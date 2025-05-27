@@ -197,7 +197,7 @@ def main():
 
     samplesheet_file = args.samplesheet
     index_sequences = args.index_sequences
-    fastq_file = args.fastq_file
+    fastq_file = args.fastq
     sample_barcodes_file = args.sample_barcodes
     cell_barcodes_file = args.cell_barcodes
     sample_map_file = args.sample_map

@@ -54,7 +54,6 @@ include: "rules/collect_stats.smk"
 include: "rules/read_flow.smk"
 include: "rules/reconstruction_stats.smk"
 include: "rules/common.smk"
-include: "rules/generate_notebook.smk"
 
 
 rule all:
