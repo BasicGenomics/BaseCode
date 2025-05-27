@@ -109,4 +109,4 @@ def split_bam_by_strand(inbam):
 
 
 if __name__ == "__main__":
-    split_bam_by_strand(sys.argv[1], set([]))
+    split_bam_by_strand(sys.argv[1])
