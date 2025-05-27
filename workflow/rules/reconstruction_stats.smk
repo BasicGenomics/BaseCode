@@ -1,5 +1,5 @@
 rule count_lengths:
-    input: bam = "results/{name}.reads.aligned_trimmed_genetagged_sorted.stitched.molecules.sorted.bam".format(name=config["name"])
+    input: bam = "results/{name}.stitched.molecules.sorted.bam".format(name=config["name"])
     output: "results/QC_files/{name}_long_form_reconstruction_stats.csv".format(name=config["name"])
     threads: config["threads"]
     params: gtf =  "{}.gtf".format(GTFFILE)

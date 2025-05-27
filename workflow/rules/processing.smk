@@ -76,9 +76,9 @@ rule assign_genes_exon:
     """
 
 rule assign_genes_intron:
-    input: pstrand = temp("results/{name}.trimmed.aligned.pstrand.GeneTagged.Exon.bam".format(name=config["name"])),
-            mstrand = temp("results/{name}.trimmed.aligned.mstrand.GeneTagged.Exon.bam".format(name=config["name"])),
-            nostrand = temp("results/{name}.trimmed.aligned.nostrand.GeneTagged.Exon.bam".format(name=config["name"]))
+    input: pstrand = "results/{name}.trimmed.aligned.pstrand.GeneTagged.Exon.bam".format(name=config["name"]),
+            mstrand = "results/{name}.trimmed.aligned.mstrand.GeneTagged.Exon.bam".format(name=config["name"]),
+            nostrand = "results/{name}.trimmed.aligned.nostrand.GeneTagged.Exon.bam".format(name=config["name"])
     output: pstrand = temp("results/{name}.trimmed.aligned.pstrand.GeneTagged.bam".format(name=config["name"])),
             mstrand = temp("results/{name}.trimmed.aligned.mstrand.GeneTagged.bam".format(name=config["name"])),
             nostrand = temp("results/{name}.trimmed.aligned.nostrand.GeneTagged.bam".format(name=config["name"]))
