@@ -34,7 +34,7 @@ rule bam_geneassigned:
     output: mapping_group = "results/read_flow_files/{name}_mapping_group.csv".format(name=config["name"]),
             reassignment = "results/read_flow_files/{name}_reassignment.csv".format(name=config["name"])
     conda: "../envs/full.yaml"
-    shell: "python3 workflow/scripts/read_flow_mapped.py -i {input.bam} -c {input.cbcpath} -s {input.pbcpath} --mapping-group-out {output.mapping_group} --reassignment-out {output.reassignment}"
+    shell: "python3 workflow/scripts/read_flow_mapped.py -i {input.bam} -c {input.cbcpath} -s {input.pbcpath} --mapping-group-out {output.mapping_group}"
 
 rule bam_reconstructed:
     input: bam = "results/{name}.reads.aligned_trimmed_genetagged_sorted.reconstructed.sorted.bam".format(name=config["name"]),
