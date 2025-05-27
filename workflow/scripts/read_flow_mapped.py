@@ -104,7 +104,6 @@ def main():
     args = parser.parse_args()
 
     mapping_group_out = args.mapping_group_out
-    reassignment_out = args.reassignment_out
 
     cell_set = set([line.rstrip() for line in open(args.cells)])
     sample_set = set([line.rstrip() for line in open(args.sample_barcodes)])
