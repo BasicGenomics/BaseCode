@@ -29,9 +29,9 @@ rule stats:
     shell: "python3 workflow/scripts/human_stats.py -i {input.bam}  -g {params.gtf} -o results/QC_files -s {input.samplesheet} -p {config[name]} -t {threads}"
 
 rule conversion_binomial_mixture:
-        input: bam = "results/{name}.reads.aligned_trimmed_genetagged_sorted.bam".format(name=config["name"]), bai = "results/{name}.reads.aligned_trimmed_genetagged_sorted.bam.bai".format(name=config["name"])
-        output: "results/QC_files/{name}_conversion_binomial_mixture.csv".format(name=config["name"])
-        params: fasta = REFFILE, gtf =  "{}.gtf".format(GTFFILE)
-        threads: int(config["threads"]/2)
-        conda: "../envs/full.yaml"
-        shell: "python3 workflow/scripts/conversion_binomial_mixture.py -i {input.bam} -f {params.fasta} -g {params.gtf} -o results/QC_files -p {config[name]} -t {threads}"
+    input: bam = "results/{name}.reads.aligned_trimmed_genetagged_sorted.bam".format(name=config["name"]), bai = "results/{name}.reads.aligned_trimmed_genetagged_sorted.bam.bai".format(name=config["name"])
+    output: "results/QC_files/{name}_conversion_binomial_mixture.csv".format(name=config["name"])
+    params: fasta = REFFILE, gtf =  "{}.gtf".format(GTFFILE)
+    threads: int(config["threads"]/2)
+    conda: "../envs/full.yaml"
+    shell: "python3 workflow/scripts/conversion_binomial_mixture.py -i {input.bam} -f {params.fasta} -g {params.gtf} -o results/QC_files -p {config[name]} -t {threads}"

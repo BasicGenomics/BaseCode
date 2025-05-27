@@ -80,9 +80,9 @@ rule rename_tags_exon:
     input:  pstrand = "results/{name}.trimmed.aligned.pstrand.bam.featureCounts.bam".format(name=config["name"]),
             mstrand = "results/{name}.trimmed.aligned.mstrand.bam.featureCounts.bam".format(name=config["name"]),
             nostrand = "results/{name}.trimmed.aligned.nostrand.bam.featureCounts.bam".format(name=config["name"])
-    output: pstrand = "results/{name}.trimmed.aligned.pstrand.Exon.bam".format(name=config["name"]),
-            mstrand = "results/{name}.trimmed.aligned.mstrand.Exon.bam".format(name=config["name"]),
-            nostrand = "results/{name}.trimmed.aligned.nostrand.Exon.bam".format(name=config["name"])
+    output: pstrand = temp("results/{name}.trimmed.aligned.pstrand.Exon.bam".format(name=config["name"])),
+            mstrand = temp("results/{name}.trimmed.aligned.mstrand.Exon.bam".format(name=config["name"])),
+            nostrand = temp("results/{name}.trimmed.aligned.nostrand.Exon.bam".format(name=config["name"]))
     conda: "../envs/full.yaml"
     shell: "python3 workflow/scripts/rename_tags_exon.py {input.pstrand} {input.mstrand} {input.nostrand} {output.pstrand} {output.mstrand} {output.nostrand}"
 
@@ -90,9 +90,9 @@ rule assign_genes_intron:
     input: pstrand = "results/{name}.trimmed.aligned.pstrand.Exon.bam".format(name=config["name"]),
             mstrand = "results/{name}.trimmed.aligned.mstrand.Exon.bam".format(name=config["name"]),
             nostrand = "results/{name}.trimmed.aligned.nostrand.Exon.bam".format(name=config["name"])
-    output: pstrand = "results/{name}.trimmed.aligned.pstrand.Exon.bam.featureCounts.bam".format(name=config["name"]),
-            mstrand = "results/{name}.trimmed.aligned.mstrand.Exon.bam.featureCounts.bam".format(name=config["name"]),
-            nostrand = "results/{name}.trimmed.aligned.nostrand.Exon.bam.featureCounts.bam".format(name=config["name"])
+    output: pstrand = temp("results/{name}.trimmed.aligned.pstrand.Exon.bam.featureCounts.bam".format(name=config["name"])),
+            mstrand = temp("results/{name}.trimmed.aligned.mstrand.Exon.bam.featureCounts.bam".format(name=config["name"])),
+            nostrand = temp("results/{name}.trimmed.aligned.nostrand.Exon.bam.featureCounts.bam".format(name=config["name"]))
     log: "results/logs/assign_genes.log"
     benchmark: "results/benchmarks/assign_genes.benchmark.txt"
     params: gtffile = "{}.gtf".format(GTFFILE),
@@ -100,9 +100,9 @@ rule assign_genes_intron:
             gtffile_negative = "{}.negative.gtf".format(GTFFILE)
     conda: "../envs/full.yaml"
     shell:"""
-    featureCounts -t exon --primary  -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_positive} -o results/pos.tmp {input.pstrand}
-    featureCounts -t exon --primary  -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_negative} -o results/neg.tmp {input.mstrand}
-    featureCounts -t exon --primary  -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile} -o results/no.tmp {input.nostrand}
+    featureCounts  --primary  -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_positive} -o results/pos.tmp {input.pstrand}
+    featureCounts  --primary  -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_negative} -o results/neg.tmp {input.mstrand}
+    featureCounts  --primary  -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile} -o results/no.tmp {input.nostrand}
     rm results/pos.tmp results/neg.tmp results/no.tmp
     mkdir -p results/.tmp_bgab/
     """
@@ -110,9 +110,9 @@ rule rename_tags_intron:
     input:  pstrand = "results/{name}.trimmed.aligned.pstrand.Exon.bam.featureCounts.bam".format(name=config["name"]),
             mstrand = "results/{name}.trimmed.aligned.mstrand.Exon.bam.featureCounts.bam".format(name=config["name"]),
             nostrand = "results/{name}.trimmed.aligned.nostrand.Exon.bam.featureCounts.bam".format(name=config["name"])
-    output: pstrand = "results/{name}.trimmed.aligned.pstrand.GeneTagged.bam".format(name=config["name"]),
-            mstrand = "results/{name}.trimmed.aligned.mstrand.GeneTagged.bam".format(name=config["name"]),
-            nostrand = "results/{name}.trimmed.aligned.nostrand.GeneTagged.bam".format(name=config["name"])
+    output: pstrand = temp("results/{name}.trimmed.aligned.pstrand.GeneTagged.bam".format(name=config["name"])),
+            mstrand = temp("results/{name}.trimmed.aligned.mstrand.GeneTagged.bam".format(name=config["name"])),
+            nostrand = temp("results/{name}.trimmed.aligned.nostrand.GeneTagged.bam".format(name=config["name"]))
     conda: "../envs/full.yaml"
     shell: "python3 workflow/scripts/rename_tags_intron.py {input.pstrand} {input.mstrand} {input.nostrand} {output.pstrand} {output.mstrand} {output.nostrand}"
 
@@ -122,7 +122,7 @@ rule concatenate_and_sort:
             nostrand = "results/{name}.trimmed.aligned.nostrand.GeneTagged.bam".format(name=config["name"])
     log: "results/logs/concatenate_and_sort.log"
     benchmark: "results/benchmarks/concatenate_and_sort.benchmark.txt"
-    output: temp("results/{name}.reads.aligned_trimmed_genetagged_sorted.bam".format(name=config["name"]))
+    output: "results/{name}.reads.aligned_trimmed_genetagged_sorted.bam".format(name=config["name"])
     conda: "../envs/full.yaml"
     shell: "samtools cat {input.nostrand} {input.pstrand} {input.mstrand} | samtools sort -m 1000M -@ {config[threads]} -T results/.tmp_bgab/sorttmp. -o {output} &> {log}"
 
@@ -143,7 +143,7 @@ rule reconstruct:
     params: gtffile = GTFFILE
     threads: config["threads"]
     benchmark: "results/benchmarks/reconstruction.benchmark.txt"
-    shell: "{config[resource_dir]}/binaries/basic_reconstruction --input {input.bam} --output {output} --gtf {params.gtffile}.gtf --sample-map {input.sample_map} --threads {threads} --bulk"
+    shell: "{config[resource_dir]}/binaries/basic_reconstruction --input {input.bam} --output {output} --gtf {params.gtffile}.gtf --sample-map {input.sample_map} --threads {threads}"
 
 rule sort_reconstructed:
     input: "results/{name}.reads.aligned_trimmed_genetagged_sorted.reconstructed.bam".format(name=config["name"])
@@ -172,7 +172,7 @@ rule stitch_reconstruction:
     threads: config["threads"]
     params: gtffile = GTFFILE
     conda: "../envs/full.yaml"
-    shell: "python3 workflow/scripts/stitcher.py --input {input.bam} --output {output} --gtf {params.gtffile}.gtf --threads {threads} --cell-tag CB --UMI-tag RM --gene-identifier gene_name"
+    shell: "python3 workflow/scripts/stitcher.py --input {input.bam} --output {output} --gtf {params.gtffile}.gtf --threads {threads} --cell-tag CB --UMI-tag RM --gene-identifier gene_id"
 
 rule sorted_stitched:
     input: "results/{name}.stitched.bam".format(name=config["name"])
