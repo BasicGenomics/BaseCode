@@ -69,9 +69,9 @@ rule assign_genes_exon:
             gtffile_negative = "{}.negative.gtf".format(GTFFILE)
     conda: "../envs/full.yaml"
     shell:"""
-    featureCounts -t exon --primary  -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_positive} -o {output.pstrand}  results/pos.tmp
-    featureCounts -t exon --primary  -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_negative} -o {output.mstrand}  results/neg.tmp
-    featureCounts -t exon --primary  -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile} -o {output.nostrand}  results/no.tpm
+    featureCounts -t exon --primary  -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_positive} -o  results/pos.tmp
+    featureCounts -t exon --primary  -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_negative} -o  results/neg.tmp
+    featureCounts -t exon --primary  -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile} -o  results/no.tpm
     rm results/pos.tmp results/neg.tmp results/no.tpm
     mkdir -p results/.tmp_bgab/
     """
@@ -100,9 +100,9 @@ rule assign_genes_intron:
             gtffile_negative = "{}.negative.gtf".format(GTFFILE)
     conda: "../envs/full.yaml"
     shell:"""
-    featureCounts -t intron --primary  -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_positive} -o {output.pstrand}  results/pos.tmp
-    featureCounts -t intron --primary  -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_negative} -o {output.mstrand}  results/neg.tmp
-    featureCounts -t intron --primary  -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile} -o {output.nostrand}  results/no.tpm
+    featureCounts -t intron --primary  -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_positive} -o results/pos.tmp
+    featureCounts -t intron --primary  -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_negative} -o  results/neg.tmp
+    featureCounts -t intron --primary  -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile} -o  results/no.tpm
     rm results/pos.tmp results/neg.tmp results/no.tpm
     mkdir -p results/.tmp_bgab/
     """
