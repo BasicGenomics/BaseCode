@@ -1,0 +1,62 @@
+# Main entrypoint of the workflow. 
+# Please follow the best practices: 
+# https://snakemake.readthedocs.io/en/stable/snakefiles/best_practices.html,
+# in particular regarding the standardized folder structure mentioned there. 
+import getpass
+from snakemake.utils import min_version
+min_version("6.0")
+
+configfile: "config/config.yaml"
+
+
+if 'resource_dir' not in config:
+    user = getpass.getuser()
+    config['resource_dir'] = '/home/{user}/BaseCode/resources/'.format(user=user)
+else:
+    if config['resource_dir'] == '':
+        user = getpass.getuser()
+        config['resource_dir'] = '/home/{user}/BaseCode/resources/'.format(user=user)
+
+if "index_layout" not in config:
+    config["index_layout"] = "16:0-16"
+
+if "umilen" not in config:
+    config["umilen"] = 0
+if "dtlen" not in config:
+    config["dtlen"] = 24
+if "dt_cutoff" not in config:
+    config["dt_cutoff"] = 16
+if "ts_sequence" not in config:
+    config["ts_sequence"] = "TCTTCTCTCCTCCTCC"
+if "ts_pad" not in config:
+    config["ts_pad"] = 3
+if "ts_cutoff" not in config:
+    config["ts_cutoff"] = 5
+
+if "params" not in config:
+    config["params"] = {}
+
+if "cutadapt" not in config["params"]:
+    config["params"]["cutadapt"] = "" "-n 2 -m 25 -q 10 -a CTGTCTCTTATACACATCT -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCA -g TTTTTTTTTTTTTTTTTTTT -g GGAGGAGGAGAGAAGA -g AAAAAAAAAAAAAAAAAAAA -A CTGTCTCTTATACACATCT -A AAAAAAAAAAAAAAAAAAAA -A AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT"
+
+if "hisat3n" not in config["params"]:
+    config["params"]["hisat3n"] = "-k 5 --max-seeds 8 --score-min L,0,-0.5 --base-change G,A --no-temp-splicesite"
+
+SPLICESITES = "{resource_dir}/genome_references/{reference}/splicesites.ss".format(resource_dir=config["resource_dir"], reference=config["reference"]) 
+GENOMEREF = "{resource_dir}/genome_references/{reference}/genomeref".format(resource_dir=config["resource_dir"], reference=config["reference"])
+GTFFILE = "{resource_dir}/genome_references/{reference}/geneannotations".format(resource_dir=config["resource_dir"], reference=config["reference"])
+REFFILE = "{resource_dir}/genome_references/{reference}/reference.fa".format(resource_dir = config["resource_dir"], reference = config["reference"])
+cores_samtools = int(config["threads"]*0.05)+1
+cores_hisat = config["threads"]-cores_samtools
+
+include: "rules/processing.smk"
+include: "rules/collect_stats.smk"
+include: "rules/read_flow.smk"
+include: "rules/reconstruction_stats.smk"
+include: "rules/common.smk"
+include: "rules/generate_notebook.smk"
+
+
+rule all:
+    input:
+        get_final_output,
