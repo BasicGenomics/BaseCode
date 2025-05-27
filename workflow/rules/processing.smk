@@ -112,7 +112,7 @@ rule rename_tags_intron:
             nostrand = "results/{name}.trimmed.aligned.nostrand.Exon.bam.featureCounts.bam".format(name=config["name"])
     output: pstrand = "results/{name}.trimmed.aligned.pstrand.GeneTagged.bam".format(name=config["name"]),
             mstrand = "results/{name}.trimmed.aligned.mstrand.GeneTagged.bam".format(name=config["name"]),
-            nostrand = "results/{name}trimmed.aligned.nostrand.GeneTagged.bam".format(name=config["name"])
+            nostrand = "results/{name}.trimmed.aligned.nostrand.GeneTagged.bam".format(name=config["name"])
     conda: "../envs/full.yaml"
     shell: "python3 workflow/scripts/rename_tags_intron.py {input.pstrand} {input.mstrand} {input.nostrand} {output.pstrand} {output.mstrand} {output.nostrand}"
 
