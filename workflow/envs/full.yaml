@@ -23,8 +23,8 @@ dependencies:
 - pytorch=2.3.1
 - pygtrie=2.5.0
 - portion=2.4.2
-- numpy=2.2.6
+- numpy=1.24.2
 - gtfparse=1.2.1
 - subread=2.0.6
-- pyfastx=2.2.0
+- pyfastx=2.1.0
 - fastexcel=0.14.0
