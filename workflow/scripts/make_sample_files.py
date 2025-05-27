@@ -167,12 +167,12 @@ def scan_fastq_for_order_and_orientation(fastq_file, index_sequence_map):
 
     print(first, second)
     
-    if 'index1' == first_most_common.split('_'):
+    if 'index1' == first_most_common.split('_')[0]:
         seq_order += '1_'
     else:
         seq_order += '2_'
     
-    if 'index1' == second_most_common.split('_'):
+    if 'index1' == second_most_common.split('_')[0]:
         seq_order += '1'
     else:
         seq_order += '2'
