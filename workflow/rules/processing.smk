@@ -61,7 +61,7 @@ rule assign_genes_exon:
             nostrand = "results/{name}.trimmed.aligned.nostrand.bam".format(name=config["name"])
     output: pstrand = temp("results/{name}.trimmed.aligned.pstrand.bam.featureCounts.bam".format(name=config["name"])),
             mstrand = temp("results/{name}.trimmed.aligned.mstrand.bam.featureCounts.bam".format(name=config["name"])),
-            nostrand = temp("results/{name}trimmed.aligned.nostrand.bam.featureCounts.bam".format(name=config["name"]))
+            nostrand = temp("results/{name}.trimmed.aligned.nostrand.bam.featureCounts.bam".format(name=config["name"]))
     log: "results/logs/assign_genes.log"
     benchmark: "results/benchmarks/assign_genes.benchmark.txt"
     params: gtffile = "{}.gtf".format(GTFFILE),
@@ -69,9 +69,9 @@ rule assign_genes_exon:
             gtffile_negative = "{}.negative.gtf".format(GTFFILE)
     conda: "../envs/full.yaml"
     shell:"""
-    featureCounts -t exon --primary  -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_positive} -o results/pos.tmp {input.pstrand}
-    featureCounts -t exon --primary  -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_negative} -o results/neg.tmp {input.mstrand}
-    featureCounts -t exon --primary  -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile} -o results/no.tmp {input.nostrand}
+    featureCounts -t exon --primary -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_positive} -o results/pos.tmp {input.pstrand}
+    featureCounts -t exon --primary -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_negative} -o results/neg.tmp {input.mstrand}
+    featureCounts -t exon --primary -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile} -o results/no.tmp {input.nostrand}
     rm results/pos.tmp results/neg.tmp results/no.tmp
     mkdir -p results/.tmp_bgab/
     """
@@ -79,7 +79,7 @@ rule assign_genes_exon:
 rule rename_tags_exon:
     input:  pstrand = "results/{name}.trimmed.aligned.pstrand.bam.featureCounts.bam".format(name=config["name"]),
             mstrand = "results/{name}.trimmed.aligned.mstrand.bam.featureCounts.bam".format(name=config["name"]),
-            nostrand = "results/{name}trimmed.aligned.nostrand.bam.featureCounts.bam".format(name=config["name"])
+            nostrand = "results/{name}.trimmed.aligned.nostrand.bam.featureCounts.bam".format(name=config["name"])
     output: pstrand = "results/{name}.trimmed.aligned.pstrand.Exon.bam".format(name=config["name"]),
             mstrand = "results/{name}.trimmed.aligned.mstrand.Exon.bam".format(name=config["name"]),
             nostrand = "results/{name}.trimmed.aligned.nostrand.Exon.bam".format(name=config["name"])
