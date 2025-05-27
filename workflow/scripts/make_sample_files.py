@@ -188,9 +188,10 @@ def main():
     parser.add_argument('-s','--samplesheet',metavar='samplesheet', type=str, help='Samplesheet')
     parser.add_argument('--index-sequences',metavar='indexes', type=str, help='Index Sequences')
     parser.add_argument('--fastq', metavar='fastq', type=str, help='fastq file with index sequences')
-    parser.add_argument('--sample_barcodes', metavar='barcodes', type=str, help='Sample barcode output')
-    parser.add_argument('--sample_map', metavar='samples', type=str, help='Sample map output')
-    parser.add_argument('--readtype_map', metavar='readtypes', type=str, help='readtype map output')
+    parser.add_argument('--sample-barcodes', metavar='barcodes', type=str, help='Sample barcode output')
+    parser.add_argument('--sample-barcodes', metavar='barcodes', type=str, help='Cell barcode output')
+    parser.add_argument('--sample-map', metavar='samples', type=str, help='Sample map output')
+    parser.add_argument('--readtype-map', metavar='readtypes', type=str, help='readtype map output')
     parser.add_argument('--samplesheet-out', metavar='samplesheet_out', type=str, help='Samplesheet output')
     args = parser.parse_args()
 
