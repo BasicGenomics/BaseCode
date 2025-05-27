@@ -128,7 +128,7 @@ rule concatenate_and_sort:
 
 rule first_index:
     input: "results/{name}.reads.aligned_trimmed_genetagged_sorted.bam".format(name=config["name"])
-    output: temp("results/{name}.reads.aligned_trimmed_genetagged_sorted.bam.bai".format(name=config["name"]))
+    output: "results/{name}.reads.aligned_trimmed_genetagged_sorted.bam.bai".format(name=config["name"])
     params:
         extra="",
     threads: config["threads"]
