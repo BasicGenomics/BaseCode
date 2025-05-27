@@ -59,9 +59,9 @@ rule assign_genes_exon:
     input: pstrand = "results/{name}.trimmed.aligned.pstrand.bam".format(name=config["name"]),
             mstrand = "results/{name}.trimmed.aligned.mstrand.bam".format(name=config["name"]),
             nostrand = "results/{name}.trimmed.aligned.nostrand.bam".format(name=config["name"])
-    output: pstrand = temp("results/{name}.trimmed.aligned.pstrand.GeneTagged.Exon.bam".format(name=config["name"])),
-            mstrand = temp("results/{name}.trimmed.aligned.mstrand.GeneTagged.Exon.bam".format(name=config["name"])),
-            nostrand = temp("results/{name}.trimmed.aligned.nostrand.GeneTagged.Exon.bam".format(name=config["name"]))
+    output: pstrand = temp("results/{name}.trimmed.aligned.pstrand.bam.featureCounts.bam".format(name=config["name"])),
+            mstrand = temp("results/{name}.trimmed.aligned.mstrand.bam.featureCounts.bam".format(name=config["name"])),
+            nostrand = temp("results/{name}trimmed.aligned.nostrand.bam.featureCounts.bam".format(name=config["name"]))
     log: "results/logs/assign_genes.log"
     benchmark: "results/benchmarks/assign_genes.benchmark.txt"
     params: gtffile = "{}.gtf".format(GTFFILE),
@@ -69,19 +69,30 @@ rule assign_genes_exon:
             gtffile_negative = "{}.negative.gtf".format(GTFFILE)
     conda: "../envs/full.yaml"
     shell:"""
-    featureCounts -t exon --primary  -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_positive} -o {output.pstrand}  {input.pstrand} 
-    featureCounts -t exon --primary  -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_negative} -o {output.mstrand}  {input.mstrand}
-    featureCounts -t exon --primary  -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile} -o {output.nostrand}  {input.nostrand} 
+    featureCounts -t exon --primary  -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_positive} -o {output.pstrand}  results/pos.tmp
+    featureCounts -t exon --primary  -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_negative} -o {output.mstrand}  results/neg.tmp
+    featureCounts -t exon --primary  -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile} -o {output.nostrand}  results/no.tpm
+    rm results/pos.tmp results/neg.tmp results/no.tpm
     mkdir -p results/.tmp_bgab/
     """
+
+rule rename_tags_exon:
+    input:  pstrand = "results/{name}.trimmed.aligned.pstrand.bam.featureCounts.bam".format(name=config["name"]),
+            mstrand = "results/{name}.trimmed.aligned.mstrand.bam.featureCounts.bam".format(name=config["name"]),
+            nostrand = "results/{name}trimmed.aligned.nostrand.bam.featureCounts.bam".format(name=config["name"])
+    output: pstrand = "results/{name}.trimmed.aligned.pstrand.Exon.bam".format(name=config["name"]),
+            mstrand = "results/{name}.trimmed.aligned.mstrand.Exon.bam".format(name=config["name"]),
+            nostrand = "results/{name}trimmed.aligned.nostrand.Exon.bam".format(name=config["name"])
+    conda: "../envs/full.yaml"
+    shell: "python3 workflow/scripts/rename_tags_exon.py {input.pstrand} {input.mstrand} {input.nostrand} {input.pstrand} {input.mstrand} {input.nostrand}"
 
 rule assign_genes_intron:
-    input: pstrand = "results/{name}.trimmed.aligned.pstrand.GeneTagged.Exon.bam".format(name=config["name"]),
-            mstrand = "results/{name}.trimmed.aligned.mstrand.GeneTagged.Exon.bam".format(name=config["name"]),
-            nostrand = "results/{name}.trimmed.aligned.nostrand.GeneTagged.Exon.bam".format(name=config["name"])
-    output: pstrand = temp("results/{name}.trimmed.aligned.pstrand.GeneTagged.bam".format(name=config["name"])),
-            mstrand = temp("results/{name}.trimmed.aligned.mstrand.GeneTagged.bam".format(name=config["name"])),
-            nostrand = temp("results/{name}.trimmed.aligned.nostrand.GeneTagged.bam".format(name=config["name"]))
+    input: pstrand = "results/{name}.trimmed.aligned.pstrand.Exon.bam".format(name=config["name"]),
+            mstrand = "results/{name}.trimmed.aligned.mstrand.Exon.bam".format(name=config["name"]),
+            nostrand = "results/{name}.trimmed.aligned.nostrand.Exon.bam".format(name=config["name"])
+    output: pstrand = "results/{name}.trimmed.aligned.pstrand.Exon.bam.featureCounts.bam".format(name=config["name"]),
+            mstrand = "results/{name}.trimmed.aligned.mstrand.Exon.bam.featureCounts.bam".format(name=config["name"]),
+            nostrand = "results/{name}.trimmed.aligned.nostrand.Exon.bam.featureCounts.bam".format(name=config["name"])
     log: "results/logs/assign_genes.log"
     benchmark: "results/benchmarks/assign_genes.benchmark.txt"
     params: gtffile = "{}.gtf".format(GTFFILE),
@@ -89,12 +100,21 @@ rule assign_genes_intron:
             gtffile_negative = "{}.negative.gtf".format(GTFFILE)
     conda: "../envs/full.yaml"
     shell:"""
-    featureCounts -a {params.gtffile_positive} -t intron --primary  -T {threads} -R {output.pstrand} -p −−countReadPairs −−largestOverlap −−fracOverlap 0.1  {input.pstrand}
-    featureCounts -a {params.gtffile_negative} -t intron --primary  -T {threads} -R {output.mstrand} -p −−countReadPairs −−largestOverlap −−fracOverlap 0.1  {input.mstrand}
-    featureCounts -a {params.gtffile} -t intron --primary  -T {threads} -R {output.nostrand} -p −−countReadPairs −−largestOverlap −−fracOverlap 0.1  {input.nostrand}
+    featureCounts -t intron --primary  -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_positive} -o {output.pstrand}  results/pos.tmp
+    featureCounts -t intron --primary  -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_negative} -o {output.mstrand}  results/neg.tmp
+    featureCounts -t intron --primary  -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile} -o {output.nostrand}  results/no.tpm
+    rm results/pos.tmp results/neg.tmp results/no.tpm
     mkdir -p results/.tmp_bgab/
     """
-
+rule rename_tags_intron:
+    input:  pstrand = "results/{name}.trimmed.aligned.pstrand.Exon.bam.featureCounts.bam".format(name=config["name"]),
+            mstrand = "results/{name}.trimmed.aligned.mstrand.Exon.bam.featureCounts.bam".format(name=config["name"]),
+            nostrand = "results/{name}.trimmed.aligned.nostrand.Exon.bam.featureCounts.bam".format(name=config["name"])
+    output: pstrand = "results/{name}.trimmed.aligned.pstrand.GeneTagged.bam".format(name=config["name"]),
+            mstrand = "results/{name}.trimmed.aligned.mstrand.GeneTagged.bam".format(name=config["name"]),
+            nostrand = "results/{name}trimmed.aligned.nostrand.GeneTagged.bam".format(name=config["name"])
+    conda: "../envs/full.yaml"
+    shell: "python3 workflow/scripts/rename_tags_intron.py {input.pstrand} {input.mstrand} {input.nostrand} {input.pstrand} {input.mstrand} {input.nostrand}"
 
 rule concatenate_and_sort:
     input: pstrand = "results/{name}.trimmed.aligned.pstrand.GeneTagged.bam".format(name=config["name"]),
