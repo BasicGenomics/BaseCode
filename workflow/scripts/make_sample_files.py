@@ -136,7 +136,7 @@ def scan_fastq_for_order_and_orientation(fastq_file, index_sequence_map):
     first = Counter({'index1_forward': 0, 'index1_reverse': 0, 'index2_forward': 0, 'index2_reverse': 0})
     second = Counter({'index1_forward': 0, 'index1_reverse': 0, 'index2_forward': 0, 'index2_reverse': 0})
     i = 0
-    for (name, seq) in pyfastx.Fasta(fastq_file, build_index=False):
+    for (name, seq, qual) in pyfastx.Fastq(fastq_file, build_index=False):
         index_seq = seq[-16:]
         i += 1
         if i > 10000:
