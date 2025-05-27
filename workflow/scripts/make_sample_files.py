@@ -80,7 +80,14 @@ def make_sample_barcode_PCR_B(row, seq_order, forward_list):
 def make_sample_barcode_to_sample_id_map(df):
     map_dict = {}
     for idx, row in df.iterrows():
-        for barcode in row['SAMPLE_BARCODES'].split(';'):
+        for barcode in row['SAMPLE_BARCODES_PCR_A'].split(';'):
+            if barcode in map_dict:
+                sample_name = map_dict[barcode]
+                if sample_name != row['SAMPLE_ID']:
+                    raise NotImplementedError
+            else:
+                map_dict[barcode] = row['SAMPLE_ID']
+        for barcode in row['SAMPLE_BARCODES_PCR_B'].split(';'):
             if barcode in map_dict:
                 sample_name = map_dict[barcode]
                 if sample_name != row['SAMPLE_ID']:
@@ -105,13 +112,12 @@ def fix_SAMPLE_ID(row):
 def make_sample_barcode_to_readType_map(df):
     map_dict = {}
     for idx, row in df.iterrows():
-        for (index2, barcodes) in zip(row['INDEX2'], row['SAMPLE_BARCODES']):
-            if 'Rv2' in index2:
-                readtype = '3prime'
-            else:
-                readtype = '5prime_int'
+        for barcodes in row['SAMPLE_BARCODES_PCR_A']:
             for barcode in barcodes.split(';'):
-                map_dict[barcode] = readtype
+                map_dict[barcode] = '5prime_int'
+        for barcodes in row['SAMPLE_BARCODES_PCR_B']:
+            for barcode in barcodes.split(';'):
+                map_dict[barcode] = '3prime'
     return map_dict
 
 def get_forward_and_reverse_sequences(index_sequence_map):
