@@ -100,9 +100,9 @@ rule assign_genes_intron:
             gtffile_negative = "{}.negative.gtf".format(GTFFILE)
     conda: "../envs/full.yaml"
     shell:"""
-    featureCounts -t intron --primary  -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_positive} -o results/pos.tmp {input.pstrand}
-    featureCounts -t intron --primary  -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_negative} -o results/neg.tmp {input.mstrand}
-    featureCounts -t intron --primary  -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile} -o results/no.tmp {input.nostrand}
+    featureCounts -t exon --primary  -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_positive} -o results/pos.tmp {input.pstrand}
+    featureCounts -t exon --primary  -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_negative} -o results/neg.tmp {input.mstrand}
+    featureCounts -t exon --primary  -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile} -o results/no.tmp {input.nostrand}
     rm results/pos.tmp results/neg.tmp results/no.tmp
     mkdir -p results/.tmp_bgab/
     """
