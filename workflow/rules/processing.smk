@@ -1,5 +1,5 @@
 rule make_barcode_files:
-    input: config["samplesheet"], fastq = config["r2"]
+    input: samplesheet = config["samplesheet"], fastq = config["r2"]
     output: barcodes = "results/{name}_sample_barcodes.txt".format(name=config["name"]),
         cell_barcodes = "results/{name}_cell_barcodes.txt".format(name=config["name"]),
         sample_map = "results/{name}_sample_map.yaml".format(name=config["name"]),
@@ -7,7 +7,7 @@ rule make_barcode_files:
         samplesheet_out = "results/{name}_samplesheet.csv".format(name=config["name"])
     params: index_sequences = "config/index_sequences.yaml"
     conda: "../envs/full.yaml"
-    shell: "python3 workflow/scripts/make_sample_files.py -s {input} --fastq {input.fastq} --index-sequences {params.index_sequences} --sample-barcodes {output.barcodes} --cell-barcodes {output.cell_barcodes} --sample-map {output.sample_map} --readtype-map {output.readtype_map} --samplesheet-out {output.samplesheet_out}"
+    shell: "python3 workflow/scripts/make_sample_files.py -s {input.samplesheet} --fastq {input.fastq} --index-sequences {params.index_sequences} --sample-barcodes {output.barcodes} --cell-barcodes {output.cell_barcodes} --sample-map {output.sample_map} --readtype-map {output.readtype_map} --samplesheet-out {output.samplesheet_out}"
 
 rule parse_fastq:
     input: r1_in = config["r1"], r2_in = config["r2"], pbcpath = "results/{name}_sample_barcodes.txt".format(name=config["name"]), cell_barcodes = "results/{name}_cell_barcodes.txt".format(name=config["name"]), sample_map = "results/{name}_sample_map.yaml".format(name=config["name"]), readtype_map = "results/{name}_readtype_map.yaml".format(name=config["name"])
