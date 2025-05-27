@@ -2,7 +2,7 @@ rule make_barcode_files:
     input: config["samplesheet"]
     output: barcodes = "results/{name}_sample_barcodes.txt".format(name=config["name"]),
         cell_barcodes = "results/{name}_cell_barcodes.txt".format(name=config["name"]),
-        fastq = config["r2"]
+        fastq = config["r2"],
         sample_map = "results/{name}_sample_map.yaml".format(name=config["name"]),
         readtype_map = "results/{name}_readtype_map.yaml".format(name=config["name"]),
         samplesheet_out = "results/{name}_samplesheet.csv".format(name=config["name"])
