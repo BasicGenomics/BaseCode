@@ -82,9 +82,9 @@ rule rename_tags_exon:
             nostrand = "results/{name}trimmed.aligned.nostrand.bam.featureCounts.bam".format(name=config["name"])
     output: pstrand = "results/{name}.trimmed.aligned.pstrand.Exon.bam".format(name=config["name"]),
             mstrand = "results/{name}.trimmed.aligned.mstrand.Exon.bam".format(name=config["name"]),
-            nostrand = "results/{name}trimmed.aligned.nostrand.Exon.bam".format(name=config["name"])
+            nostrand = "results/{name}.trimmed.aligned.nostrand.Exon.bam".format(name=config["name"])
     conda: "../envs/full.yaml"
-    shell: "python3 workflow/scripts/rename_tags_exon.py {input.pstrand} {input.mstrand} {input.nostrand} {input.pstrand} {input.mstrand} {input.nostrand}"
+    shell: "python3 workflow/scripts/rename_tags_exon.py {input.pstrand} {input.mstrand} {input.nostrand} {output.pstrand} {output.mstrand} {output.nostrand}"
 
 rule assign_genes_intron:
     input: pstrand = "results/{name}.trimmed.aligned.pstrand.Exon.bam".format(name=config["name"]),
@@ -114,7 +114,7 @@ rule rename_tags_intron:
             mstrand = "results/{name}.trimmed.aligned.mstrand.GeneTagged.bam".format(name=config["name"]),
             nostrand = "results/{name}trimmed.aligned.nostrand.GeneTagged.bam".format(name=config["name"])
     conda: "../envs/full.yaml"
-    shell: "python3 workflow/scripts/rename_tags_intron.py {input.pstrand} {input.mstrand} {input.nostrand} {input.pstrand} {input.mstrand} {input.nostrand}"
+    shell: "python3 workflow/scripts/rename_tags_intron.py {input.pstrand} {input.mstrand} {input.nostrand} {output.pstrand} {output.mstrand} {output.nostrand}"
 
 rule concatenate_and_sort:
     input: pstrand = "results/{name}.trimmed.aligned.pstrand.GeneTagged.bam".format(name=config["name"]),
