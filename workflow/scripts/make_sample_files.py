@@ -240,7 +240,7 @@ def main():
         f.writelines("\n".join(make_sample_barcode_list(set(samplesheet_df["SAMPLE_BARCODES_PCR_A"]))))
         f.writelines("\n".join(make_sample_barcode_list(set(samplesheet_df["SAMPLE_BARCODES_PCR_B"]))))
 
-    samplesheet_df['BARCODE'] = 'NA'
+    samplesheet_df['BARCODE'] = 'nan'
     with open(cell_barcodes_file, 'w') as f:
         f.writelines("\n".join(make_sample_barcode_list(set(samplesheet_df['BARCODE']))))
 
