@@ -112,10 +112,10 @@ def fix_SAMPLE_ID(row):
 def make_sample_barcode_to_readType_map(df):
     map_dict = {}
     for idx, row in df.iterrows():
-        for barcodes in row['SAMPLE_BARCODES_PCR_A']:
+        for barcodes in row['SAMPLE_BARCODES_PCR_A'].split(';'):
             for barcode in barcodes.split(';'):
                 map_dict[barcode] = '5prime_int'
-        for barcodes in row['SAMPLE_BARCODES_PCR_B']:
+        for barcodes in row['SAMPLE_BARCODES_PCR_B'].split(';'):
             for barcode in barcodes.split(';'):
                 map_dict[barcode] = '3prime'
     return map_dict
