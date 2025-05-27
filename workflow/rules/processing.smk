@@ -69,9 +69,9 @@ rule assign_genes_exon:
             gtffile_negative = "{}.negative.gtf".format(GTFFILE)
     conda: "../envs/full.yaml"
     shell:"""
-    featureCounts -a {params.gtffile_positive} -t exon --primary  -T {threads} -R {output.pstrand} -p −−countReadPairs −−largestOverlap −−fracOverlap 0.1  {input.pstrand}
-    featureCounts -a {params.gtffile_negative} -t exon --primary  -T {threads} -R {output.mstrand} -p −−countReadPairs −−largestOverlap −−fracOverlap 0.1  {input.mstrand}
-    featureCounts -a {params.gtffile} -t exon --primary  -T {threads} -R {output.nostrand} -p −−countReadPairs −−largestOverlap −−fracOverlap 0.1  {input.nostrand}
+    featureCounts -a {params.gtffile_positive} -t exon --primary  -T {threads} -R BAM -p −−countReadPairs −−largestOverlap −−fracOverlap 0.1 > {input.pstrand}
+    featureCounts -a {params.gtffile_negative} -t exon --primary  -T {threads} -R BAM -p −−countReadPairs −−largestOverlap −−fracOverlap 0.1  > {input.mstrand}
+    featureCounts -a {params.gtffile} -t exon --primary  -T {threads} -R BAM -p −−countReadPairs −−largestOverlap −−fracOverlap 0.1 > {input.nostrand}
     mkdir -p results/.tmp_bgab/
     """
 
