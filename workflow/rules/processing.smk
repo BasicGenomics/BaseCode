@@ -43,7 +43,7 @@ rule map_reads:
     benchmark: "results/benchmarks/map_reads.benchmark.txt"
     params: splicesites = SPLICESITES, genomeref = GENOMEREF, cores_hisat = cores_hisat, cores_samtools = cores_samtools
     conda: "../envs/full.yaml"
-    shell: "{config[resource_dir]}/binaries/hisat-3n --new-summary --summary-file {log.summary} {config[params][hisat3n]} -p {params.cores_hisat} --known-splicesite-infile {params.splicesites} -x {params.genomeref} -1 {input.r1} -2 {input.r2} | samtools view -F 256 -b -@ {params.cores_samtools} -o {output} &> {log.stdout}"
+    shell: "{config[resource_dir]}/binaries/hisat-3n --new-summary --summary-file {log.summary} {config[params][hisat3n]} -p {params.cores_hisat} --known-splicesite-infile {params.splicesites} -x {params.genomeref} -1 {input.r1} -2 {input.r2} | samtools view -F 256 -b -@ {params.cores_samtools} -o {output} > {log.stdout} 2>&1"
 
 rule split_bam_by_strand:
     input: "results/{name}.trimmed.aligned.bam".format(name=config["name"])
@@ -69,9 +69,9 @@ rule assign_genes_exon:
             gtffile_negative = "{}.negative.gtf".format(GTFFILE)
     conda: "../envs/full.yaml"
     shell:"""
-    featureCounts -t exon --primary -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_positive} -o results/pos.tmp {input.pstrand}
-    featureCounts -t exon --primary -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_negative} -o results/neg.tmp {input.mstrand}
-    featureCounts -t exon --primary -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile} -o results/no.tmp {input.nostrand}
+    featureCounts -t exon --primary -g gene_name -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_positive} -o results/pos.tmp {input.pstrand} >> {log} 2>&1
+    featureCounts -t exon --primary -g gene_name -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_negative} -o results/neg.tmp {input.mstrand} >> {log} 2>&1
+    featureCounts -t exon --primary -g gene_name -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile} -o results/no.tmp {input.nostrand} >> {log} 2>&1
     rm results/pos.tmp results/neg.tmp results/no.tmp
     mkdir -p results/.tmp_bgab/
     """
@@ -100,9 +100,9 @@ rule assign_genes_intron:
             gtffile_negative = "{}.negative.gtf".format(GTFFILE)
     conda: "../envs/full.yaml"
     shell:"""
-    featureCounts  --primary  -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_positive} -o results/pos.tmp {input.pstrand}
-    featureCounts  --primary  -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_negative} -o results/neg.tmp {input.mstrand}
-    featureCounts  --primary  -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile} -o results/no.tmp {input.nostrand}
+    featureCounts -t intron --primary -g gene_name -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_positive} -o results/pos.tmp {input.pstrand} >> {log} 2>&1
+    featureCounts -t intron --primary -g gene_name -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_negative} -o results/neg.tmp {input.mstrand} >> {log} 2>&1
+    featureCounts -t intron --primary -g gene_name -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile} -o results/no.tmp {input.nostrand} >> {log} 2>&1
     rm results/pos.tmp results/neg.tmp results/no.tmp
     mkdir -p results/.tmp_bgab/
     """
@@ -124,7 +124,7 @@ rule concatenate_and_sort:
     benchmark: "results/benchmarks/concatenate_and_sort.benchmark.txt"
     output: "results/{name}.reads.aligned_trimmed_genetagged_sorted.bam".format(name=config["name"])
     conda: "../envs/full.yaml"
-    shell: "samtools cat {input.nostrand} {input.pstrand} {input.mstrand} | samtools sort -m 1000M -@ {config[threads]} -T results/.tmp_bgab/sorttmp. -o {output} &> {log}"
+    shell: "samtools cat {input.nostrand} {input.pstrand} {input.mstrand} | samtools sort -m 1000M -@ {config[threads]} -T results/.tmp_bgab/sorttmp. -o {output} >> {log} 2>&1"
 
 rule first_index:
     input: "results/{name}.reads.aligned_trimmed_genetagged_sorted.bam".format(name=config["name"])
@@ -141,9 +141,10 @@ rule reconstruct:
         sample_map = "results/{name}_sample_map.yaml".format(name=config["name"])
     output: temp("results/{name}.reads.aligned_trimmed_genetagged_sorted.reconstructed.bam".format(name=config["name"]))
     params: gtffile = GTFFILE
+    log: "results/logs/reconstruct.log
     threads: config["threads"]
     benchmark: "results/benchmarks/reconstruction.benchmark.txt"
-    shell: "{config[resource_dir]}/binaries/basic_reconstruction --input {input.bam} --output {output} --gtf {params.gtffile}.gtf --sample-map {input.sample_map} --threads {threads}"
+    shell: "{config[resource_dir]}/binaries/basic_reconstruction --input {input.bam} --output {output} --gtf {params.gtffile}.gtf --sample-map {input.sample_map} --threads {threads} >> {log} 2>&1"
 
 rule sort_reconstructed:
     input: "results/{name}.reads.aligned_trimmed_genetagged_sorted.reconstructed.bam".format(name=config["name"])
@@ -171,8 +172,9 @@ rule stitch_reconstruction:
     output: temp("results/{name}.stitched.bam".format(name=config["name"]))
     threads: config["threads"]
     params: gtffile = GTFFILE
+    log: "results/logs/stitch_reconstruction.log"
     conda: "../envs/full.yaml"
-    shell: "python3 workflow/scripts/stitcher.py --input {input.bam} --output {output} --gtf {params.gtffile}.gtf --threads {threads} --cell-tag CB --UMI-tag RM --gene-identifier gene_id"
+    shell: "python3 workflow/scripts/stitcher.py --input {input.bam} --output {output} --gtf {params.gtffile}.gtf --threads {threads} --cell-tag CB --UMI-tag RM --gene-identifier gene_id >> {log} 2>&1"
 
 rule sorted_stitched:
     input: "results/{name}.stitched.bam".format(name=config["name"])
