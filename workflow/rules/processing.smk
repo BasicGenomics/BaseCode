@@ -141,7 +141,7 @@ rule reconstruct:
         sample_map = "results/{name}_sample_map.yaml".format(name=config["name"])
     output: temp("results/{name}.reads.aligned_trimmed_genetagged_sorted.reconstructed.bam".format(name=config["name"]))
     params: gtffile = GTFFILE
-    log: "results/logs/reconstruct.log
+    log: "results/logs/reconstruct.log"
     threads: config["threads"]
     benchmark: "results/benchmarks/reconstruction.benchmark.txt"
     shell: "{config[resource_dir]}/binaries/basic_reconstruction --input {input.bam} --output {output} --gtf {params.gtffile}.gtf --sample-map {input.sample_map} --threads {threads} >> {log} 2>&1"
