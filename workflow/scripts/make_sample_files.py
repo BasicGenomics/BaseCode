@@ -4,6 +4,7 @@ import pandas as pd
 import yaml
 import pyfastx
 from collections import Counter
+import os
 
 complement = {'A': 'T', 'C': 'G', 'G': 'C', 'T': 'A', 'N': 'N'}
 
@@ -217,13 +218,18 @@ def main():
 
     seq_order, forward_list = scan_fastq_for_order_and_orientation(fastq_file, index_sequence_map)
 
-    df_excel = pl.read_excel(samplesheet_file)
-    df_excel[0, 'PCR A'] = 'FW1_PCR_A'
-    df_excel[0, 'PCR B'] = 'FW1_PCR_B'
-    df_excel.columns = df_excel.iter_rows().__next__()
-    df_excel = df_excel.filter(pl.col("RV1") != "RV1")
+    _filename, file_extension = os.path.splitext(samplesheet_file)
 
-    samplesheet_df = df_excel.to_pandas()
+    if file_extension == '.csv':
+        samplesheet_df = pd.read_csv(samplesheet_file, index_col=0)
+    else:
+        df_excel = pl.read_excel(samplesheet_file)
+        df_excel[0, 'PCR A'] = 'FW1_PCR_A'
+        df_excel[0, 'PCR B'] = 'FW1_PCR_B'
+        df_excel.columns = df_excel.iter_rows().__next__()
+        df_excel = df_excel.filter(pl.col("RV1") != "RV1")
+
+        samplesheet_df = df_excel.to_pandas()
 
     samplesheet_df["FW1_PCR_A_SEQ"] = samplesheet_df.apply(lambda row: index_sequence_map[row['FW1_PCR_A']], axis=1)
     samplesheet_df["RV1_SEQ"] = samplesheet_df.apply(lambda row: index_sequence_map[row['RV1']], axis=1)

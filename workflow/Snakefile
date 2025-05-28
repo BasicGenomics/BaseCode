@@ -37,7 +37,7 @@ if "params" not in config:
     config["params"] = {}
 
 if "cutadapt" not in config["params"]:
-    config["params"]["cutadapt"] = "" "-n 2 -m 25 -q 10 -a CTGTCTCTTATACACATCT -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCA -g TTTTTTTTTTTTTTTTTTTT -g GGAGGAGGAGAGAAGA -g AAAAAAAAAAAAAAAAAAAA -A CTGTCTCTTATACACATCT -A AAAAAAAAAAAAAAAAAAAA -A AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT"
+    config["params"]["cutadapt"] = "-n 2 -m 25 -q 10 -a CTGTCTCTTATACACATCT -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCA -g TTTTTTTTTTTTTTTTTTTT -g GGAGGAGGAGAGAAGA -g AAAAAAAAAAAAAAAAAAAA -A CTGTCTCTTATACACATCT -A AAAAAAAAAAAAAAAAAAAA -A AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT"
 
 if "hisat3n" not in config["params"]:
     config["params"]["hisat3n"] = "-k 5 --max-seeds 8 --score-min L,0,-0.5 --base-change G,A --no-temp-splicesite"
