@@ -17,6 +17,7 @@ from joblib import delayed,Parallel
 from multiprocessing import Process, Manager
 from collections import Counter
 import faulthandler
+from tools import parse_gtf, filterGeneDict
 __version__ = '3.0'
 nucleotides = ['A', 'T', 'C', 'G']
 nuc_dict = {'A':0, 'T':1, 'C':2, 'G':3, 'N': 4}
@@ -448,33 +449,7 @@ def construct_stitched_molecules(infile, gtffile, cells, gene_file, contig, thre
     else:
         cell_set = None
     print('Reading gene info from {}'.format(gtffile))
-    gene_list = []
-    if gene_identifier == 'gene_id':
-        n = 1
-    elif gene_identifier == 'gene_name':
-        n = 5
-    else:
-        n = 1
-    with open(gtffile, 'r') as f:
-        for line in f:
-            l = line.split('\t')
-            if len(l) < 8:
-                continue
-            if l[2] == 'gene':
-                if contig is not None:
-                    if l[0] == contig:
-                        try:
-                            gene_list.append({'gene_id': l[8].split(' ')[n].replace('"', '').strip(';\n'), 'seqid':l[0], 'start':int(l[3]), 'end':int(l[4])})
-                        except:
-                            gene_list.append({'gene_id': l[8].split(' ')[1].replace('"', '').strip(';\n'), 'seqid':l[0], 'start':int(l[3]), 'end':int(l[4])})
-                    else:
-                        continue
-                else:
-                    try:
-                        gene_list.append({'gene_id': l[8].split(' ')[n].replace('"', '').strip(';\n'), 'seqid':l[0], 'start':int(l[3]), 'end':int(l[4])})
-                    except:
-                        gene_list.append({'gene_id': l[8].split(' ')[1].replace('"', '').strip(';\n'), 'seqid':l[0], 'start':int(l[3]), 'end':int(l[4])})
-    gene_dict = {g['gene_id']: g for g in gene_list}
+    gene_dict = filterGeneDict(parse_gtf(gtffile, None), infile)
     
     if gene_file is not None and gene_file != 'None':
         gene_set = set([line.rstrip() for line in open(gene_file)])
