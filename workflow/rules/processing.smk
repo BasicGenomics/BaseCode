@@ -139,7 +139,7 @@ rule reconstruct:
     input: bam = "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.bam".format(name=config["name"]),
         bai = "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.bam.bai".format(name=config["name"]),
         sample_map = "results/metadata/{name}_sample_map.yaml".format(name=config["name"])
-    output: temp("results/{name}.reads.aligned_trimmed_genetagged_sorted.reconstructed.bam".format(name=config["name"]))
+    output: temp("results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.reconstructed.bam".format(name=config["name"]))
     params: gtffile = GTFFILE
     log: "results/logs/reconstruct.log"
     threads: config["threads"]
