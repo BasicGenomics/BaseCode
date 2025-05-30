@@ -85,7 +85,7 @@ rule rename_tags_exon:
             nostrand = temp("results/intermediate/{name}.trimmed.aligned.nostrand.Exon.bam".format(name=config["name"]))
     log: "results/logs/rename_tags_exon.log"
     conda: "../envs/full.yaml"
-    shell: "python3 workflow/scripts/rename_tags_exon.py {input.pstrand} {input.mstrand} {input.nostrand} {output.pstrand} {output.mstrand} {output.nostrand}"
+    shell: "python3 workflow/scripts/rename_tags_exon.py {input.pstrand} {input.mstrand} {input.nostrand} {output.pstrand} {output.mstrand} {output.nostrand} > {log} 2>&1"
 
 rule assign_genes_intron:
     input: pstrand = "results/intermediate/{name}.trimmed.aligned.pstrand.Exon.bam".format(name=config["name"]),
