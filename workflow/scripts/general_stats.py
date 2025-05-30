@@ -113,9 +113,11 @@ def main():
                 df['sample_barcode'] = sample
                 df['read_pair'] = read_pair
                 sample_dfs['{}_{}'.format(sample, read_pair)] = df
-    
-    df_cell_level = pd.concat(sample_dfs,axis=0)
-    df_cell_level.index = ['_'.join([s1,s2]) for (s1,s2) in df_cell_level.index]
+    if len(sample_dfs) > 0:
+        df_cell_level = pd.concat(sample_dfs,axis=0)
+        df_cell_level.index = ['_'.join([s1,s2]) for (s1,s2) in df_cell_level.index]
+    else:
+        df_cell_level = pd.DataFrame()
 
     df_cell_level.to_csv('{}/{}_mapping_categories_per_sample.csv'.format(args.out_dir, args.prefix))
 
