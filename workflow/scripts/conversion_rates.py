@@ -11,6 +11,8 @@ from joblib import delayed,Parallel
 from multiprocessing import Process, Manager
 from pyfaidx import Fasta
 import itertools
+from tools import parse_gtf, filterGeneDict, determine_gene_tag
+
 
 
 def base_conversion_complement(base_conversions):
@@ -31,58 +33,6 @@ def find_eligible_positions(fasta_file, base_conversions, g_dict):
 
     return whole_sequence, eligible_position_set
 
-def parse_gtf_gene_name(gtffile, contig, ban_set=set()):
-    gene_list = []
-    with open(gtffile, 'r') as f:
-        for line in f:
-            l = line.split('\t')
-            if len(l) < 8:
-                continue
-            if l[2] == 'gene':
-                if l[2] in ban_set:
-                    continue
-                if contig is not None:
-                    if l[0] == contig:
-                        try:
-                            gene_list.append({'gene_id': l[8].split(' ')[5].replace('"', '').strip(';'), 'seqid':l[0], 'start':int(l[3]), 'end':int(l[4]), 'strand': l[6]})
-                        except:
-                            gene_list.append({'gene_id': l[8].split(' ')[1].replace('"', '').strip(';'), 'seqid':l[0], 'start':int(l[3]), 'end':int(l[4]), 'strand': l[6]})
-                    else:
-                        continue
-                else:
-                    try:
-                        gene_list.append({'gene_id': l[8].split(' ')[5].replace('"', '').strip(';'), 'seqid':l[0], 'start':int(l[3]), 'end':int(l[4]), 'strand': l[6]})
-                    except:
-                        gene_list.append({'gene_id': l[8].split(' ')[1].replace('"', '').strip(';'), 'seqid':l[0], 'start':int(l[3]), 'end':int(l[4]), 'strand': l[6]})
-    gene_dict = {g['gene_id']: g for g in gene_list}
-    return gene_dict
-
-def determine_gene_tag(read):
-    if read.has_tag('GE'):
-        gene_exon = read.get_tag('GE')
-    else:
-        gene_exon = 'Unassigned'
-    if read.has_tag('GI'):
-        gene_intron = read.get_tag('GI')
-    else:
-        gene_intron = 'Unassigned'
-    # if it maps to the intron or exon of a gene
-    if gene_intron != 'Unassigned' or gene_exon != 'Unassigned':
-        # if it is a junction read
-        if gene_intron == gene_exon:
-            gene = gene_intron
-            # if it's an only intronic read
-        elif gene_intron != 'Unassigned' and gene_exon == 'Unassigned':
-            gene = gene_intron
-            # if it's an only exonic read
-        elif gene_exon != 'Unassigned' and gene_intron == 'Unassigned':
-            gene = gene_exon
-            # if the exon and intron gene tag contradict each other
-        else:
-            gene = ''
-    else:
-        gene = ''
-    return gene
 
 def get_insertions_locs(cigtuples):
     insertion_locs = []
@@ -173,19 +123,7 @@ def get_conversion_stats_per_cell(bam_infile,fasta_file, base_conversions, g_dic
         sc_per_cell[cell].update(specific_conversions)
         tc_per_cell[cell].update(total_content)
     return sc_per_cell, tc_per_cell
-def filterGeneDict(gene_dict, bam_infile):
-        bam = pysam.AlignmentFile(bam_infile,'rb')
-        contigs = {d['SN'] for d in bam.header['SQ']}
-        new_gene_dict = {}
-        i = 0
-        for gene, g_dict in gene_dict.items():
-            if g_dict['seqid'] not in contigs:
-                i += 1
-                continue
-            new_gene_dict[gene] = g_dict
-        bam.close()
-        print("Filtered {} genes which are not found in bam file".format(i))
-        return new_gene_dict
+
 def main():
     parser = argparse.ArgumentParser(description='Calculate conversion rates', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('-i','--input',metavar='input', type=str, help='Input .bam file')
@@ -216,7 +154,7 @@ def main():
    
     samplesheet_df = pd.read_csv(samplesheet_file, index_col=0)
 
-    gene_dict = filterGeneDict(parse_gtf_gene_name(gtffile, None), bam_infile)
+    gene_dict = filterGeneDict(parse_gtf(gtffile, None), bam_infile)
     
     base_conversions = args.base_conversions
 

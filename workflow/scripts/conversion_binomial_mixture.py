@@ -11,7 +11,7 @@ from joblib import delayed,Parallel
 from multiprocessing import Process, Manager
 from pyfaidx import Fasta
 import itertools
-
+from tools import parse_gtf, filterGeneDict, determine_gene_tag
 
 import pandas as pd
 import numpy as np
@@ -460,58 +460,10 @@ def get_whole_sequence(fasta_file, g_dict):
     whole_sequence = fasta_ref[g_dict['seqid']][g_dict['start']:g_dict['end']].seq.upper()
 
     return whole_sequence
-def parse_gtf_gene_name(gtffile, contig, ban_set=set()):
-    gene_list = []
-    with open(gtffile, 'r') as f:
-        for line in f:
-            l = line.split('\t')
-            if len(l) < 8:
-                continue
-            if l[2] == 'gene':
-                if l[2] in ban_set:
-                    continue
-                if contig is not None:
-                    if l[0] == contig:
-                        try:
-                            gene_list.append({'gene_id': l[8].split(' ')[5].replace('"', '').strip(';'), 'seqid':l[0], 'start':int(l[3]), 'end':int(l[4]), 'strand': l[6]})
-                        except:
-                            gene_list.append({'gene_id': l[8].split(' ')[1].replace('"', '').strip(';'), 'seqid':l[0], 'start':int(l[3]), 'end':int(l[4]), 'strand': l[6]})
-                    else:
-                        continue
-                else:
-                    try:
-                        gene_list.append({'gene_id': l[8].split(' ')[5].replace('"', '').strip(';'), 'seqid':l[0], 'start':int(l[3]), 'end':int(l[4]), 'strand': l[6]})
-                    except:
-                        gene_list.append({'gene_id': l[8].split(' ')[1].replace('"', '').strip(';'), 'seqid':l[0], 'start':int(l[3]), 'end':int(l[4]), 'strand': l[6]})
-    gene_dict = {g['gene_id']: g for g in gene_list}
-    return gene_dict
 
-def determine_gene_tag(read):
-    if read.has_tag('GE'):
-        gene_exon = read.get_tag('GE')
-    else:
-        gene_exon = 'Unassigned'
-    if read.has_tag('GI'):
-        gene_intron = read.get_tag('GI')
-    else:
-        gene_intron = 'Unassigned'
-    # if it maps to the intron or exon of a gene
-    if gene_intron != 'Unassigned' or gene_exon != 'Unassigned':
-        # if it is a junction read
-        if gene_intron == gene_exon:
-            gene = gene_intron
-            # if it's an only intronic read
-        elif gene_intron != 'Unassigned' and gene_exon == 'Unassigned':
-            gene = gene_intron
-            # if it's an only exonic read
-        elif gene_exon != 'Unassigned' and gene_intron == 'Unassigned':
-            gene = gene_exon
-            # if the exon and intron gene tag contradict each other
-        else:
-            gene = ''
-    else:
-        gene = ''
-    return gene
+
+
+
 
 def get_insertions_locs(cigtuples):
     insertion_locs = []
@@ -577,18 +529,7 @@ def find_base_conversions(read, whole_sequence, start_offset):
     return specific_content, total_content
 
 
-def filterGeneDict(gene_dict, bam_infile):
-        bam = pysam.AlignmentFile(bam_infile,'rb')
-        contigs = {d['SN'] for d in bam.header['SQ']}
-        new_gene_dict = {}
-        i = 0
-        for gene, g_dict in gene_dict.items():
-            if g_dict['seqid'] not in contigs:
-                i += 1
-                continue
-            new_gene_dict[gene] = g_dict
-        bam.close()
-        return new_gene_dict
+
 def get_consistency(read, g_dict, read_type):
     if read.is_reverse and (g_dict['strand'] == '-'):
         if read_type == 'FP_read':
@@ -605,6 +546,7 @@ def get_consistency(read, g_dict, read_type):
             return False
         else:
             return True
+
 def func(bamfile,fasta_file, g_dict, conversion_plus, conversion_minus, coverage_plus, coverage_minus):
     whole_sequence = get_whole_sequence(fasta_file, g_dict)
     bam = pysam.AlignmentFile(bamfile)
@@ -758,7 +700,7 @@ def main():
     coverage_plus = 'G'
     coverage_minus = 'C'
 
-    gene_dict = filterGeneDict(parse_gtf_gene_name(gtffile, None), bam_infile)
+    gene_dict = filterGeneDict(parse_gtf(gtffile, None), bam_infile)
 
     res = Parallel(n_jobs=threads, verbose = 3, backend='multiprocessing')(delayed(func)(bam_infile,fastafile, g_dict, conversion_plus, conversion_minus, coverage_plus, coverage_minus) for g,g_dict in gene_dict.items())
 
