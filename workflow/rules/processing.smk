@@ -11,8 +11,8 @@ rule make_barcode_files:
 
 rule parse_fastq:
     input: r1_in = config["r1"], r2_in = config["r2"], pbcpath = "results/metadata/{name}_sample_barcodes.txt".format(name=config["name"]), cell_barcodes = "results/metadata/{name}_cell_barcodes.txt".format(name=config["name"]), sample_map = "results/metadata/{name}_sample_map.yaml".format(name=config["name"]), readtype_map = "results/metadata/{name}_readtype_map.yaml".format(name=config["name"])
-    output: r1_out = temp("results/{name}.read1.fastq.gz".format(name=config["name"])),
-            r2_out = temp("results/{name}.read2.fastq.gz".format(name=config["name"]))
+    output: r1_out = temp("results/intermediate/{name}.read1.fastq.gz".format(name=config["name"])),
+            r2_out = temp("results/intermediate/{name}.read2.fastq.gz".format(name=config["name"]))
     log: "results/logs/parse_fastq.log"
     benchmark: "results/benchmarks/parse_fastq.benchmark.txt"
     params: comp_threads = int(config["threads"]*0.2),
@@ -24,8 +24,8 @@ rule trim_fastq:
            r2 = "results/intermediate/{name}.read2.fastq.gz".format(name=config["name"])
     output: r1 = temp("results/intermediate/{name}.trimmed.read1.fastq.gz".format(name=config["name"])),
            r2 = temp("results/intermediate/{name}.trimmed.read2.fastq.gz".format(name=config["name"])),
-           r1_short = temp("results/{name}.tooshort.read1.fastq.gz".format(name=config["name"])),
-           r2_short = temp("results/{name}.tooshort.read2.fastq.gz".format(name=config["name"]))
+           r1_short = temp("results/intermediate/{name}.tooshort.read1.fastq.gz".format(name=config["name"])),
+           r2_short = temp("results/intermediate/{name}.tooshort.read2.fastq.gz".format(name=config["name"]))
     log: stdout = "results/logs/trim_fastq.log",
          summary = "results/summaries/{name}.cutadapt.json".format(name=config["name"])
     benchmark: "results/benchmarks/trim_fastq.benchmark.txt"
