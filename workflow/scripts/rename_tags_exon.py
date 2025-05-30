@@ -34,6 +34,7 @@ def main(arguments):
             XT = read.get_tag('XT')
             read.set_tag('GE', XT)
         tags = read.get_tags(with_value_type=True)
+        print(tags[0][0], type(tags[0][0]))
         tags = [t for t in tags if t[0] not in ['XS', 'XT', 'XN']]
         read.set_tags(tags)
         mstrand_out.write(read)
@@ -47,6 +48,7 @@ def main(arguments):
             XT = read.get_tag('XT')
             read.set_tag('GE', XT)
         tags = read.get_tags(with_value_type=True)
+        print(tags[0][0], type(tags[0][0]))
         tags = [t for t in tags if t[0] not in ['XS', 'XT', 'XN']]
         read.set_tags(tags)
         nostrand_out.write(read)
