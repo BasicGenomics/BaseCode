@@ -19,6 +19,9 @@ def main(arguments):
         if read.has_tag('XT'):
             XT = read.get_tag('XT')
             read.set_tag('GI', XT)
+        tags = read.get_tags()
+        tags = [t for t in tags if t[0] not in ['XS', 'XT', 'XN']]
+        read.set_tags(tags)
         pstrand_out.write(read)
     for read in mstrand_in.fetch(until_eof=True):
         if read.has_tag('XS'):
@@ -29,6 +32,9 @@ def main(arguments):
         if read.has_tag('XT'):
             XT = read.get_tag('XT')
             read.set_tag('GI', XT)
+        tags = read.get_tags()
+        tags = [t for t in tags if t[0] not in ['XS', 'XT', 'XN']]
+        read.set_tags(tags)
         mstrand_out.write(read)
     for read in nostrand_in.fetch(until_eof=True):
         if read.has_tag('XS'):
@@ -39,6 +45,9 @@ def main(arguments):
         if read.has_tag('XT'):
             XT = read.get_tag('XT')
             read.set_tag('GI', XT)
+        tags = read.get_tags()
+        tags = [t for t in tags if t[0] not in ['XS', 'XT', 'XN']]
+        read.set_tags(tags)
         nostrand_out.write(read)
     
     pstrand_in.close()

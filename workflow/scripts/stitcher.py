@@ -450,6 +450,8 @@ def construct_stitched_molecules(infile, gtffile, cells, gene_file, contig, thre
         cell_set = None
     print('Reading gene info from {}'.format(gtffile))
     gene_dict = filterGeneDict(parse_gtf(gtffile, None), infile)
+
+    print(list(gene_dict.keys())[0])
     
     if gene_file is not None and gene_file != 'None':
         gene_set = set([line.rstrip() for line in open(gene_file)])
