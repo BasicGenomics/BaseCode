@@ -72,7 +72,7 @@ rule assign_genes_exon:
     featureCounts -t exon --primary -g gene_name -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_positive} -o results/intermediate/pos.tmp {input.pstrand} >> {log} 2>&1
     featureCounts -t exon --primary -g gene_name -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_negative} -o results/intermediate/neg.tmp {input.mstrand} >> {log} 2>&1
     featureCounts -t exon --primary -g gene_name -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile} -o results/intermediate/no.tmp {input.nostrand} >> {log} 2>&1
-    rm results/pos.tmp results/neg.tmp results/no.tmp
+    rm results/intermediate/pos.tmp results/intermediate/neg.tmp results/intermediate/no.tmp
     mkdir -p results/.tmp_bgab/
     """
 
@@ -103,7 +103,7 @@ rule assign_genes_intron:
     featureCounts -t intron --primary -g gene_name -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_positive} -o intermediate/results/pos.tmp {input.pstrand} >> {log} 2>&1
     featureCounts -t intron --primary -g gene_name -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_negative} -o intermediate/results/neg.tmp {input.mstrand} >> {log} 2>&1
     featureCounts -t intron --primary -g gene_name -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile} -o intermediate/results/no.tmp {input.nostrand} >> {log} 2>&1
-    rm results/pos.tmp results/neg.tmp results/no.tmp
+    rm results/intermediate/pos.tmp results/intermediate/neg.tmp results/intermediate/no.tmp
     mkdir -p results/.tmp_bgab/
     """
 rule rename_tags_intron:
