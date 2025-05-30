@@ -69,9 +69,9 @@ rule assign_genes_exon:
             gtffile_negative = "{}.negative.gtf".format(GTFFILE)
     conda: "../envs/full.yaml"
     shell:"""
-    featureCounts -t exon --primary -g gene_name -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_positive} -o results/pos.tmp {input.pstrand} >> {log} 2>&1
-    featureCounts -t exon --primary -g gene_name -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_negative} -o results/neg.tmp {input.mstrand} >> {log} 2>&1
-    featureCounts -t exon --primary -g gene_name -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile} -o results/no.tmp {input.nostrand} >> {log} 2>&1
+    featureCounts -t exon --primary -g gene_name -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_positive} -o results/intermediate/pos.tmp {input.pstrand} >> {log} 2>&1
+    featureCounts -t exon --primary -g gene_name -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_negative} -o results/intermediate/neg.tmp {input.mstrand} >> {log} 2>&1
+    featureCounts -t exon --primary -g gene_name -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile} -o results/intermediate/no.tmp {input.nostrand} >> {log} 2>&1
     rm results/pos.tmp results/neg.tmp results/no.tmp
     mkdir -p results/.tmp_bgab/
     """
@@ -100,9 +100,9 @@ rule assign_genes_intron:
             gtffile_negative = "{}.negative.gtf".format(GTFFILE)
     conda: "../envs/full.yaml"
     shell:"""
-    featureCounts -t intron --primary -g gene_name -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_positive} -o results/pos.tmp {input.pstrand} >> {log} 2>&1
-    featureCounts -t intron --primary -g gene_name -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_negative} -o results/neg.tmp {input.mstrand} >> {log} 2>&1
-    featureCounts -t intron --primary -g gene_name -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile} -o results/no.tmp {input.nostrand} >> {log} 2>&1
+    featureCounts -t intron --primary -g gene_name -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_positive} -o intermediate/results/pos.tmp {input.pstrand} >> {log} 2>&1
+    featureCounts -t intron --primary -g gene_name -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_negative} -o intermediate/results/neg.tmp {input.mstrand} >> {log} 2>&1
+    featureCounts -t intron --primary -g gene_name -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile} -o intermediate/results/no.tmp {input.nostrand} >> {log} 2>&1
     rm results/pos.tmp results/neg.tmp results/no.tmp
     mkdir -p results/.tmp_bgab/
     """
