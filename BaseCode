@@ -24,6 +24,7 @@ if __name__ == '__main__':
                           help='Number of threads to allocate for analysis')
     aparser.add_argument('--no-conda', action='store_true',
                          help='Flag to NOT use conda installation.')
+    aparser.add_argument('--verbose', action='store_true', help='Verbose output')
     
     print(logo)
 
@@ -34,12 +35,15 @@ if __name__ == '__main__':
     else:
         conda_arg = '--use-conda'
 
-    snakemake_cmd = 'snakemake -j {} -q all --rerun-incomplete {} '.format(args.threads, conda_arg)
+    snakemake_cmd = 'snakemake -j {} --rerun-incomplete {} '.format(args.threads, conda_arg)
 
     if args.config != '':
         snakemake_cmd += '--configfile {} '.format(args.config)
 
-    snakemake_cmd += '--config threads={}'.format(args.threads)
+    snakemake_cmd += '--config threads={} '.format(args.threads)
+
+    if not args.verbose:
+        snakemake_cmd += '-q all'
 
     os.system(snakemake_cmd)
 
