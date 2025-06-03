@@ -37,7 +37,9 @@ if __name__ == '__main__':
     snakemake_cmd = 'snakemake -j {} --rerun-incomplete {} '.format(args.threads, conda_arg)
 
     if args.config != '':
-        snakemake_cmd += '--configfile {}'.format(args.config)
+        snakemake_cmd += '--configfile {} '.format(args.config)
+
+    snakemake_cmd += '--config threads={}'.format(args.threads)
 
     os.system(snakemake_cmd)
     
