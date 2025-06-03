@@ -34,7 +34,7 @@ if __name__ == '__main__':
     else:
         conda_arg = '--use-conda'
 
-    snakemake_cmd = 'snakemake -j {} --rerun-incomplete {} '.format(args.threads, conda_arg)
+    snakemake_cmd = 'snakemake -j {} -q all --rerun-incomplete {} '.format(args.threads, conda_arg)
 
     if args.config != '':
         snakemake_cmd += '--configfile {} '.format(args.config)
