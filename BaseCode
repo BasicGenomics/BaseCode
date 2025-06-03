@@ -22,7 +22,7 @@ if __name__ == '__main__':
     aparser.add_argument('-c','--config', help='Path to config yaml file', default = '')
     aparser.add_argument('-t','--threads', default=20, type=int,
                           help='Number of threads to allocate for analysis')
-    aparser.add_argument('--no-conda', action='store_false',
+    aparser.add_argument('--no-conda', action='store_true',
                          help='Flag to NOT use conda installation.')
     
     print(logo)
