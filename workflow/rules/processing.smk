@@ -10,8 +10,9 @@ rule make_barcode_files:
         readtype_map = "results/metadata/{name}_readtype_map.yaml".format(name=config["name"]),
         samplesheet_out = "results/metadata/{name}_samplesheet.csv".format(name=config["name"])
     params: index_sequences = "config/index_sequences.yaml"
+    log: "results/logs/make_barcode_files.log"
     conda: "../envs/full.yaml"
-    shell: "echo Creating barcode files && python3 workflow/scripts/make_sample_files.py -s {input.samplesheet} --fastq {input.fastq} --index-sequences {params.index_sequences} --sample-barcodes {output.barcodes} --cell-barcodes {output.cell_barcodes} --sample-map {output.sample_map} --readtype-map {output.readtype_map} --samplesheet-out {output.samplesheet_out}"
+    shell: "echo Creating barcode files && python3 workflow/scripts/make_sample_files.py -s {input.samplesheet} --fastq {input.fastq} --index-sequences {params.index_sequences} --sample-barcodes {output.barcodes} --cell-barcodes {output.cell_barcodes} --sample-map {output.sample_map} --readtype-map {output.readtype_map} --samplesheet-out {output.samplesheet_out} > {log} 2>&1"
 
 rule parse_fastq:
     input: r1_in = config["r1"], r2_in = config["r2"], pbcpath = "results/metadata/{name}_sample_barcodes.txt".format(name=config["name"]), cell_barcodes = "results/metadata/{name}_cell_barcodes.txt".format(name=config["name"]), sample_map = "results/metadata/{name}_sample_map.yaml".format(name=config["name"]), readtype_map = "results/metadata/{name}_readtype_map.yaml".format(name=config["name"])
@@ -72,6 +73,7 @@ rule assign_genes_exon:
             gtffile_positive = "{}.positive.gtf".format(GTFFILE),
             gtffile_negative = "{}.negative.gtf".format(GTFFILE)
     conda: "../envs/full.yaml"
+    threads: config["threads"]
     shell:"""
     featureCounts -t exon --primary -g gene_name -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_positive} -o results/intermediate/pos.tmp {input.pstrand} >> {log} 2>&1
     featureCounts -t exon --primary -g gene_name -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_negative} -o results/intermediate/neg.tmp {input.mstrand} >> {log} 2>&1
@@ -104,6 +106,7 @@ rule assign_genes_intron:
             gtffile_positive = "{}.positive.gtf".format(GTFFILE),
             gtffile_negative = "{}.negative.gtf".format(GTFFILE)
     conda: "../envs/full.yaml"
+    threads: config["threads"]
     shell:"""
     featureCounts -t intron --primary -g gene_name -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_positive} -o results/intermediate/pos.tmp {input.pstrand} >> {log} 2>&1
     featureCounts -t intron --primary -g gene_name -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_negative} -o results/intermediate/neg.tmp {input.mstrand} >> {log} 2>&1
@@ -130,7 +133,8 @@ rule concatenate_and_sort:
     benchmark: "results/benchmarks/concatenate_and_sort.benchmark.txt"
     output: "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.bam".format(name=config["name"])
     conda: "../envs/full.yaml"
-    shell: "samtools cat {input.nostrand} {input.pstrand} {input.mstrand} | samtools sort -m 1000M -@ {config[threads]} -T results/.tmp_bgab/sorttmp. -o {output} >> {log} 2>&1"
+    threads: config["threads"]
+    shell: "samtools cat {input.nostrand} {input.pstrand} {input.mstrand} | samtools sort -m 1000M -@ {threads} -T results/.tmp_bgab/sorttmp. -o {output} >> {log} 2>&1"
 
 rule first_index:
     input: "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.bam".format(name=config["name"])
@@ -138,6 +142,7 @@ rule first_index:
     params:
         extra="",
     threads: config["threads"]
+    log: "results/logs/first_index.log"
     wrapper:
         "v3.3.3/bio/samtools/index" 
 
@@ -169,6 +174,7 @@ rule index_reconstructed:
     params:
         extra="",
     threads: config["threads"]
+    log: "results/logs/index_reconstructed.log"
     wrapper:
         "v3.3.3/bio/samtools/index"
 
@@ -198,6 +204,7 @@ rule index_stitched:
     params:
         extra="",
     threads: config["threads"]
+    log: "results/logs/index_stitched.log"
     wrapper:
         "v3.3.3/bio/samtools/index"
 
@@ -214,6 +221,6 @@ rule sort_molecule_bams:
     conda: "../envs/full.yaml"
     shell:"""
     echo Creating final output file
-    samtools sort -m 1000M -@ {config[threads]} -T results/.tmp_bgab/sorttmp. -o {output.molecules_out} {input.molecules_out} &> {log}
+    samtools sort -m 1000M -@ {config[threads]} -T results/.tmp_bgab/sorttmp. -o {output.molecules_out} {input.molecules_out} > {log} 2>&1
     samtools index -@ {config[threads]} {output.molecules_out}
     """
