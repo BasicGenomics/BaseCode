@@ -3,6 +3,7 @@ channels:
 - bioconda
 - nodefaults
 dependencies:
+- python=3.11
 - cutadapt=4.6
 - samtools=1.19
 - pyyaml=6.0
@@ -20,7 +21,6 @@ dependencies:
 - scipy=1.10.0
 - joblib=1.2.0
 - pyfaidx=0.7.1
-- pytorch=2.3.1
 - pygtrie=2.5.0
 - portion=2.4.2
 - numpy=1.24.2
