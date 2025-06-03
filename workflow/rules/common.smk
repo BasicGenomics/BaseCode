@@ -15,7 +15,6 @@ def get_final_output(wildcards):
     "results/QC_files/{name}_status_fraction_per_gene.csv".format(name=config["name"]),
     "results/QC_files/{name}_insert_sizes_per_sample_barcode.csv".format(name=config["name"]),
     "results/QC_files/{name}_double_reads_per_sample_barcode.csv".format(name=config["name"]),
-    "results/QC_files/{name}_conversion_binomial_mixture.csv".format(name=config["name"]),
     "results/logs/python_version.log"]
 
     return final_output
