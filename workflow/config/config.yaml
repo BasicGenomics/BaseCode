@@ -5,4 +5,3 @@ r1: '/home/bg/runs/test_project/fastq/test_project_read_1.fq.gz'
 r2: '/home/bg/runs/test_project/fastq/test_project_read_2.fq.gz'
 i1: ''
 i2: ''
-threads: 20
