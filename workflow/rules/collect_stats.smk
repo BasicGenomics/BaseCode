@@ -15,7 +15,7 @@ rule insertion_sizes:
 rule conversion:
     input: bam = "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.bam".format(name=config["name"]), bai = "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.bam.bai".format(name=config["name"]), samplesheet = "results/metadata/{name}_samplesheet.csv".format(name=config["name"])
     output: "results/QC_files/{name}_conversion_rate_pos.csv".format(name=config["name"]),"results/QC_files/{name}_conversion_rate_total.csv".format(name=config["name"])
-    params: fasta = REFFILE, gtf =  "{}.gtf".format(GTFFILE)
+    params: fasta = REFFILE, gtf =  "{}.gff3".format(GTFFILE)
     threads: int(config["threads"]/2)
     conda: "../envs/full.yaml"
     log: "results/logs/conversion.log"

@@ -1,4 +1,5 @@
 rule log_python_version:
+    conda: "../envs/full.yaml"
     output: "results/logs/python_version.log"
     shell: "python3 --version > {output}"
 
@@ -69,9 +70,9 @@ rule assign_genes_exon:
             nostrand = temp("results/intermediate/{name}.trimmed.aligned.nostrand.bam.featureCounts.bam".format(name=config["name"]))
     log: "results/logs/assign_genes.log"
     benchmark: "results/benchmarks/assign_genes.benchmark.txt"
-    params: gtffile = "{}.gtf".format(GTFFILE),
-            gtffile_positive = "{}.positive.gtf".format(GTFFILE),
-            gtffile_negative = "{}.negative.gtf".format(GTFFILE)
+    params: gtffile = "{}.gff3".format(GTFFILE),
+            gtffile_positive = "{}.positive.gff3".format(GTFFILE),
+            gtffile_negative = "{}.negative.gff3".format(GTFFILE)
     conda: "../envs/full.yaml"
     threads: config["threads"]
     shell:"""
@@ -102,9 +103,9 @@ rule assign_genes_intron:
             nostrand = temp("results/intermediate/{name}.trimmed.aligned.nostrand.Exon.bam.featureCounts.bam".format(name=config["name"]))
     log: "results/logs/assign_genes.log"
     benchmark: "results/benchmarks/assign_genes.benchmark.txt"
-    params: gtffile = "{}.gtf".format(GTFFILE),
-            gtffile_positive = "{}.positive.gtf".format(GTFFILE),
-            gtffile_negative = "{}.negative.gtf".format(GTFFILE)
+    params: gtffile = "{}.gff3".format(GTFFILE),
+            gtffile_positive = "{}.positive.gff3".format(GTFFILE),
+            gtffile_negative = "{}.negative.gff3".format(GTFFILE)
     conda: "../envs/full.yaml"
     threads: config["threads"]
     shell:"""
@@ -155,7 +156,7 @@ rule reconstruct:
     log: "results/logs/reconstruct.log"
     threads: config["threads"]
     benchmark: "results/benchmarks/reconstruction.benchmark.txt"
-    shell: "echo Reconstructing reads && {config[resource_dir]}/binaries/basic_reconstruction --input {input.bam} --output {output} --gtf {params.gtffile}.gtf --sample-map {input.sample_map} --threads {threads} >> {log} 2>&1"
+    shell: "echo Reconstructing reads && {config[resource_dir]}/binaries/basic_reconstruction --input {input.bam} --output {output} --gtf {params.gtffile}.gff3 --sample-map {input.sample_map} --threads {threads} >> {log} 2>&1"
 
 rule sort_reconstructed:
     input: "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.reconstructed.bam".format(name=config["name"])
@@ -186,7 +187,7 @@ rule stitch_reconstruction:
     params: gtffile = GTFFILE
     log: "results/logs/stitch_reconstruction.log"
     conda: "../envs/full.yaml"
-    shell: "echo Combining reads into synthetic long reads && python3 workflow/scripts/stitcher.py --input {input.bam} --output {output} --gtf {params.gtffile}.gtf --threads {threads} --cell-tag CB --UMI-tag RM --gene-identifier gene_id >> {log} 2>&1"
+    shell: "echo Combining reads into synthetic long reads && python3 workflow/scripts/stitcher.py --input {input.bam} --output {output} --gtf {params.gtffile}.gff3 --threads {threads} --cell-tag CB --UMI-tag RM --gene-identifier gene_id >> {log} 2>&1"
 
 rule sorted_stitched:
     input: "results/intermediate/{name}.stitched.bam".format(name=config["name"])
