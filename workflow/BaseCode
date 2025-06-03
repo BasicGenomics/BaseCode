@@ -1,0 +1,43 @@
+#!/usr/bin/env python3
+
+from argparse import ArgumentParser
+import os
+
+logo = r"""
+╔═══════════════════════════════════════════════════════════════════════╗
+║                                                                       ║
+║    ██████╗  █████╗ ███████╗███████╗ ██████╗ ██████╗ ██████╗  ███████╗ ║
+║    ██╔══██╗██╔══██╗██╔════╝██╔════╝██╔════╝██╔═══██╗██╔══██╗ ██╔════╝ ║
+║    ██████╔╝███████║███████╗█████╗  ██║     ██║   ██║██║  ██║ █████╗   ║
+║    ██╔══██╗██╔══██║╚════██║██╔══╝  ██║     ██║   ██║██║  ██║ ██╔══╝   ║
+║    ██████╔╝██║  ██║███████║███████╗╚██████╗╚██████╔╝██████╔╝ ███████╗ ║
+║    ╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝ ╚═════╝ ╚═════╝ ╚═════╝  ╚══════╝ ║
+║    version 1.0 Stockholm Sky Release                                  ║
+╚═══════════════════════════════════════════════════════════════════════╝"""
+
+if __name__ == '__main__':
+
+    aparser = ArgumentParser()
+
+    aparser.add_argument('-c','--config', help='Path to config yaml file', default = '')
+    aparser.add_argument('-t','--threads', default=20, type=int,
+                          help='Number of threads to allocate for analysis')
+    aparser.add_argument('--no-conda', action='store_false',
+                         help='Flag to NOT use conda installation.')
+    
+    print(logo)
+
+    args = aparser.parse_args()
+
+    if args.no_conda:
+        conda_arg = ''
+    else:
+        conda_arg = '--use-conda'
+
+    snakemake_cmd = 'snakemake -j {} --rerun-incomplete {} '.format(args.threads, conda_arg)
+
+    if args.config != '':
+        snakemake_cmd += '--configfile {}'.format(args.config)
+
+    os.system(snakemake_cmd)
+    
