@@ -23,7 +23,7 @@ rule parse_fastq:
     benchmark: "results/benchmarks/parse_fastq.benchmark.txt"
     params: comp_threads = int(config["threads"]*0.2),
             proc_threads = config["threads"]-int(config["threads"]*0.2)
-    shell: "echo Parsing reads && {config[resource_dir]}/binaries/parse_fastq --read1 {input.r1_in} --read2 {input.r2_in} --r1-out {output.r1_out} --r2-out {output.r2_out} --cbcpath {input.cell_barcodes} --pbcpath {input.pbcpath} --readtype-structure {input.readtype_map} --index-layout {config[index_layout]} --sample-structure {input.sample_map} --processing-threads {params.proc_threads} --compression-threads {params.comp_threads}  --umilen {config[umilen]} --dtlen {config[dtlen]} --dt-cutoff {config[dt_cutoff]} --ts-sequence {config[ts_sequence]} --ts-pad {config[ts_pad]} --ts-cutoff {config[ts_cutoff]} > {log} 2>&1"
+    shell: "echo Parsing reads && binaries/parse_fastq --read1 {input.r1_in} --read2 {input.r2_in} --r1-out {output.r1_out} --r2-out {output.r2_out} --cbcpath {input.cell_barcodes} --pbcpath {input.pbcpath} --readtype-structure {input.readtype_map} --index-layout {config[index_layout]} --sample-structure {input.sample_map} --processing-threads {params.proc_threads} --compression-threads {params.comp_threads}  --umilen {config[umilen]} --dtlen {config[dtlen]} --dt-cutoff {config[dt_cutoff]} --ts-sequence {config[ts_sequence]} --ts-pad {config[ts_pad]} --ts-cutoff {config[ts_cutoff]} > {log} 2>&1"
 
 rule trim_fastq:
     input: r1 = "results/intermediate/{name}.read1.fastq.gz".format(name=config["name"]),
@@ -49,7 +49,7 @@ rule map_reads:
     benchmark: "results/benchmarks/map_reads.benchmark.txt"
     params: splicesites = SPLICESITES, genomeref = GENOMEREF, cores_hisat = cores_hisat, cores_samtools = cores_samtools
     conda: "../envs/full.yaml"
-    shell: "echo Mapping reads && {config[resource_dir]}/binaries/hisat-3n --new-summary --summary-file {log.summary} {config[params][hisat3n]} -p {params.cores_hisat} --known-splicesite-infile {params.splicesites} -x {params.genomeref} -1 {input.r1} -2 {input.r2} | samtools view -F 256 -b -@ {params.cores_samtools} -o {output} > {log.stdout} 2>&1"
+    shell: "echo Mapping reads && binaries/hisat-3n --new-summary --summary-file {log.summary} {config[params][hisat3n]} -p {params.cores_hisat} --known-splicesite-infile {params.splicesites} -x {params.genomeref} -1 {input.r1} -2 {input.r2} | samtools view -F 256 -b -@ {params.cores_samtools} -o {output} > {log.stdout} 2>&1"
 
 rule split_bam_by_strand:
     input: "results/intermediate/{name}.trimmed.aligned.bam".format(name=config["name"])
@@ -156,7 +156,7 @@ rule reconstruct:
     log: "results/logs/reconstruct.log"
     threads: config["threads"]
     benchmark: "results/benchmarks/reconstruction.benchmark.txt"
-    shell: "echo Reconstructing reads && {config[resource_dir]}/binaries/basic_reconstruction --input {input.bam} --output {output} --gtf {params.gtffile}.gff3 --sample-map {input.sample_map} --threads {threads} >> {log} 2>&1"
+    shell: "echo Reconstructing reads && binaries/basic_reconstruction --input {input.bam} --output {output} --gtf {params.gtffile}.gff3 --sample-map {input.sample_map} --threads {threads} >> {log} 2>&1"
 
 rule sort_reconstructed:
     input: "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.reconstructed.bam".format(name=config["name"])

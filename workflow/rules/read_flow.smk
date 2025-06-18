@@ -8,7 +8,7 @@ rule fastq_processed:
     output: "results/read_flow_files/{name}_fastq_processed_stats.json".format(name=config["name"])
     threads: int(config["threads"])-1
     log: "results/logs/fastq_processed.log"
-    shell: "{config[resource_dir]}/binaries/analyze_fastq --read1 {input.r1} --read2 {input.r2} --cbcpath {input.cbcpath} --pbcpath {input.pbcpath} --threads {config[threads]} --output {output}  > {log} 2>&1"
+    shell: "binaries/analyze_fastq --read1 {input.r1} --read2 {input.r2} --cbcpath {input.cbcpath} --pbcpath {input.pbcpath} --threads {config[threads]} --output {output}  > {log} 2>&1"
 
 rule fastq_trimmed:
     input: r1 = "results/intermediate/{name}.trimmed.read1.fastq.gz".format(name=config["name"]),
@@ -18,7 +18,7 @@ rule fastq_trimmed:
     output: "results/read_flow_files/{name}_fastq_trimmed_stats.json".format(name=config["name"])
     threads: int(config["threads"])-1
     log: "results/logs/fastq_trimmed.log"
-    shell: "{config[resource_dir]}/binaries/analyze_fastq --read1 {input.r1} --read2 {input.r2} --cbcpath {input.cbcpath} --pbcpath {input.pbcpath} --threads {config[threads]} --output {output}  > {log} 2>&1"
+    shell: "binaries/analyze_fastq --read1 {input.r1} --read2 {input.r2} --cbcpath {input.cbcpath} --pbcpath {input.pbcpath} --threads {config[threads]} --output {output}  > {log} 2>&1"
 
 rule fastq_too_short:
     input: r1 = "results/intermediate/{name}.tooshort.read1.fastq.gz".format(name=config["name"]),
@@ -28,7 +28,7 @@ rule fastq_too_short:
     output: "results/read_flow_files/{name}_fastq_tooshort_stats.json".format(name=config["name"])
     threads: int(config["threads"])-1
     log: "results/logs/fastq_too_short.log"
-    shell: "{config[resource_dir]}/binaries/analyze_fastq --read1 {input.r1} --read2 {input.r2} --cbcpath {input.cbcpath} --pbcpath {input.pbcpath} --threads {config[threads]} --output {output}  > {log} 2>&1"
+    shell: "binaries/analyze_fastq --read1 {input.r1} --read2 {input.r2} --cbcpath {input.cbcpath} --pbcpath {input.pbcpath} --threads {config[threads]} --output {output}  > {log} 2>&1"
 
 rule bam_geneassigned:
     input: bam = "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.bam".format(name=config["name"]),

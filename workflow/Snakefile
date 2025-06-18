@@ -11,11 +11,11 @@ configfile: "config/config.yaml"
 
 if 'resource_dir' not in config:
     user = getpass.getuser()
-    config['resource_dir'] = '/home/{user}/BaseCode/resources/'.format(user=user)
+    config['resource_dir'] = '/user/local/app/resources/'.format(user=user)
 else:
     if config['resource_dir'] == '':
         user = getpass.getuser()
-        config['resource_dir'] = '/home/{user}/BaseCode/resources/'.format(user=user)
+        config['resource_dir'] = '/user/local/app/resources/'.format(user=user)
 
 if "index_layout" not in config:
     config["index_layout"] = "16:0-16"
