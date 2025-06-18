@@ -1,5 +1,4 @@
 cutadapt==4.6
-samtools==1.19
 pyyaml==6.0
 pandas==1.5.3
 scanpy==1.9.3
