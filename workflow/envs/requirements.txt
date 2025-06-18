@@ -1,6 +1,6 @@
 cutadapt==4.6
 pyyaml==6.0.2
-pandas==1.5.3
+pandas==2.3.0
 scanpy==1.9.3
 polars==1.1.0
 pyarrow==20.0.0
