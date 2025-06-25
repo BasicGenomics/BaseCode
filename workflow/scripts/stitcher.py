@@ -277,7 +277,7 @@ def stitch_reads(read_d, cell, gene, umi, UMI_tag):
 
     ll_list = [m.sum(axis=0) for m in sparse_csc_dict.values()]
     try:
-        ll_sums = np.stack(ll_list)
+        ll_sums = np.array(np.stack(ll_list))
     except ValueError:
         return (False, ':'.join([gene,cell,umi]))
     full_ll = logsumexp(ll_sums, axis=0)
