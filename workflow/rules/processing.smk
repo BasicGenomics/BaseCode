@@ -4,16 +4,15 @@ rule log_python_version:
     shell: "python3 --version > {output}"
 
 rule make_barcode_files:
-    input: samplesheet = config["samplesheet"], fastq = config["r2"]
+    input: samplesheet = config["samplesheet"], fastq = config["r2"], index_sequences = "resources/index_sequences.yaml"
     output: barcodes = "results/metadata/{name}_sample_barcodes.txt".format(name=config["name"]),
         cell_barcodes = "results/metadata/{name}_cell_barcodes.txt".format(name=config["name"]),
         sample_map = "results/metadata/{name}_sample_map.yaml".format(name=config["name"]),
         readtype_map = "results/metadata/{name}_readtype_map.yaml".format(name=config["name"]),
         samplesheet_out = "results/metadata/{name}_samplesheet.csv".format(name=config["name"])
-    params: index_sequences = "resources/index_sequences.yaml"
     log: "results/logs/make_barcode_files.log"
     conda: "../envs/full.yaml"
-    shell: "echo Creating barcode files && python3 workflow/scripts/make_sample_files.py -s {input.samplesheet} --fastq {input.fastq} --index-sequences {params.index_sequences} --sample-barcodes {output.barcodes} --cell-barcodes {output.cell_barcodes} --sample-map {output.sample_map} --readtype-map {output.readtype_map} --samplesheet-out {output.samplesheet_out} > {log} 2>&1"
+    shell: "echo Creating barcode files && python3 workflow/scripts/make_sample_files.py -s {input.samplesheet} --fastq {input.fastq} --index-sequences {input.index_sequences} --sample-barcodes {output.barcodes} --cell-barcodes {output.cell_barcodes} --sample-map {output.sample_map} --readtype-map {output.readtype_map} --samplesheet-out {output.samplesheet_out} > {log} 2>&1"
 
 rule parse_fastq:
     input: r1_in = config["r1"], r2_in = config["r2"], pbcpath = "results/metadata/{name}_sample_barcodes.txt".format(name=config["name"]), cell_barcodes = "results/metadata/{name}_cell_barcodes.txt".format(name=config["name"]), sample_map = "results/metadata/{name}_sample_map.yaml".format(name=config["name"]), readtype_map = "results/metadata/{name}_readtype_map.yaml".format(name=config["name"])
