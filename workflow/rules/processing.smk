@@ -4,7 +4,7 @@ rule log_python_version:
     shell: "python3 --version > {output}"
 
 rule make_barcode_files:
-    input: samplesheet = config["samplesheet"], fastq = config["r2"], index_sequences = "resources/index_sequences.yaml"
+    input: samplesheet = config["samplesheet"], fastq = config["r2"], index_sequences = "workflow/resources/index_sequences.yaml"
     output: barcodes = "results/metadata/{name}_sample_barcodes.txt".format(name=config["name"]),
         cell_barcodes = "results/metadata/{name}_cell_barcodes.txt".format(name=config["name"]),
         sample_map = "results/metadata/{name}_sample_map.yaml".format(name=config["name"]),
