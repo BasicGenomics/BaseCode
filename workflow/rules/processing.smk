@@ -10,7 +10,7 @@ rule make_barcode_files:
         sample_map = "results/metadata/{name}_sample_map.yaml".format(name=config["name"]),
         readtype_map = "results/metadata/{name}_readtype_map.yaml".format(name=config["name"]),
         samplesheet_out = "results/metadata/{name}_samplesheet.csv".format(name=config["name"])
-    params: index_sequences = "config/index_sequences.yaml"
+    params: index_sequences = "resources/index_sequences.yaml"
     log: "results/logs/make_barcode_files.log"
     conda: "../envs/full.yaml"
     shell: "echo Creating barcode files && python3 workflow/scripts/make_sample_files.py -s {input.samplesheet} --fastq {input.fastq} --index-sequences {params.index_sequences} --sample-barcodes {output.barcodes} --cell-barcodes {output.cell_barcodes} --sample-map {output.sample_map} --readtype-map {output.readtype_map} --samplesheet-out {output.samplesheet_out} > {log} 2>&1"
