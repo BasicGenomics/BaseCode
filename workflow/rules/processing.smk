@@ -75,9 +75,9 @@ rule assign_genes_exon:
     conda: "../envs/full.yaml"
     threads: config["threads"]
     shell:"""
-    binaries/featureCounts -t exon --primary -g gene_name -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_positive} -o results/intermediate/pos.tmp {input.pstrand} >> {log} 2>&1
-    binaries/featureCounts -t exon --primary -g gene_name -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_negative} -o results/intermediate/neg.tmp {input.mstrand} >> {log} 2>&1
-    binaries/featureCounts -t exon --primary -g gene_name -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile} -o results/intermediate/no.tmp {input.nostrand} >> {log} 2>&1
+    binaries/featureCounts -t exon --primary -g gene_name -T {threads} -R BAM -p --countReadPairs -O --largestOverlap --fracOverlap 0.1 -a {params.gtffile_positive} -o results/intermediate/pos.tmp {input.pstrand} >> {log} 2>&1
+    binaries/featureCounts -t exon --primary -g gene_name -T {threads} -R BAM -p --countReadPairs -O --largestOverlap --fracOverlap 0.1 -a {params.gtffile_negative} -o results/intermediate/neg.tmp {input.mstrand} >> {log} 2>&1
+    binaries/featureCounts -t exon --primary -g gene_name -T {threads} -R BAM -p --countReadPairs -O --largestOverlap --fracOverlap 0.1 -a {params.gtffile} -o results/intermediate/no.tmp {input.nostrand} >> {log} 2>&1
     rm results/intermediate/pos.tmp results/intermediate/neg.tmp results/intermediate/no.tmp
     mkdir -p results/.tmp_bgab/
     """
@@ -108,9 +108,9 @@ rule assign_genes_intron:
     conda: "../envs/full.yaml"
     threads: config["threads"]
     shell:"""
-    binaries/featureCounts -t intron --primary -g gene_name -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_positive} -o results/intermediate/pos.tmp {input.pstrand} >> {log} 2>&1
-    binaries/featureCounts -t intron --primary -g gene_name -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile_negative} -o results/intermediate/neg.tmp {input.mstrand} >> {log} 2>&1
-    binaries/featureCounts -t intron --primary -g gene_name -T {threads} -R BAM -p --countReadPairs --largestOverlap --fracOverlap 0.1 -a {params.gtffile} -o results/intermediate/no.tmp {input.nostrand} >> {log} 2>&1
+    binaries/featureCounts -t intron --primary -g gene_name -T {threads} -R BAM -p --countReadPairs -O --largestOverlap --fracOverlap 0.1 -a {params.gtffile_positive} -o results/intermediate/pos.tmp {input.pstrand} >> {log} 2>&1
+    binaries/featureCounts -t intron --primary -g gene_name -T {threads} -R BAM -p --countReadPairs -O --largestOverlap --fracOverlap 0.1 -a {params.gtffile_negative} -o results/intermediate/neg.tmp {input.mstrand} >> {log} 2>&1
+    binaries/featureCounts -t intron --primary -g gene_name -T {threads} -R BAM -p --countReadPairs -O --largestOverlap --fracOverlap 0.1 -a {params.gtffile} -o results/intermediate/no.tmp {input.nostrand} >> {log} 2>&1
     rm results/intermediate/pos.tmp results/intermediate/neg.tmp results/intermediate/no.tmp
     mkdir -p results/.tmp_bgab/
     """
