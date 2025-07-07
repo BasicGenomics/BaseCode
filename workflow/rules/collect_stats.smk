@@ -26,6 +26,6 @@ rule summary_stats:
     output: summary_file = "results/QC_files/{name}_summary_stats.csv".format(name=config["name"])
     log: "results/logs/summary_stats.log"
     threads: 1
-    shell: "python3 workflow/scripts/summary_stats.py --long-form {input.long_form} --json {input.json} --sample-map {input.sample_map} --output {output.summary_file}"
+    shell: "echo BaseCode Processing Pipeline Finished &&  python3 workflow/scripts/summary_stats.py --long-form {input.long_form} --json {input.json} --sample-map {input.sample_map} --output {output.summary_file}"
 
 

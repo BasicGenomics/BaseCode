@@ -12,7 +12,7 @@ rule make_barcode_files:
         samplesheet_out = "results/metadata/{name}_samplesheet.csv".format(name=config["name"])
     log: "results/logs/make_barcode_files.log"
     conda: "../envs/full.yaml"
-    shell: "echo Creating barcode files && python3 workflow/scripts/make_sample_files.py -s {input.samplesheet} --fastq {input.fastq} --index-sequences {input.index_sequences} --sample-barcodes {output.barcodes} --cell-barcodes {output.cell_barcodes} --sample-map {output.sample_map} --readtype-map {output.readtype_map} --samplesheet-out {output.samplesheet_out} > {log} 2>&1"
+    shell: "echo Process Samplesheet && python3 workflow/scripts/make_sample_files.py -s {input.samplesheet} --fastq {input.fastq} --index-sequences {input.index_sequences} --sample-barcodes {output.barcodes} --cell-barcodes {output.cell_barcodes} --sample-map {output.sample_map} --readtype-map {output.readtype_map} --samplesheet-out {output.samplesheet_out} > {log} 2>&1"
 
 rule parse_fastq:
     input: r1_in = config["r1"], r2_in = config["r2"], pbcpath = "results/metadata/{name}_sample_barcodes.txt".format(name=config["name"]), cell_barcodes = "results/metadata/{name}_cell_barcodes.txt".format(name=config["name"]), sample_map = "results/metadata/{name}_sample_map.yaml".format(name=config["name"]), readtype_map = "results/metadata/{name}_readtype_map.yaml".format(name=config["name"])
@@ -22,7 +22,7 @@ rule parse_fastq:
     benchmark: "results/benchmarks/parse_fastq.benchmark.txt"
     params: comp_threads = int(config["threads"]*0.2),
             proc_threads = config["threads"]-int(config["threads"]*0.2)
-    shell: "echo Parsing reads && binaries/parse_fastq --read1 {input.r1_in} --read2 {input.r2_in} --r1-out {output.r1_out} --r2-out {output.r2_out} --cbcpath {input.cell_barcodes} --pbcpath {input.pbcpath} --readtype-structure {input.readtype_map} --index-layout {config[index_layout]} --sample-structure {input.sample_map} --processing-threads {params.proc_threads} --compression-threads {params.comp_threads}  --umilen {config[umilen]} --dtlen {config[dtlen]} --dt-cutoff {config[dt_cutoff]} --ts-sequence {config[ts_sequence]} --ts-pad {config[ts_pad]} --ts-cutoff {config[ts_cutoff]} > {log} 2>&1"
+    shell: "echo Parse FASTQ && binaries/parse_fastq --read1 {input.r1_in} --read2 {input.r2_in} --r1-out {output.r1_out} --r2-out {output.r2_out} --cbcpath {input.cell_barcodes} --pbcpath {input.pbcpath} --readtype-structure {input.readtype_map} --index-layout {config[index_layout]} --sample-structure {input.sample_map} --processing-threads {params.proc_threads} --compression-threads {params.comp_threads}  --umilen {config[umilen]} --dtlen {config[dtlen]} --dt-cutoff {config[dt_cutoff]} --ts-sequence {config[ts_sequence]} --ts-pad {config[ts_pad]} --ts-cutoff {config[ts_cutoff]} > {log} 2>&1"
 
 rule trim_fastq:
     input: r1 = "results/intermediate/{name}.read1.fastq.gz".format(name=config["name"]),
@@ -36,7 +36,7 @@ rule trim_fastq:
     benchmark: "results/benchmarks/trim_fastq.benchmark.txt"
     conda: "../envs/full.yaml"
     threads: config["threads"]
-    shell: "echo Trimming reads && cutadapt -j {threads} --json {log.summary} {config[params][cutadapt]} --too-short-output {output.r1_short} --too-short-paired-output {output.r2_short} -o {output.r1} -p {output.r2} {input.r1} {input.r2} > {log.stdout} 2>&1"
+    shell: "echo Trim FASTQ && cutadapt -j {threads} --json {log.summary} {config[params][cutadapt]} --too-short-output {output.r1_short} --too-short-paired-output {output.r2_short} -o {output.r1} -p {output.r2} {input.r1} {input.r2} > {log.stdout} 2>&1"
 
 
 rule map_reads:
@@ -48,7 +48,7 @@ rule map_reads:
     benchmark: "results/benchmarks/map_reads.benchmark.txt"
     params: splicesites = SPLICESITES, genomeref = GENOMEREF, cores_hisat = cores_hisat, cores_samtools = cores_samtools
     conda: "../envs/full.yaml"
-    shell: "echo Mapping reads && binaries/hisat-3n --new-summary --summary-file {log.summary} {config[params][hisat3n]} -p {params.cores_hisat} --known-splicesite-infile {params.splicesites} -x {params.genomeref} -1 {input.r1} -2 {input.r2} | samtools view -F 256 -b -@ {params.cores_samtools} -o {output} > {log.stdout} 2>&1"
+    shell: "echo Map Reads && binaries/hisat-3n --new-summary --summary-file {log.summary} {config[params][hisat3n]} -p {params.cores_hisat} --known-splicesite-infile {params.splicesites} -x {params.genomeref} -1 {input.r1} -2 {input.r2} | samtools view -F 256 -b -@ {params.cores_samtools} -o {output} > {log.stdout} 2>&1"
 
 rule split_bam_by_strand:
     input: "results/intermediate/{name}.trimmed.aligned.bam".format(name=config["name"])
@@ -58,7 +58,7 @@ rule split_bam_by_strand:
     log: "results/logs/split_bam_by_strand.log"
     benchmark: "results/benchmarks/split_bam_by_strand.benchmark.txt"
     conda: "../envs/full.yaml"
-    shell: "echo Assigning reads to genes && python3 workflow/scripts/split_bam_by_strand.py {input} > {log} 2>&1"
+    shell: "echo Assign Genes && python3 workflow/scripts/split_bam_by_strand.py {input} > {log} 2>&1"
 
 rule assign_genes_exon:
     input: pstrand = "results/intermediate/{name}.trimmed.aligned.pstrand.bam".format(name=config["name"]),
@@ -155,7 +155,7 @@ rule reconstruct:
     log: "results/logs/reconstruct.log"
     threads: config["threads"]
     benchmark: "results/benchmarks/reconstruction.benchmark.txt"
-    shell: "echo Reconstructing reads && binaries/basic_reconstruction --input {input.bam} --output {output} --gtf {params.gtffile}.gff3 --sample-map {input.sample_map} --threads {threads} >> {log} 2>&1"
+    shell: "echo Reconstruct Molecules && binaries/basic_reconstruction --input {input.bam} --output {output} --gtf {params.gtffile}.gff3 --sample-map {input.sample_map} --threads {threads} >> {log} 2>&1"
 
 rule sort_reconstructed:
     input: "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.reconstructed.bam".format(name=config["name"])
@@ -186,7 +186,7 @@ rule stitch_reconstruction:
     params: gtffile = GTFFILE
     log: "results/logs/stitch_reconstruction.log"
     conda: "../envs/full.yaml"
-    shell: "echo Combining reads into synthetic long reads && python3 workflow/scripts/stitcher.py --input {input.bam} --output {output} --gtf {params.gtffile}.gff3 --threads {threads} --cell-tag CB --UMI-tag RM --gene-identifier gene_id >> {log} 2>&1"
+    shell: "echo Stitch Molecules && python3 workflow/scripts/stitcher.py --input {input.bam} --output {output} --gtf {params.gtffile}.gff3 --threads {threads} --cell-tag CB --UMI-tag RM --gene-identifier gene_id >> {log} 2>&1"
 
 rule sorted_stitched:
     input: "results/intermediate/{name}.stitched.bam".format(name=config["name"])
