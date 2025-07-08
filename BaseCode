@@ -24,7 +24,7 @@ if __name__ == '__main__':
                           help='Number of threads to allocate for analysis')
     aparser.add_argument('--verbose', action='store_true', help='Verbose output')
     
-    print(logo)
+    
 
     args = aparser.parse_args()
 
@@ -40,5 +40,6 @@ if __name__ == '__main__':
     if not args.verbose:
         snakemake_cmd += '-q all'
 
-    os.system(snakemake_cmd)
+    if print(logo) == None:
+        os.system(snakemake_cmd)
 

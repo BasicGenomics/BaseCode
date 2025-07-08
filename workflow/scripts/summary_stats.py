@@ -99,12 +99,5 @@ def main():
     df_full.write_csv(output_file) 
     print('Full summary report for all samples found at {}'.format(output_file))
 
-    
-
-
-    
-        
-
-
-
-
+if __name__ == "__main__":
+    main()
