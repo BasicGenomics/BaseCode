@@ -84,6 +84,8 @@ def main():
 
     df_reconstruction_polars = pl.DataFrame(data)
 
+    print(df_reconstruction_polars)
+
     df_full = df_sample_counts_polars.join(df_reconstruction_polars, on = 'index')
 
     df_full = df_full.sort('Total Counts')
