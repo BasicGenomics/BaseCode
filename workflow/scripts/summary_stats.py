@@ -68,7 +68,7 @@ def main():
 
         sample_list.append(unique_sample_id)
 
-        genes_detected_sample = df_long_form_sample.group_by('XT').shape[0]
+        genes_detected_sample = df_long_form_sample.unique(subset=['XT']).shape[0]
         genes_detected_list.append(genes_detected_sample)
 
         molecules_detected_TP_sample = df_long_form_sample_threep.shape[0]
