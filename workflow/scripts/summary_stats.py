@@ -90,11 +90,7 @@ def main():
     
     df_full_head_10 = df_full.head(10)
 
-    print(df_full_head_10)
-
-    values = [s.to_list() for s in df_full_head_10.get_columns()]
-
-    print(values)
+    values = [list(s) for s in df_full_head_10.rows()]
 
     header = df_full_head_10.columns
     
