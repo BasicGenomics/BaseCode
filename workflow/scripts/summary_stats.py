@@ -66,7 +66,7 @@ def main():
         df_long_form_completed = df_long_form_sample.filter(((pl.col('IC') > 0) & (pl.col('FC') > 0)))
         df_long_form_sample_threep = df_long_form_sample.filter(pl.col('TC') > 0)
 
-        sample_list.append(unique_sample_id)
+        sample_list.extend(unique_sample_id)
 
         genes_detected_sample = df_long_form_sample.unique(subset=['XT']).shape[0]
         genes_detected_list.append(genes_detected_sample)
@@ -83,8 +83,6 @@ def main():
     data = {'index': sample_list, 'Genes Detected': genes_detected_list, 'Molecules Detected (3\')': molecules_detected_TP_list, 'Percentage Completed (%)': percentage_reconstructed_list, 'Median Length Completed Molecules (bp)': median_reconstructed_completed_list }
 
     df_reconstruction_polars = pl.DataFrame(data)
-
-    print(df_reconstruction_polars)
 
     df_full = df_sample_counts_polars.join(df_reconstruction_polars, on = 'index')
 
