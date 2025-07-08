@@ -2,6 +2,7 @@
 
 from argparse import ArgumentParser
 import os
+import time
 
 logo = r"""
 ╔═══════════════════════════════════════════════════════════════════════╗
@@ -17,7 +18,9 @@ logo = r"""
 
 if __name__ == '__main__':
 
-    os.system('echo {}'.format(logo))
+    print(logo)
+
+    time.sleep(1)
 
     aparser = ArgumentParser()
 
