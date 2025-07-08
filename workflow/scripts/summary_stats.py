@@ -86,7 +86,7 @@ def main():
 
     df_full = df_sample_counts_polars.join(df_reconstruction_polars, on = 'index')
 
-    df_full = df_full.sort('Total Counts')
+    df_full = df_full.sort('Total Counts', descending=True)
     
     df_full_head_10 = df_full.head(10)
 
