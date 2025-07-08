@@ -30,7 +30,7 @@ if __name__ == '__main__':
 
 
 
-    snakemake_cmd = 'snakemake -j {} --rerun-incomplete'.format(args.threads)
+    snakemake_cmd = 'snakemake -j {} --rerun-incomplete '.format(args.threads)
 
     if args.config != '':
         snakemake_cmd += '--configfile {} '.format(args.config)
