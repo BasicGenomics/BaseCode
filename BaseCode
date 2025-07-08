@@ -17,6 +17,8 @@ logo = r"""
 
 if __name__ == '__main__':
 
+    os.system('echo {}'.format(logo))
+
     aparser = ArgumentParser()
 
     aparser.add_argument('-c','--config', help='Path to config yaml file', default = "config/config.yaml")
@@ -28,8 +30,6 @@ if __name__ == '__main__':
 
     args = aparser.parse_args()
 
-
-
     snakemake_cmd = 'snakemake -j {} --rerun-incomplete '.format(args.threads)
 
     if args.config != '':
@@ -40,6 +40,5 @@ if __name__ == '__main__':
     if not args.verbose:
         snakemake_cmd += '-q all'
 
-    if print(logo) == None:
-        os.system(snakemake_cmd)
+    os.system(snakemake_cmd)
 
