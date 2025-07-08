@@ -94,6 +94,8 @@ def main():
 
     values = [s.to_list() for s in df_full_head_10.get_columns()]
 
+    print(values)
+
     header = df_full_head_10.columns
     
     print(tabulate.tabulate(values, headers=header))
