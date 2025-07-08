@@ -94,7 +94,7 @@ def main():
 
     header = df_full_head_10.columns
     
-    print(tabulate(values, header=header))
+    print(tabulate.tabulate(values, header=header))
 
     df_full.write_csv(output_file) 
     print('Full summary report for all samples found at {}'.format(output_file))
