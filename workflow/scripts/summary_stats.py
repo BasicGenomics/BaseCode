@@ -63,7 +63,7 @@ def main():
     median_reconstructed_completed_list = []
 
     for (unique_sample_id, df_long_form_sample) in df_long_form.group_by('SM'):
-        df_long_form_completed = df_long_form_sample.filter(((pl.col('IC') > 0) & (pl.col('FC') > 0)))
+        df_long_form_completed = df_long_form_sample.filter(((pl.col('TC') > 0) & (pl.col('IC') > 0) & (pl.col('FC') > 0)))
         df_long_form_sample_threep = df_long_form_sample.filter(pl.col('TC') > 0)
 
         sample_list.extend(unique_sample_id)
