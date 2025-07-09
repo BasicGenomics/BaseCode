@@ -59,12 +59,16 @@ def main():
     sample_list = []
     genes_detected_list = []
     molecules_detected_TP_list = []
+    molecules_detected_INT_list = []
+    molecules_detected_FP_list = []
     percentage_reconstructed_list = []
     median_reconstructed_completed_list = []
 
     for (unique_sample_id, df_long_form_sample) in df_long_form.group_by('SM'):
         df_long_form_completed = df_long_form_sample.filter(((pl.col('TC') > 0) & (pl.col('IC') > 0) & (pl.col('FC') > 0)))
         df_long_form_sample_threep = df_long_form_sample.filter(pl.col('TC') > 0)
+        df_long_form_sample_int = df_long_form_sample.filter(pl.col('IC') > 0)
+        df_long_form_sample_fivep = df_long_form_sample.filter(pl.col('FC') > 0)
 
         sample_list.extend(unique_sample_id)
 
@@ -74,13 +78,19 @@ def main():
         molecules_detected_TP_sample = df_long_form_sample_threep.shape[0]
         molecules_detected_TP_list.append(molecules_detected_TP_sample)
 
+        molecules_detected_INT_sample = df_long_form_sample_int.shape[0]
+        molecules_detected_INT_list.append(molecules_detected_INT_sample)
+
+        molecules_detected_FP_sample = df_long_form_sample_fivep.shape[0]
+        molecules_detected_FP_list.append(molecules_detected_FP_sample)
+
         percentage_reconstructed_sample = np.round(100*(df_long_form_completed.shape[0]/df_long_form_sample_threep.shape[0]),2)
         percentage_reconstructed_list.append(percentage_reconstructed_sample)
         
         median_reconstructed_completed_sample = df_long_form_completed.median()['QL'][0]
         median_reconstructed_completed_list.append(median_reconstructed_completed_sample)
 
-    data = {'index': sample_list, 'Genes Detected': genes_detected_list, 'Molecules Detected (3\')': molecules_detected_TP_list, 'Percentage Completed (%)': percentage_reconstructed_list, 'Median Length Completed Molecules (bp)': median_reconstructed_completed_list }
+    data = {'index': sample_list, 'Genes Detected': genes_detected_list, 'Molecules Detected (5\')': molecules_detected_FP_list, 'Molecules Detected (INT)': molecules_detected_INT_list, 'Molecules Detected (3\')': molecules_detected_TP_list, 'Percentage Completed (%)': percentage_reconstructed_list, 'Median Length Completed Molecules (bp)': median_reconstructed_completed_list }
 
     df_reconstruction_polars = pl.DataFrame(data)
 
