@@ -77,7 +77,7 @@ def main():
         percentage_reconstructed_sample = np.round(100*(df_long_form_completed.shape[0]/df_long_form_sample_threep.shape[0]),2)
         percentage_reconstructed_list.append(percentage_reconstructed_sample)
         
-        median_reconstructed_completed_sample = 100*df_long_form_completed.median()['QL'][0]
+        median_reconstructed_completed_sample = df_long_form_completed.median()['QL'][0]
         median_reconstructed_completed_list.append(median_reconstructed_completed_sample)
 
     data = {'index': sample_list, 'Genes Detected': genes_detected_list, 'Molecules Detected (3\')': molecules_detected_TP_list, 'Percentage Completed (%)': percentage_reconstructed_list, 'Median Length Completed Molecules (bp)': median_reconstructed_completed_list }
