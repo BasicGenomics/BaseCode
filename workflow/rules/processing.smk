@@ -155,7 +155,7 @@ rule reconstruct:
     log: "results/logs/reconstruct.log"
     threads: config["threads"]
     benchmark: "results/benchmarks/reconstruction.benchmark.txt"
-    shell: "echo Reconstruct Molecules && binaries/basic_reconstruction --input {input.bam} --output {output} --gtf {params.gtffile}.gff3 --sample-map {input.sample_map} --threads {threads} --gff-column-name {config[gff_gene_identifier]} >> {log} 2>&1"
+    shell: "echo Reconstruct Molecules && binaries/basic_reconstruction --input {input.bam} --output {output} --gtf {params.gtffile}.gff3 --sample-map {input.sample_map} --threads {threads} --gene-identifier {config[gff_gene_identifier]} >> {log} 2>&1"
 
 rule sort_reconstructed:
     input: "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.reconstructed.bam".format(name=config["name"])
