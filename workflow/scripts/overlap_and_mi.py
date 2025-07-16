@@ -57,6 +57,8 @@ if __name__ == '__main__':
     parser.add_argument('--genes-out', help='Output cell file')
     parser.add_argument('--cells-out', help='Output gene file')
     parser.add_argument('-t', '--threads', metavar='threads', type=int, default=1, help='Number of threads')
+    parser.add_argument('--gene-identifier', default='gene_id', metavar='gene_identifier', type=str, help='Gene identifier')
+
 
     args = parser.parse_args()
 
@@ -67,7 +69,9 @@ if __name__ == '__main__':
     gene_out = args.genes_out
     cell_out = args.cells_out
 
-    gene_dicts = filterGeneDict(parse_gtf(gtffile, None), bamfile)
+    gene_identifier = args.gene_identifier
+
+    gene_dicts = filterGeneDict(parse_gtf(gtffile, None, column_name=gene_identifier), bamfile)
 
     res = Parallel(n_jobs=threads, verbose = 3, backend='multiprocessing')(delayed(func)(bamfile, g_dict) for g,g_dict in gene_dicts.items())
 

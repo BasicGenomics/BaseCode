@@ -5,7 +5,7 @@ def parse_col_nine(col9):
     info_dict = {t.split('=')[0]: t.split('=')[1] for t in info_list}
     return info_dict
 
-def parse_gtf(gtffile, contig, ban_set=set()):
+def parse_gtf(gtffile, contig, ban_set=set(), column_name = 'gene_name'):
     gene_list = []
     with open(gtffile, 'r') as f:
         for line in f:
@@ -18,14 +18,14 @@ def parse_gtf(gtffile, contig, ban_set=set()):
                 if contig is not None:
                     if l[0] == contig:
                         info_dict = parse_col_nine(l[8])
-                        if 'gene_name' not in info_dict:
+                        if column_name not in info_dict:
                             continue
-                        gene_list.append({'gene_id': info_dict['gene_name'], 'seqid': l[0], 'start': int(l[3]), 'end': int(l[4]), 'strand': l[6]})
+                        gene_list.append({'gene_id': info_dict[column_name], 'seqid': l[0], 'start': int(l[3]), 'end': int(l[4]), 'strand': l[6]})
                 else:
                     info_dict = parse_col_nine(l[8])
-                    if 'gene_name' not in info_dict:
+                    if column_name not in info_dict:
                         continue
-                    gene_list.append({'gene_id': info_dict['gene_name'], 'seqid': l[0], 'start': int(l[3]), 'end': int(l[4]), 'strand': l[6]})
+                    gene_list.append({'gene_id': info_dict[column_name], 'seqid': l[0], 'start': int(l[3]), 'end': int(l[4]), 'strand': l[6]})
     gene_dict = {g['gene_id']: g for g in gene_list}
     return gene_dict
 

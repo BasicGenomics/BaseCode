@@ -47,6 +47,7 @@ if __name__ == "__main__":
     parser.add_argument('--sum', help='Output sum per sample barcode file')
     parser.add_argument('--fraction', help='Output status fraction per gene file')
     parser.add_argument('-t', '--threads', metavar='threads', type=int, default=1, help='Number of threads')
+    parser.add_argument('--gene-identifier', default='gene_id', metavar='gene_identifier', type=str, help='Gene identifier')
 
     args = parser.parse_args()
 
@@ -57,8 +58,9 @@ if __name__ == "__main__":
     counts_out = args.counts
     sum_out = args.sum
     fraction_out = args.fraction
+    gene_identifier = args.gene_identifier
 
-    gene_dicts = filterGeneDict(parse_gtf(gtffile, None), bamfile)
+    gene_dicts = filterGeneDict(parse_gtf(gtffile, None, column_name=gene_identifier), bamfile)
     res = Parallel(n_jobs=threads, verbose = 3, backend='multiprocessing')(delayed(func)(bamfile, g_dict) for g,g_dict in gene_dicts.items())
 
     total_counts_per_gene = {}

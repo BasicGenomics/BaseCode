@@ -135,6 +135,7 @@ def main():
     parser.add_argument('-t', '--threads', metavar='threads', type=int, default=1, help='Number of threads')
     parser.add_argument('-bc', '--base-conversions', nargs='+', type=str, default=['aG','gA'], help='Base conversions used to reconstruct')
     parser.add_argument('--only-samples', action='store_true')
+    parser.add_argument('--gene-identifier', default='gene_id', metavar='gene_identifier', type=str, help='Gene identifier')
 
     args = parser.parse_args()
 
@@ -147,6 +148,7 @@ def main():
     out_dir = args.out_dir
     isExist = os.path.exists(out_dir)
     only_samples = args.only_samples
+    gene_identifier = args.gene_identifier
     if not isExist:
         # Create a new directory because it does not exist
         os.makedirs(out_dir)
@@ -154,7 +156,7 @@ def main():
    
     samplesheet_df = pd.read_csv(samplesheet_file, index_col=0)
 
-    gene_dict = filterGeneDict(parse_gtf(gtffile, None), bam_infile)
+    gene_dict = filterGeneDict(parse_gtf(gtffile, None, column_name=gene_identifier), bam_infile)
     
     base_conversions = args.base_conversions
 

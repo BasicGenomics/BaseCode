@@ -510,7 +510,7 @@ def construct_stitched_molecules(infile, gtffile, cells, gene_file, contig, thre
     else:
         cell_set = None
     print('Reading gene info from {}'.format(gtffile))
-    gene_dict = parse_gtf(gtffile, contig)
+    gene_dict = parse_gtf(gtffile, contig,column_name=gene_identifier)
     
     if gene_file is not None and gene_file != 'None':
         gene_set = set([line.rstrip() for line in open(gene_file)])
@@ -543,7 +543,7 @@ if __name__ == '__main__':
     parser.add_argument('--cells', default=None, metavar='cells', type=str, help='List of cell barcodes to stitch molecules')
     parser.add_argument('--genes', default=None, metavar='genes', type=str, help='List of gene,  one per line.')
     parser.add_argument('--contig', default=None, metavar='contig', type=str, help='Restrict stitching to contig')
-    parser.add_argument('--gene-identifier', default='gene_id', metavar='gene_identifier', type=str, help='Gene identifier (gene_id or gene_name)')
+    parser.add_argument('--gene-identifier', default='gene_id', metavar='gene_identifier', type=str, help='Gene identifier')
     parser.add_argument('--only-molecules', action='store_true', help='Only reconstruct molecues')
     parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + __version__)
     args = parser.parse_args()

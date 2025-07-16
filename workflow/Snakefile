@@ -31,6 +31,9 @@ if "ts_pad" not in config:
 if "ts_cutoff" not in config:
     config["ts_cutoff"] = 5
 
+if "gff_column_name" not in config:
+    config["gff_column_name"] = "gene_name"
+
 if "params" not in config:
     config["params"] = {}
 

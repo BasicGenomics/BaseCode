@@ -19,7 +19,7 @@ rule conversion:
     threads: int(config["threads"]/2)
     conda: "../envs/full.yaml"
     log: "results/logs/conversion.log"
-    shell: "python3 workflow/scripts/conversion_rates.py -i {input.bam} -f {params.fasta} -g {params.gtf} -o results/QC_files -s {input.samplesheet} -p {config[name]} -t {threads} > {log} 2>&1"
+    shell: "python3 workflow/scripts/conversion_rates.py -i {input.bam} -f {params.fasta} -g {params.gtf} -o results/QC_files -s {input.samplesheet} -p {config[name]} -t {threads} --gene-identifier {config[gff_column_name]} > {log} 2>&1"
 
 rule summary_stats:
     input: long_form = "results/QC_files/{name}_long_form_reconstruction_stats.csv".format(name=config["name"]), json = "results/read_flow_files/{name}_fastq_processed_stats.json".format(name=config["name"]), sample_map = "results/metadata/{name}_sample_map.yaml".format(name=config["name"]), bam = "results/{name}.stitched.molecules.sorted.bam".format(name=config["name"])
