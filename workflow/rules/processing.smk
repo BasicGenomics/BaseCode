@@ -75,9 +75,9 @@ rule assign_genes_exon:
     conda: "../envs/full.yaml"
     threads: config["threads"]
     shell:"""
-    binaries/featureCounts -t exon --primary -g {config[gff_column_name]} -T {threads} -R BAM -p --countReadPairs -O -M --largestOverlap --fracOverlap 0.1 -a {params.gtffile_positive} -o results/intermediate/pos.tmp {input.pstrand} >> {log} 2>&1
-    binaries/featureCounts -t exon --primary -g {config[gff_column_name]} -T {threads} -R BAM -p --countReadPairs -O -M --largestOverlap --fracOverlap 0.1 -a {params.gtffile_negative} -o results/intermediate/neg.tmp {input.mstrand} >> {log} 2>&1
-    binaries/featureCounts -t exon --primary -g {config[gff_column_name]} -T {threads} -R BAM -p --countReadPairs -O -M --largestOverlap --fracOverlap 0.1 -a {params.gtffile} -o results/intermediate/no.tmp {input.nostrand} >> {log} 2>&1
+    binaries/featureCounts -t exon --primary -g {config[gff_gene_identifier]} -T {threads} -R BAM -p --countReadPairs -O -M --largestOverlap --fracOverlap 0.1 -a {params.gtffile_positive} -o results/intermediate/pos.tmp {input.pstrand} >> {log} 2>&1
+    binaries/featureCounts -t exon --primary -g {config[gff_gene_identifier]} -T {threads} -R BAM -p --countReadPairs -O -M --largestOverlap --fracOverlap 0.1 -a {params.gtffile_negative} -o results/intermediate/neg.tmp {input.mstrand} >> {log} 2>&1
+    binaries/featureCounts -t exon --primary -g {config[gff_gene_identifier]} -T {threads} -R BAM -p --countReadPairs -O -M --largestOverlap --fracOverlap 0.1 -a {params.gtffile} -o results/intermediate/no.tmp {input.nostrand} >> {log} 2>&1
     rm results/intermediate/pos.tmp results/intermediate/neg.tmp results/intermediate/no.tmp
     mkdir -p results/.tmp_bgab/
     """
@@ -108,9 +108,9 @@ rule assign_genes_intron:
     conda: "../envs/full.yaml"
     threads: config["threads"]
     shell:"""
-    binaries/featureCounts -t intron --primary -g {config[gff_column_name]} -T {threads} -R BAM -p --countReadPairs -O -M --largestOverlap --fracOverlap 0.1 -a {params.gtffile_positive} -o results/intermediate/pos.tmp {input.pstrand} >> {log} 2>&1
-    binaries/featureCounts -t intron --primary -g {config[gff_column_name]} -T {threads} -R BAM -p --countReadPairs -O -M --largestOverlap --fracOverlap 0.1 -a {params.gtffile_negative} -o results/intermediate/neg.tmp {input.mstrand} >> {log} 2>&1
-    binaries/featureCounts -t intron --primary -g {config[gff_column_name]} -T {threads} -R BAM -p --countReadPairs -O -M --largestOverlap --fracOverlap 0.1 -a {params.gtffile} -o results/intermediate/no.tmp {input.nostrand} >> {log} 2>&1
+    binaries/featureCounts -t intron --primary -g {config[gff_gene_identifier]} -T {threads} -R BAM -p --countReadPairs -O -M --largestOverlap --fracOverlap 0.1 -a {params.gtffile_positive} -o results/intermediate/pos.tmp {input.pstrand} >> {log} 2>&1
+    binaries/featureCounts -t intron --primary -g {config[gff_gene_identifier]} -T {threads} -R BAM -p --countReadPairs -O -M --largestOverlap --fracOverlap 0.1 -a {params.gtffile_negative} -o results/intermediate/neg.tmp {input.mstrand} >> {log} 2>&1
+    binaries/featureCounts -t intron --primary -g {config[gff_gene_identifier]} -T {threads} -R BAM -p --countReadPairs -O -M --largestOverlap --fracOverlap 0.1 -a {params.gtffile} -o results/intermediate/no.tmp {input.nostrand} >> {log} 2>&1
     rm results/intermediate/pos.tmp results/intermediate/neg.tmp results/intermediate/no.tmp
     mkdir -p results/.tmp_bgab/
     """
@@ -155,7 +155,7 @@ rule reconstruct:
     log: "results/logs/reconstruct.log"
     threads: config["threads"]
     benchmark: "results/benchmarks/reconstruction.benchmark.txt"
-    shell: "echo Reconstruct Molecules && binaries/basic_reconstruction --input {input.bam} --output {output} --gtf {params.gtffile}.gff3 --sample-map {input.sample_map} --threads {threads} --gff-column-name {config[gff_column_name]} >> {log} 2>&1"
+    shell: "echo Reconstruct Molecules && binaries/basic_reconstruction --input {input.bam} --output {output} --gtf {params.gtffile}.gff3 --sample-map {input.sample_map} --threads {threads} --gff-column-name {config[gff_gene_identifier]} >> {log} 2>&1"
 
 rule sort_reconstructed:
     input: "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.reconstructed.bam".format(name=config["name"])
@@ -186,7 +186,7 @@ rule stitch_reconstruction:
     params: gtffile = GTFFILE
     log: "results/logs/stitch_reconstruction.log"
     conda: "../envs/full.yaml"
-    shell: "echo Stitch Molecules && python3 workflow/scripts/stitcher.py --input {input.bam} --output {output} --gtf {params.gtffile}.gff3 --threads {threads} --cell-tag CB --UMI-tag RM --gene-identifier {config[gff_column_name]} >> {log} 2>&1"
+    shell: "echo Stitch Molecules && python3 workflow/scripts/stitcher.py --input {input.bam} --output {output} --gtf {params.gtffile}.gff3 --threads {threads} --cell-tag CB --UMI-tag RM --gene-identifier {config[gff_gene_identifier]} >> {log} 2>&1"
 
 rule sorted_stitched:
     input: "results/intermediate/{name}.stitched.bam".format(name=config["name"])

@@ -60,7 +60,7 @@ if __name__ == "__main__":
     fraction_out = args.fraction
     gene_identifier = args.gene_identifier
 
-    gene_dicts = filterGeneDict(parse_gtf(gtffile, None, column_name=gene_identifier), bamfile)
+    gene_dicts = filterGeneDict(parse_gtf(gtffile, None, gene_identifier=gene_identifier), bamfile)
     res = Parallel(n_jobs=threads, verbose = 3, backend='multiprocessing')(delayed(func)(bamfile, g_dict) for g,g_dict in gene_dicts.items())
 
     total_counts_per_gene = {}

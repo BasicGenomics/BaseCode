@@ -156,7 +156,7 @@ def main():
    
     samplesheet_df = pd.read_csv(samplesheet_file, index_col=0)
 
-    gene_dict = filterGeneDict(parse_gtf(gtffile, None, column_name=gene_identifier), bam_infile)
+    gene_dict = filterGeneDict(parse_gtf(gtffile, None, gene_identifier=gene_identifier), bam_infile)
     
     base_conversions = args.base_conversions
 
