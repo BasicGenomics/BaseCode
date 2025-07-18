@@ -131,14 +131,14 @@ rule concatenate_and_sort:
             nostrand = "results/intermediate/{name}.trimmed.aligned.nostrand.GeneTagged.bam".format(name=config["name"])
     log: "results/logs/concatenate_and_sort.log"
     benchmark: "results/benchmarks/concatenate_and_sort.benchmark.txt"
-    output: "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.bam".format(name=config["name"])
+    output: temp("results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.bam".format(name=config["name"]))
     conda: "../envs/full.yaml"
     threads: config["threads"]
     shell: "samtools cat {input.nostrand} {input.pstrand} {input.mstrand} | samtools sort -m 1000M -@ {threads} -T results/.tmp_bgab/sorttmp. -o {output} >> {log} 2>&1"
 
 rule first_index:
     input: "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.bam".format(name=config["name"])
-    output: "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.bam.bai".format(name=config["name"])
+    output: temp("results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.bam.bai".format(name=config["name"]))
     params:
         extra="",
     threads: config["threads"]
@@ -159,7 +159,7 @@ rule reconstruct:
 
 rule sort_reconstructed:
     input: "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.reconstructed.bam".format(name=config["name"])
-    output: "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.reconstructed.sorted.bam".format(name=config["name"])
+    output: temp("results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.reconstructed.sorted.bam".format(name=config["name"]))
     threads: config["threads"]
     log: "results/logs/sort_reconstructed.log"
     params:
@@ -169,7 +169,7 @@ rule sort_reconstructed:
 
 rule index_reconstructed:
     input: "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.reconstructed.sorted.bam".format(name=config["name"])
-    output: "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.reconstructed.sorted.bam.bai".format(name=config["name"])
+    output: temp("results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.reconstructed.sorted.bam.bai".format(name=config["name"]))
     log: "results/logs/index_reconstructed.log"
     params:
         extra="",
@@ -190,7 +190,7 @@ rule stitch_reconstruction:
 
 rule sorted_stitched:
     input: "results/intermediate/{name}.stitched.bam".format(name=config["name"])
-    output: "results/intermediate/{name}.stitched.sorted.bam".format(name=config["name"])
+    output: temp("results/intermediate/{name}.stitched.sorted.bam".format(name=config["name"]))
     threads: config["threads"]
     log: "results/logs/sort_stitched.log"
     params:
@@ -200,7 +200,7 @@ rule sorted_stitched:
 
 rule index_stitched:
     input: "results/intermediate/{name}.stitched.sorted.bam".format(name=config["name"])
-    output: "results/intermediate/{name}.stitched.sorted.bam.bai".format(name=config["name"])
+    output: temp("results/intermediate/{name}.stitched.sorted.bam.bai".format(name=config["name"]))
     params:
         extra="",
     threads: config["threads"]
