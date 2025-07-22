@@ -91,7 +91,11 @@ rule rename_tags_exon:
             nostrand = temp("results/intermediate/{name}.trimmed.aligned.nostrand.Exon.bam".format(name=config["name"]))
     log: "results/logs/rename_tags_exon.log"
     conda: "../envs/full.yaml"
-    shell: "python3 workflow/scripts/rename_tags_exon.py {input.pstrand} {input.mstrand} {input.nostrand} {output.pstrand} {output.mstrand} {output.nostrand} > {log} 2>&1"
+    shell:"""
+    binaries/rename_tags --input {input.pstrand} --output {output.pstrand} >> {log} 2>&1"
+    binaries/rename_tags --input {input.mstrand} --output {output.mstrand} >> {log} 2>&1
+    bineries/rename_tags --input {input.nostrand} --output {output.nostrand} >> {log} 2>&1
+    """
 
 rule assign_genes_intron:
     input: pstrand = "results/intermediate/{name}.trimmed.aligned.pstrand.Exon.bam".format(name=config["name"]),
@@ -123,8 +127,11 @@ rule rename_tags_intron:
             nostrand = temp("results/intermediate/{name}.trimmed.aligned.nostrand.GeneTagged.bam".format(name=config["name"]))
     log: "results/logs/rename_tags_intron.log"
     conda: "../envs/full.yaml"
-    shell: "python3 workflow/scripts/rename_tags_intron.py {input.pstrand} {input.mstrand} {input.nostrand} {output.pstrand} {output.mstrand} {output.nostrand} > {log} 2>&1"
-
+    shell:"""
+    binaries/rename_tags --input {input.pstrand} --output {output.pstrand} --intron-mode >> {log} 2>&1"
+    binaries/rename_tags --input {input.mstrand} --output {output.mstrand} --intron-mode >> {log} 2>&1
+    bineries/rename_tags --input {input.nostrand} --output {output.nostrand} --intron-mode >> {log} 2>&1
+    """
 rule concatenate_and_sort:
     input: pstrand = "results/intermediate/{name}.trimmed.aligned.pstrand.GeneTagged.bam".format(name=config["name"]),
             mstrand = "results/intermediate/{name}.trimmed.aligned.mstrand.GeneTagged.bam".format(name=config["name"]),
