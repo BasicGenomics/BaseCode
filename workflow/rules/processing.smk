@@ -94,7 +94,7 @@ rule rename_tags_exon:
     shell:"""
     binaries/rename_tags --input {input.pstrand} --output {output.pstrand} >> {log} 2>&1
     binaries/rename_tags --input {input.mstrand} --output {output.mstrand} >> {log} 2>&1
-    bineries/rename_tags --input {input.nostrand} --output {output.nostrand} >> {log} 2>&1
+    binaries/rename_tags --input {input.nostrand} --output {output.nostrand} >> {log} 2>&1
     """
 
 rule assign_genes_intron:
