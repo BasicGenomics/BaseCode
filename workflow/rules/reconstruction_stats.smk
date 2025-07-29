@@ -5,7 +5,7 @@ rule count_lengths:
     params: gtf =  "{}.gff3".format(GTFFILE)
     conda: "../envs/full.yaml"
     log: "results/logs/count_lengths.log"
-    shell: "python3 workflow/scripts/reconstruction_lengths.py -i {input.bam} -o {output} --gene-identifier {config[gff_gene_identifier]} > {log} 2>&1"
+    shell: "python3 workflow/scripts/reconstruction_lengths.py -i {input.bam} -o {output} > {log} 2>&1"
 
 rule overlap_and_mi:
     input: bam = "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.reconstructed.sorted.bam".format(name=config["name"]), bai = "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.reconstructed.sorted.bam.bai".format(name=config["name"])
