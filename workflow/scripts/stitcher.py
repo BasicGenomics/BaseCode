@@ -559,7 +559,7 @@ if __name__ == '__main__':
     threads = int(args.threads)
     cells = args.cells
     gene_file = args.genes
-    contig = args.contig
+    contig = args.contig 
     UMI_tag = args.UMI_tag
     cell_tag = args.cell_tag
     gene_identifier = args.gene_identifier

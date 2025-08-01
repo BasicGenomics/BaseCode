@@ -73,7 +73,7 @@ rule assign_genes_exon:
             gtffile_positive = "{}.positive.gff3".format(GTFFILE),
             gtffile_negative = "{}.negative.gff3".format(GTFFILE)
     conda: "../envs/full.yaml"
-    threads: config["threads"]
+    threads: min(config["threads"], 64)
     shell:"""
     binaries/featureCounts -t exon --primary -g {config[gff_gene_identifier]} -T {threads} -R BAM -p --countReadPairs -O -M --largestOverlap --fracOverlap 0.1 -a {params.gtffile_positive} -o results/intermediate/pos.tmp {input.pstrand} >> {log} 2>&1
     binaries/featureCounts -t exon --primary -g {config[gff_gene_identifier]} -T {threads} -R BAM -p --countReadPairs -O -M --largestOverlap --fracOverlap 0.1 -a {params.gtffile_negative} -o results/intermediate/neg.tmp {input.mstrand} >> {log} 2>&1
@@ -110,7 +110,7 @@ rule assign_genes_intron:
             gtffile_positive = "{}.positive.gff3".format(GTFFILE),
             gtffile_negative = "{}.negative.gff3".format(GTFFILE)
     conda: "../envs/full.yaml"
-    threads: config["threads"]
+    threads: min(config["threads"], 64)
     shell:"""
     binaries/featureCounts -t intron --primary -g {config[gff_gene_identifier]} -T {threads} -R BAM -p --countReadPairs -O -M --largestOverlap --fracOverlap 0.1 -a {params.gtffile_positive} -o results/intermediate/pos.tmp {input.pstrand} >> {log} 2>&1
     binaries/featureCounts -t intron --primary -g {config[gff_gene_identifier]} -T {threads} -R BAM -p --countReadPairs -O -M --largestOverlap --fracOverlap 0.1 -a {params.gtffile_negative} -o results/intermediate/neg.tmp {input.mstrand} >> {log} 2>&1
@@ -160,7 +160,7 @@ rule reconstruct:
     output: temp("results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.reconstructed.bam".format(name=config["name"]))
     params: gtffile = GTFFILE
     log: "results/logs/reconstruct.log"
-    threads: config["threads"]
+    threads: min(config["threads"], 32)
     benchmark: "results/benchmarks/reconstruction.benchmark.txt"
     shell: "echo Reconstruct Molecules && binaries/basic_reconstruction --input {input.bam} --output {output} --gtf {params.gtffile}.gff3 --sample-map {input.sample_map} --threads {threads} --gene-identifier {config[gff_gene_identifier]} >> {log} 2>&1"
 
