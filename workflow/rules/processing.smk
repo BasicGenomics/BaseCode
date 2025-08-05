@@ -58,7 +58,7 @@ rule split_bam_by_strand:
     log: "results/logs/split_bam_by_strand.log"
     benchmark: "results/benchmarks/split_bam_by_strand.benchmark.txt"
     conda: "../envs/full.yaml"
-    shell: "echo Assign Genes && python3 workflow/scripts/split_bam_by_strand.py {input} > {log} 2>&1"
+    shell: "echo Assign Genes && binaries/move_tags {input} > {log} 2>&1"
 
 rule assign_genes_exon:
     input: pstrand = "results/intermediate/{name}.trimmed.aligned.pstrand.bam".format(name=config["name"]),
