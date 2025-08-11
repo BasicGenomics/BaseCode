@@ -162,7 +162,7 @@ rule reconstruct:
     log: "results/logs/reconstruct.log"
     threads: min(config["threads"], 64)
     benchmark: "results/benchmarks/reconstruction.benchmark.txt"
-    shell: "echo Reconstruct Molecules && binaries/basic_reconstruction --input {input.bam} --output {output} --gtf {params.gtffile}.gff3 --sample-map {input.sample_map} --threads {threads} --gene-identifier {config[gff_gene_identifier]}  | samtools view -F 256 -b -@ {params.cores_samtools} -o {output} > {log.stdout} 2>&1"
+    shell: "echo Reconstruct Molecules && binaries/basic_reconstruction --input {input.bam} --output {output} --gtf {params.gtffile}.gff3 --sample-map {input.sample_map} --threads {threads} --gene-identifier {config[gff_gene_identifier]}  | samtools view -F 256 -b -@ {params.cores_samtools} -o {output} > {log} 2>&1"
 
 rule sort_reconstructed:
     input: "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.reconstructed.bam".format(name=config["name"])
