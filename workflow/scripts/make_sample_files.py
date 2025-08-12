@@ -243,7 +243,7 @@ def main():
         df_excel[0, 'PCR A'] = 'FW1_PCR_A'
         df_excel[0, 'PCR B'] = 'FW1_PCR_B'
         df_excel.columns = df_excel.iter_rows().__next__()
-        df_excel = df_excel.filter(pl.col("RV1") != "RV1")
+        df_excel = df_excel.remove(pl.col("RV1") == "RV1")
 
         samplesheet_df = df_excel.to_pandas()
 
