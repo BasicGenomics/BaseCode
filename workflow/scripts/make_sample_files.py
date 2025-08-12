@@ -82,6 +82,8 @@ def make_sample_barcode_to_sample_id_map(df):
     map_dict = {}
     for idx, row in df.iterrows():
         for barcode in row['SAMPLE_BARCODES_PCR_A'].split(';'):
+            if barcode == "":
+                continue
             if barcode in map_dict:
                 sample_name = map_dict[barcode]
                 if sample_name != row['SAMPLE_ID']:
@@ -89,6 +91,8 @@ def make_sample_barcode_to_sample_id_map(df):
             else:
                 map_dict[barcode] = row['SAMPLE_ID']
         for barcode in row['SAMPLE_BARCODES_PCR_B'].split(';'):
+            if barcode == "":
+                continue
             if barcode in map_dict:
                 sample_name = map_dict[barcode]
                 if sample_name != row['SAMPLE_ID']:
@@ -101,6 +105,8 @@ def make_sample_barcode_list(barcode_set):
     l = []
     for barcodes in barcode_set:
         for barcode in barcodes.split(';'):
+            if barcode == "":
+                continue
             l.append(barcode)
     return list(set(l))
 
@@ -201,6 +207,7 @@ def main():
     parser.add_argument('--sample-map', metavar='samples', type=str, help='Sample map output')
     parser.add_argument('--readtype-map', metavar='readtypes', type=str, help='readtype map output')
     parser.add_argument('--samplesheet-out', metavar='samplesheet_out', type=str, help='Samplesheet output')
+    parser.add_argument('--ignore-none', metavar='ignore_none', action='store_true', help='Ignore empty cells in samplesheet')
     args = parser.parse_args()
 
     samplesheet_file = args.samplesheet
@@ -211,9 +218,13 @@ def main():
     sample_map_file = args.sample_map
     readtype_map_file = args.readtype_map
     samplesheet_out = args.samplesheet_out
+    ignore_none = args.ignore_none
 
     with open(index_sequences, 'r') as f_is:
         index_sequence_map = yaml.safe_load(f_is)
+    
+    if ignore_none:
+        index_sequence_map[None] = ""
 
     seq_order, forward_list = scan_fastq_for_order_and_orientation(fastq_file, index_sequence_map)
 
