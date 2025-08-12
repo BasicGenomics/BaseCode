@@ -207,7 +207,7 @@ def main():
     parser.add_argument('--sample-map', metavar='samples', type=str, help='Sample map output')
     parser.add_argument('--readtype-map', metavar='readtypes', type=str, help='readtype map output')
     parser.add_argument('--samplesheet-out', metavar='samplesheet_out', type=str, help='Samplesheet output')
-    parser.add_argument('--ignore-none', metavar='ignore_none', action='store_true', help='Ignore empty cells in samplesheet')
+    parser.add_argument('--ignore-none', action='store_true', help='Ignore empty cells in samplesheet')
     args = parser.parse_args()
 
     samplesheet_file = args.samplesheet
