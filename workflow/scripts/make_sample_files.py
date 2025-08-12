@@ -133,7 +133,7 @@ def get_forward_and_reverse_sequences(index_sequence_map):
     index1_sequences_reverse = []
     index2_sequences_reverse = []
     for name, barcodes in index_sequence_map.items():
-        if barcodes is None:
+        if barcodes is None or name is None:
             continue
         if 'Fw' in name:
             for barcode in barcodes.split(';'):
