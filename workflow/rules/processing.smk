@@ -165,7 +165,7 @@ rule reconstruct:
     shell:"""
     echo Reconstruct Molecules
     mkdir -p results/tmp/
-    binaries/basic_reconstruction --input {input.bam} --output {output} --gtf {params.gtffile}.gff3 --sample-map {input.sample_map} --threads {threads} --gene-identifier {config[gff_gene_identifier]} --tmp results/tmp/ > {log} 2>&1"
+    binaries/basic_reconstruction --input {input.bam} --output {output} --gtf {params.gtffile}.gff3 --sample-map {input.sample_map} --threads {threads} --gene-identifier {config[gff_gene_identifier]} --tmp results/tmp/ > {log} 2>&1
     """
 
 rule sort_reconstructed:
