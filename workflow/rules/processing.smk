@@ -162,7 +162,8 @@ rule reconstruct:
     log: "results/logs/reconstruct.log"
     threads: min(config["threads"], 64)
     benchmark: "results/benchmarks/reconstruction.benchmark.txt"
-    shell:"""echo Reconstruct Molecules
+    shell:"""
+    echo Reconstruct Molecules
     mkdir -p results/tmp/
     binaries/basic_reconstruction --input {input.bam} --output {output} --gtf {params.gtffile}.gff3 --sample-map {input.sample_map} --threads {threads} --gene-identifier {config[gff_gene_identifier]} --tmp results/tmp/ > {log} 2>&1"
     """
