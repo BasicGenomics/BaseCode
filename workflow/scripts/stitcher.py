@@ -131,7 +131,7 @@ def stitch_reads(read_d, cell, gene, umi, UMI_tag):
     nreads = len(read_d)
     exonic_list = [0]*nreads
     intronic_list = [0]*nreads
-    orientation_counts = {'+': 0, '-': 0, 'NA': 0, 'no': 0}
+    orientation_counts = {'+': 0, '-': 0, 'NA': 0, 'no': 0, 'N': 0}
     read_type_counts = {'TP_read': 0, 'internal': 0, 'FP_read': 0}
     seq_list = []
     qual_list = []
