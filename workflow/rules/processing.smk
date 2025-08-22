@@ -176,7 +176,7 @@ rule sort_reconstructed:
     params:
         extra="-m 1000M",
     conda: "../envs/full.yaml"
-    shell: "samtools sort -@ {threads} -o {output} {params.extra} -T results/tmp/ {input} &> {log}"
+    shell: "samtools sort -@ {threads} -o {output} {params.extra} -T results/.tmp_bgab/sorttmp. {input} &> {log}"
 
 rule index_reconstructed:
     input: "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.reconstructed.sorted.bam".format(name=config["name"])
@@ -207,7 +207,7 @@ rule sorted_stitched:
     params:
         extra="-m 1000M",
     conda: "../envs/full.yaml"
-    shell: "samtools sort -@ {threads} -o {output} {params.extra} -T results/tmp/ {input} &> {log}"
+    shell: "samtools sort -@ {threads} -o {output} {params.extra} -T results/.tmp_bgab/sorttmp. {input} &> {log}"
 
 rule index_stitched:
     input: "results/intermediate/{name}.stitched.sorted.bam".format(name=config["name"])
