@@ -7,13 +7,13 @@ import argparse
 def get_mapping_group(read):
     if read.is_unmapped:
         return 'Unmapped'
-    ES_tag = read.get_tag('ES')
-    IS_tag = read.get_tag('IS')
-    if 'Assigned' in ES_tag:
+    has_GE_tag = read.has_tag('GE')
+    has_GI_tag = read.get_tag('GI')
+    if has_GE_tag:
         return 'Exon'
-    if 'Assigned' in IS_tag:
+    if has_GI_tag:
         return 'Intron'
-    if 'Unassigned' in ES_tag and 'Unassigned' in IS_tag:
+    if not has_GE_tag and has_GI_tag:
         return 'Intergenic'
     return 'Ambiguous'
 
