@@ -27,6 +27,7 @@ if __name__ == '__main__':
     aparser.add_argument('-t','--threads', default=30, type=int,
                           help='Number of threads to allocate for analysis')
     aparser.add_argument('--verbose', action='store_true', help='Verbose output')
+    aparser.add_argument('--dry-run', action='store_true', help='Verbose output')
     
     
 
@@ -40,7 +41,9 @@ if __name__ == '__main__':
     snakemake_cmd += '--config threads={} '.format(args.threads)
 
     if not args.verbose:
-        snakemake_cmd += '-q all'
+        snakemake_cmd += '-q all '
+    if args.dry_run:
+        snakemake_cmd += '--dry-run -p'
 
     os.system(snakemake_cmd)
 
