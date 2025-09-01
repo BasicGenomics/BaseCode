@@ -8,7 +8,7 @@ def get_mapping_group(read):
     if read.is_unmapped:
         return 'Unmapped'
     has_GE_tag = read.has_tag('GE')
-    has_GI_tag = read.get_tag('GI')
+    has_GI_tag = read.has_tag('GI')
     if has_GE_tag:
         return 'Exon'
     if has_GI_tag:
