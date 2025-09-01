@@ -13,7 +13,7 @@ def get_mapping_group(read):
         return 'Exon'
     if has_GI_tag:
         return 'Intron'
-    if not has_GE_tag and has_GI_tag:
+    if not has_GE_tag and not has_GI_tag:
         return 'Intergenic'
     return 'Ambiguous'
 
