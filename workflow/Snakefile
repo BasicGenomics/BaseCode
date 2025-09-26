@@ -18,6 +18,9 @@ else:
 if "index_layout" not in config:
     config["index_layout"] = "16:0-16"
 
+if "ignore_none" not in config:
+    config["ignore_none"] = False
+
 if "umilen" not in config:
     config["umilen"] = 0
 if "dtlen" not in config:
