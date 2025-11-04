@@ -149,14 +149,38 @@ def get_forward_and_reverse_sequences(index_sequence_map):
                 index2_sequences_reverse.append(reverse_complement(barcode))
     return index1_sequences_forward, index1_sequences_reverse, index2_sequences_forward, index2_sequences_reverse
 
-def scan_fastq_for_order_and_orientation(fastq_file, index_sequence_map):
+def fastq_iteration(fastq_files: list):
+    if len(fastq_files) == 1:
+        fastq_file = pyfastx.Fastq(fastq_files[0], build_index=False)
+        t = True
+        while t is not None:
+            t = next(fastq_file, None)
+            yield t
+    elif len(fastq_files) == 2:
+        fastq_file_i1 = pyfastx.Fastq(fastq_files[0], build_index=False)
+        fastq_file_i2 = pyfastx.Fastq(fastq_files[1], build_index=False)
+        i1 = True
+        while i1 is not None:
+            i1 = next(fastq_file_i1, None)
+            i2 = next(fastq_file_i2, None)
+            yield (i1[0], i1[1]+i2[1], i1[2]+i2[2])
+    else:
+        raise NotImplementedError
+def scan_fastq_for_order_and_orientation(fastq_files: list, index_sequence_map: dict):
     index1_sequences_forward, index1_sequences_reverse, index2_sequences_forward, index2_sequences_reverse = get_forward_and_reverse_sequences(index_sequence_map)
 
     first = Counter({'index1_forward': 0, 'index1_reverse': 0, 'index2_forward': 0, 'index2_reverse': 0})
     second = Counter({'index1_forward': 0, 'index1_reverse': 0, 'index2_forward': 0, 'index2_reverse': 0})
     i = 0
-    for (name, seq, qual) in pyfastx.Fastq(fastq_file, build_index=False):
-        index_seq = seq[-16:]
+    for (name, seq, qual) in fastq_iteration(fastq_files):
+
+        if len(fastq_files) == 1:
+            index_seq = seq[-16:]
+        elif len(fastq_files) == 2:
+            index_seq = seq
+        else:
+            raise NotImplementedError
+        
         i += 1
         if i > 10000:
             break
@@ -207,7 +231,7 @@ def main():
     parser = argparse.ArgumentParser(description='', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('-s','--samplesheet',metavar='samplesheet', type=str, help='Samplesheet')
     parser.add_argument('--index-sequences',metavar='indexes', type=str, help='Index Sequences')
-    parser.add_argument('--fastq', metavar='fastq', type=str, help='fastq file with index sequences')
+    parser.add_argument('--fastq', metavar='fastq', type=str, nargs = '+', help='fastq file with index sequences')
     parser.add_argument('--sample-barcodes', metavar='barcodes', type=str, help='Sample barcode output')
     parser.add_argument('--cell-barcodes', metavar='barcodes', type=str, help='Cell barcode output')
     parser.add_argument('--sample-map', metavar='samples', type=str, help='Sample map output')
@@ -218,7 +242,9 @@ def main():
 
     samplesheet_file = args.samplesheet
     index_sequences = args.index_sequences
-    fastq_file = args.fastq
+    fastq_files = []
+    for file in args.fastq:
+        fastq_files.append(file)
     sample_barcodes_file = args.sample_barcodes
     cell_barcodes_file = args.cell_barcodes
     sample_map_file = args.sample_map
@@ -232,7 +258,7 @@ def main():
     if ignore_none:
         index_sequence_map[None] = ""
 
-    seq_order, forward_list = scan_fastq_for_order_and_orientation(fastq_file, index_sequence_map)
+    seq_order, forward_list = scan_fastq_for_order_and_orientation(fastq_files, index_sequence_map)
 
     _filename, file_extension = os.path.splitext(samplesheet_file)
 
