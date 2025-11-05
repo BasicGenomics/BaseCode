@@ -153,8 +153,7 @@ def fastq_iteration(fastq_files: list):
     if len(fastq_files) == 1:
         fastq_file = pyfastx.Fastq(fastq_files[0], build_index=False)
         t = True
-        while t is not None:
-            t = next(fastq_file, None)
+        for t in fastq_file:
             yield t
     elif len(fastq_files) == 2:
         fastq_file_i1 = pyfastx.Fastq(fastq_files[0], build_index=False)
