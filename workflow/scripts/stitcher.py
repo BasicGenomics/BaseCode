@@ -143,7 +143,10 @@ def stitch_reads(read_d, cell, gene, umi, UMI_tag):
     master_read['skipped_interval_list'] = []
     T1 = False
     F1 = False
+    SP = False
     for i,read in enumerate(read_d):
+
+        
         if read.has_tag('SM'):
             sample_tag = read.get_tag('SM')
         else:
@@ -169,7 +172,8 @@ def stitch_reads(read_d, cell, gene, umi, UMI_tag):
             Q_list = list(read.query_alignment_qualities)
         except TypeError:
             Q_list = [read.query_alignment_qualities]
-        
+        if read.get_tag('SP') == 'Y':
+            SP = True
         seq = read.query_alignment_sequence
         cigtuples = read.cigartuples
         insertion_locs = get_insertions_locs(cigtuples)
@@ -300,6 +304,7 @@ def stitch_reads(read_d, cell, gene, umi, UMI_tag):
     master_read['gene'] = gene
     master_read['umi'] = umi
     master_read['SM'] = sample_tag
+    master_read["SP"] = SP
     if T1:
         master_read['T1'] = 'Y'
     else:
@@ -455,6 +460,7 @@ def convert_to_sam(stitched_m, UMI_tag):
     sam_dict['T1'] = 'T1:Z:{}'.format(stitched_m['T1'])
     sam_dict['F1'] = 'F1:Z:{}'.format(stitched_m['F1'])
     sam_dict['SM'] = 'SM:Z:{}'.format(stitched_m['SM'])
+    sam_dict['SP'] = 'SP:Z:{}'.format(stitched_m['SP'])
     sam_dict[UMI_tag] = '{}:Z:{}'.format(UMI_tag, stitched_m['umi'])
     return '\t'.join(list(sam_dict.values()))
 
