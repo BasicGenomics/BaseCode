@@ -14,7 +14,7 @@ if config["ignore_none"]:
                 samplesheet_out = "results/metadata/{name}_samplesheet.csv".format(name=config["name"])
             log: "results/logs/make_barcode_files.log"
             conda: "../envs/full.yaml"
-            shell: "echo Process Samplesheet && python3 workflow/scripts/make_sample_files.py -s {input.samplesheet} --fastq {input.fastq_i1} {input.fastq_i2} --index-sequences {input.index_sequences} --sample-barcodes {output.barcodes} --cell-barcodes {output.cell_barcodes} --sample-map {output.sample_map} --readtype-map {output.readtype_map} --samplesheet-out {output.samplesheet_out} --ignore-none --dt-structure {input.index_sequences} > {log} 2>&1"
+            shell: "echo Process Samplesheet && python3 workflow/scripts/make_sample_files.py -s {input.samplesheet} --fastq {input.fastq_i1} {input.fastq_i2} --index-sequences {input.index_sequences} --sample-barcodes {output.barcodes} --cell-barcodes {output.cell_barcodes} --sample-map {output.sample_map} --readtype-map {output.readtype_map} --samplesheet-out {output.samplesheet_out} --ignore-none  > {log} 2>&1"
     else:
         rule make_barcode_files:
             input: samplesheet = config["samplesheet"], fastq = config["r2"], index_sequences = "workflow/resources/index_sequences.yaml"
@@ -25,7 +25,7 @@ if config["ignore_none"]:
                 samplesheet_out = "results/metadata/{name}_samplesheet.csv".format(name=config["name"])
             log: "results/logs/make_barcode_files.log"
             conda: "../envs/full.yaml"
-            shell: "echo Process Samplesheet && python3 workflow/scripts/make_sample_files.py -s {input.samplesheet} --fastq {input.fastq} --index-sequences {input.index_sequences} --sample-barcodes {output.barcodes} --cell-barcodes {output.cell_barcodes} --sample-map {output.sample_map} --readtype-map {output.readtype_map} --samplesheet-out {output.samplesheet_out} --ignore-none --dt-structure {input.index_sequences} > {log} 2>&1"
+            shell: "echo Process Samplesheet && python3 workflow/scripts/make_sample_files.py -s {input.samplesheet} --fastq {input.fastq} --index-sequences {input.index_sequences} --sample-barcodes {output.barcodes} --cell-barcodes {output.cell_barcodes} --sample-map {output.sample_map} --readtype-map {output.readtype_map} --samplesheet-out {output.samplesheet_out} --ignore-none  > {log} 2>&1"
 else:
     if config["i1"] != "" and config["i2"] != "":
         rule make_barcode_files:
@@ -37,7 +37,7 @@ else:
                 samplesheet_out = "results/metadata/{name}_samplesheet.csv".format(name=config["name"])
             log: "results/logs/make_barcode_files.log"
             conda: "../envs/full.yaml"
-            shell: "echo Process Samplesheet && python3 workflow/scripts/make_sample_files.py -s {input.samplesheet} --fastq {input.fastq_i1} {input.fastq_i2} --index-sequences {input.index_sequences} --sample-barcodes {output.barcodes} --cell-barcodes {output.cell_barcodes} --sample-map {output.sample_map} --readtype-map {output.readtype_map} --samplesheet-out {output.samplesheet_out} --dt-structure {input.index_sequences} > {log} 2>&1"
+            shell: "echo Process Samplesheet && python3 workflow/scripts/make_sample_files.py -s {input.samplesheet} --fastq {input.fastq_i1} {input.fastq_i2} --index-sequences {input.index_sequences} --sample-barcodes {output.barcodes} --cell-barcodes {output.cell_barcodes} --sample-map {output.sample_map} --readtype-map {output.readtype_map} --samplesheet-out {output.samplesheet_out}  > {log} 2>&1"
     else:
         rule make_barcode_files:
             input: samplesheet = config["samplesheet"], fastq = config["r2"], index_sequences = "workflow/resources/index_sequences.yaml"
@@ -48,7 +48,7 @@ else:
                 samplesheet_out = "results/metadata/{name}_samplesheet.csv".format(name=config["name"])
             log: "results/logs/make_barcode_files.log"
             conda: "../envs/full.yaml"
-            shell: "echo Process Samplesheet && python3 workflow/scripts/make_sample_files.py -s {input.samplesheet} --fastq {input.fastq} --index-sequences {input.index_sequences} --sample-barcodes {output.barcodes} --cell-barcodes {output.cell_barcodes} --sample-map {output.sample_map} --readtype-map {output.readtype_map} --samplesheet-out {output.samplesheet_out}  --dt-structure {input.index_sequences} > {log} 2>&1"
+            shell: "echo Process Samplesheet && python3 workflow/scripts/make_sample_files.py -s {input.samplesheet} --fastq {input.fastq} --index-sequences {input.index_sequences} --sample-barcodes {output.barcodes} --cell-barcodes {output.cell_barcodes} --sample-map {output.sample_map} --readtype-map {output.readtype_map} --samplesheet-out {output.samplesheet_out}   > {log} 2>&1"
 
 rule parse_fastq:
     input: r1_in = config["r1"], r2_in = config["r2"], pbcpath = "results/metadata/{name}_sample_barcodes.txt".format(name=config["name"]), cell_barcodes = "results/metadata/{name}_cell_barcodes.txt".format(name=config["name"]), sample_map = "results/metadata/{name}_sample_map.yaml".format(name=config["name"]), readtype_map = "results/metadata/{name}_readtype_map.yaml".format(name=config["name"])
@@ -58,7 +58,7 @@ rule parse_fastq:
     benchmark: "results/benchmarks/parse_fastq.benchmark.txt"
     params: comp_threads = int(config["threads"]*0.2),
             proc_threads = config["threads"]-int(config["threads"]*0.2)
-    shell: "echo Parse FASTQ && binaries/parse_fastq --read1 {input.r1_in} --read2 {input.r2_in} --r1-out {output.r1_out} --r2-out {output.r2_out} --cbcpath {input.cell_barcodes} --pbcpath {input.pbcpath} --readtype-structure {input.readtype_map} --index-layout {config[index_layout]} --sample-structure {input.sample_map} --processing-threads {params.proc_threads} --compression-threads {params.comp_threads}  --umilen {config[umilen]} --dtlen {config[dtlen]} --dt-cutoff {config[dt_cutoff]} --ts-sequence {config[ts_sequence]} --ts-pad {config[ts_pad]} --ts-cutoff {config[ts_cutoff]} > {log} 2>&1"
+    shell: "echo Parse FASTQ && binaries/parse_fastq --read1 {input.r1_in} --read2 {input.r2_in} --r1-out {output.r1_out} --r2-out {output.r2_out} --cbcpath {input.cell_barcodes} --pbcpath {input.pbcpath} --readtype-structure {input.readtype_map} --dt-structure {input.readtype_map} --index-layout {config[index_layout]} --sample-structure {input.sample_map} --processing-threads {params.proc_threads} --compression-threads {params.comp_threads}  --umilen {config[umilen]} --dtlen {config[dtlen]} --dt-cutoff {config[dt_cutoff]} --ts-sequence {config[ts_sequence]} --ts-pad {config[ts_pad]} --ts-cutoff {config[ts_cutoff]} > {log} 2>&1"
 
 rule trim_fastq:
     input: r1 = "results/intermediate/{name}.read1.fastq.gz".format(name=config["name"]),
