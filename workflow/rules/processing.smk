@@ -216,7 +216,7 @@ rule index_reconstructed:
     output: "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.reconstructed.sorted.bam.bai".format(name=config["name"])
     threads: config["threads"]
     log: "results/logs/index_reconstructed.log"
-    shell: "samtools index -@ {config[threads]} {output}"
+    shell: "samtools index -@ {config[threads]} {input}"
 
 rule stitch_reconstruction:
     input: bam =  "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.reconstructed.sorted.bam".format(name=config["name"]),
@@ -243,7 +243,7 @@ rule index_stitched:
     output: temp("results/intermediate/{name}.stitched.sorted.bam.bai".format(name=config["name"]))
     threads: config["threads"]
     log: "results/logs/index_stitched.log"
-    shell: "samtools index -@ {config[threads]} {output}"
+    shell: "samtools index -@ {config[threads]} {input}"
 
 rule make_molecule_bams:
     input: bam = "results/intermediate/{name}.stitched.sorted.bam".format(name=config["name"]), bai = "results/intermediate/{name}.stitched.sorted.bam.bai".format(name=config["name"])
