@@ -184,7 +184,7 @@ rule first_index:
     output: temp("results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.bam.bai".format(name=config["name"]))
     threads: config["threads"]
     log: "results/logs/first_index.log"
-    shell: "samtools index -@ {config[threads]} {output}"
+    shell: "samtools index -@ {config[threads]} {input}"
 
 rule reconstruct:
     input: bam = "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.bam".format(name=config["name"]),
