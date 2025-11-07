@@ -172,7 +172,7 @@ def stitch_reads(read_d, cell, gene, umi, UMI_tag):
             Q_list = list(read.query_alignment_qualities)
         except TypeError:
             Q_list = [read.query_alignment_qualities]
-        if read.get_tag('SP') == 'Y':
+        if read.has_tag('SP'):
             SP = True
         seq = read.query_alignment_sequence
         cigtuples = read.cigartuples
