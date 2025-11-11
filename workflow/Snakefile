@@ -21,6 +21,12 @@ if "index_layout" not in config:
 if "ignore_none" not in config:
     config["ignore_none"] = False
 
+if "i1" not in config:
+    config["i1"] = ""
+
+if "i2" not in config:
+    config["i2"] = ""
+
 if "umilen" not in config:
     config["umilen"] = 0
 if "dtlen" not in config:
