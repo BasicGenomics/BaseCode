@@ -173,7 +173,11 @@ def stitch_reads(read_d, cell, gene, umi, UMI_tag):
         except TypeError:
             Q_list = [read.query_alignment_qualities]
         if read.has_tag('SP'):
-            SP = True
+            SP_tag = read.get_tag('SP')
+            if 'R1' in SP_tag and read.is_read1:
+                SP = True
+            if 'R2' in SP_tag and read.is_read2:
+                SP = True
         seq = read.query_alignment_sequence
         cigtuples = read.cigartuples
         insertion_locs = get_insertions_locs(cigtuples)

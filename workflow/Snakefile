@@ -27,12 +27,9 @@ if "i1" not in config:
 if "i2" not in config:
     config["i2"] = ""
 
-if "umilen" not in config:
-    config["umilen"] = 0
-if "dtlen" not in config:
-    config["dtlen"] = 24
-if "dt_cutoff" not in config:
-    config["dt_cutoff"] = 16
+if "dt_structure" not in config:
+    config["dt_structure"] = "workflow/resources/dt_structure.yaml"
+
 if "ts_sequence" not in config:
     config["ts_sequence"] = "TCTTCTCTCCTCCTCC"
 if "ts_pad" not in config:
