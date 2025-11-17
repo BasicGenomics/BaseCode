@@ -22,8 +22,10 @@ nucleotides = ['A', 'T', 'C', 'G']
 nuc_dict = {'A':0, 'T':1, 'C':2, 'G':3, 'N': 4}
 np.seterr(divide='ignore')
 ll_this_correct = {i:np.log(1-10**(-float(i)/10)) for i in range(1,94)}
+ll_this_correct[0] = np.log(1-10**(-1e-16))
 ln_3 = np.log(3)
 ll_other_correct = {i:-(float(i)*np.log(10))/10 - ln_3 for i in range(1,94)}
+ll_other_correct[0] = -(1e-16*np.log(10))/10 - ln_3
 ll_N = -np.log(4)
 
 from scipy.sparse import csc_matrix
