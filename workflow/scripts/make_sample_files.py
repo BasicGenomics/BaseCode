@@ -159,9 +159,7 @@ def fastq_iteration(fastq_files: list):
         fastq_file_i1 = pyfastx.Fastq(fastq_files[0], build_index=False)
         fastq_file_i2 = pyfastx.Fastq(fastq_files[1], build_index=False)
         i1 = True
-        while i1 is not None:
-            i1 = next(fastq_file_i1, None)
-            i2 = next(fastq_file_i2, None)
+        for i1,i2 in zip(fastq_file_i1, fastq_file_i2):
             yield (i1[0], i1[1]+i2[1], i1[2]+i2[2])
     else:
         raise NotImplementedError
