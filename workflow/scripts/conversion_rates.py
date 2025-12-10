@@ -52,8 +52,9 @@ def compare_to_reference(read_seq, read_qual, ref_seq):
     for i, (read_base, base_qual, ref_base) in enumerate(zip(read_seq, read_qual, ref_seq)):
         if base_qual < 15:
             continue
+        total_content.update({ref_base: 1})
         if read_base == ref_base:
-            total_content.update({ref_base: 1})
+            continue
         else:
             k = ''.join((ref_base.lower(),read_base))
             specific_content.update({k: 1})
