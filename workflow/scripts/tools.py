@@ -2,7 +2,7 @@ import pysam
 
 def parse_col_nine(col9):
     info_list = col9.split(';')
-    info_dict = {t.split('=')[0]: t.split('=')[1] for t in info_list}
+    info_dict = {t.split('=')[0]: t.split('=')[1].rstrip() for t in info_list}
     return info_dict
 
 def parse_gtf(gtffile, contig, ban_set=set(), gene_identifier = 'gene_name'):
