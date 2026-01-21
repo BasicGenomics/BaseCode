@@ -19,3 +19,13 @@ def get_final_output(wildcards):
     "results/QC_files/{name}_summary_stats.csv".format(name=config["name"])]
 
     return final_output
+
+
+def get_final_output_sc(wildcards):
+    final_output = ['results/barcodes/{name}_whitelist.txt'.format(name=config["name"]),
+                    "results/intermediate/{name}.read1.fastq.gz".format(name=config["name"])
+    
+    
+    ]
+
+    return final_output

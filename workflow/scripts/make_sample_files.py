@@ -223,16 +223,28 @@ def scan_fastq_for_order_and_orientation(fastq_files: list, index_sequence_map: 
     
     return seq_order, forward_list
 
+def make_dt_structure_from_cellbc(cellbc_file: str,
+                                    output_file: str, 
+                                    umilen:int = 6,
+                                    dts:int = 25,
+                                    cutoff: int = 8):
+    with open(cellbc_file, 'r') as f:
+        for line in f.readlines():
+            entry = '- {barcode: {}, sequence: {}, umilen: {}, cutoff: {}}\n'.format(line.strip(), 'T'*dts, umilen, cutoff)
+            with open(output_file, 'a') as out_f:
+                out_f.write(entry)
 
 def main():
     parser = argparse.ArgumentParser(description='', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('-s','--samplesheet',metavar='samplesheet', type=str, help='Samplesheet')
     parser.add_argument('--index-sequences',metavar='indexes', type=str, help='Index Sequences')
     parser.add_argument('--fastq', metavar='fastq', type=str, nargs = '+', help='fastq file with index sequences')
-    parser.add_argument('--sample-barcodes', metavar='barcodes', type=str, help='Sample barcode output')
-    parser.add_argument('--cell-barcodes', metavar='barcodes', type=str, help='Cell barcode output')
+    parser.add_argument('--cell-barcodes', metavar='cell_barcodes', type=str, help='Cell barcode file')
+    parser.add_argument('--sample-barcodes', metavar='sample_barcodes', type=str, help='Sample barcode output')
+    # parser.add_argument('--cell-barcodes', metavar='barcodes', type=str, help='Cell barcode output')
     parser.add_argument('--sample-map', metavar='samples', type=str, help='Sample map output')
     parser.add_argument('--readtype-map', metavar='readtypes', type=str, help='readtype map output')
+    parser.add_argument('--dt-structure', metavar='dt_structure', type=str, help='dt structure output')
     parser.add_argument('--samplesheet-out', metavar='samplesheet_out', type=str, help='Samplesheet output')
     parser.add_argument('--ignore-none', action='store_true', help='Ignore empty cells in samplesheet')
     args = parser.parse_args()
@@ -246,6 +258,7 @@ def main():
     cell_barcodes_file = args.cell_barcodes
     sample_map_file = args.sample_map
     readtype_map_file = args.readtype_map
+    dt_structure_file = args.dt_structure
     samplesheet_out = args.samplesheet_out
     ignore_none = args.ignore_none
 
@@ -286,12 +299,16 @@ def main():
         f.write('\n')
         f.writelines("\n".join(make_sample_barcode_list(set(samplesheet_df["SAMPLE_BARCODES_PCR_B"]))))
 
-    samplesheet_df['BARCODE'] = 'nan'
-    with open(cell_barcodes_file, 'w') as f:
-        f.writelines("\n".join(make_sample_barcode_list(set(samplesheet_df['BARCODE']))))
+    if os.path.exists(cell_barcodes_file) == False: # bulk mode
+        samplesheet_df['BARCODE'] = 'nan'
+        with open(cell_barcodes_file, 'w') as f:
+            f.writelines("\n".join(make_sample_barcode_list(set(samplesheet_df['BARCODE']))))
+    else: # single cell mode
+        make_dt_structure_from_cellbc(cell_barcodes_file, dt_structure_file)
 
     samplesheet_df['SAMPLE_ID'] = samplesheet_df.apply(fix_SAMPLE_ID, axis=1)
-    samplesheet_df.index = samplesheet_df.apply(lambda row: row['SAMPLE_ID']+row['BARCODE'], axis=1) 
+    # samplesheet_df.index = samplesheet_df.apply(lambda row: row['SAMPLE_ID']+row['BARCODE'], axis=1) 
+    samplesheet_df.index = samplesheet_df.apply(lambda row: row['SAMPLE_ID'], axis=1) 
 
     map_dict = make_sample_barcode_to_sample_id_map(samplesheet_df)
 
@@ -300,6 +317,7 @@ def main():
     
     with open(readtype_map_file, 'w') as f:
         yaml.dump(sample_barcode_to_readType_map, f)
+
     
     samplesheet_df.to_csv(samplesheet_out)
 if __name__ == "__main__":

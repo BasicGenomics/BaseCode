@@ -6,8 +6,7 @@
 from snakemake.utils import min_version
 min_version("6.0")
 
-# configfile: "/config/config.yaml"
-configfile: "/mnt/nvme/kawail/analysis/sc/20251217_G400/PR205/PR205_10/basecode/config.yaml"
+configfile: "config/config.yaml"
 
 
 if 'resource_dir' not in config:
@@ -50,14 +49,6 @@ if "cutadapt" not in config["params"]:
 if "hisat3n" not in config["params"]:
     config["params"]["hisat3n"] = "-k 5 --max-seeds 8 --score-min L,0,-0.5 --base-change G,A --no-temp-splicesite"
 
-if 'umilen' not in config["params"]:
-    config["params"]["umilen"] = "6"
-if 'dts' not in config["params"]:
-    config["params"]["dts"] = "25"
-if 'cutoff' not in config["params"]:
-    config["params"]["cutoff"] = "8"
-
-
 SPLICESITES = "{resource_dir}/genome_references/{reference}/splicesites.ss".format(resource_dir=config["resource_dir"], reference=config["reference"]) 
 GENOMEREF = "{resource_dir}/genome_references/{reference}/genomeref".format(resource_dir=config["resource_dir"], reference=config["reference"])
 GTFFILE = "{resource_dir}/genome_references/{reference}/geneannotations".format(resource_dir=config["resource_dir"], reference=config["reference"])
@@ -65,18 +56,13 @@ REFFILE = "{resource_dir}/genome_references/{reference}/reference.fa".format(res
 cores_samtools = int(config["threads"]*0.05)+1
 cores_hisat = config["threads"]-cores_samtools
 
-#barcode whitelist config
-BARCODE_CFG = "{resource_dir}/pipspeak/barcodes_v5.yaml".format(resource_dir=config["resource_dir"])
-
-include: "rules/runs.smk"
+include: "rules/processing.smk"
+include: "rules/collect_stats.smk"
+include: "rules/read_flow.smk"
+include: "rules/reconstruction_stats.smk"
 include: "rules/common.smk"
-
-# include: "rules/processing.smk"
-# include: "rules/collect_stats.smk"
-# include: "rules/read_flow.smk"
-# include: "rules/reconstruction_stats.smk"
 
 
 rule all:
     input:
-        get_final_output_sc,
+        get_final_output,
