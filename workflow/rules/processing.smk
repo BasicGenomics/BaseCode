@@ -195,20 +195,36 @@ rule first_index:
     log: "results/logs/first_index.log"
     shell: "samtools index -@ {config[threads]} {input}"
 
-rule reconstruct:
-    input: bam = "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.bam".format(name=config["name"]),
-        bai = "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.bam.bai".format(name=config["name"]),
-        sample_map = "results/metadata/{name}_sample_map.yaml".format(name=config["name"])
-    output: temp("results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.reconstructed.bam".format(name=config["name"]))
-    params: gtffile = GTFFILE, cores_hisat = cores_hisat, cores_samtools = cores_samtools
-    log: "results/logs/reconstruct.log"
-    threads: min(config["threads"], 64)
-    benchmark: "results/benchmarks/reconstruction.benchmark.txt"
-    shell:"""
-    echo Reconstruct Molecules
-    mkdir -p results/tmp/
-    binaries/basic_reconstruction --input {input.bam} --output {output} --gtf {params.gtffile}.gff3 --sample-map {input.sample_map} --threads {threads} --gene-identifier {config[gff_gene_identifier]}  | samtools view -F 256 -b -@ {params.cores_samtools} -o {output} > {log} 2>&1
-    """
+if config["reverse"]:
+    rule reconstruct:
+        input: bam = "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.bam".format(name=config["name"]),
+            bai = "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.bam.bai".format(name=config["name"]),
+            sample_map = "results/metadata/{name}_sample_map.yaml".format(name=config["name"])
+        output: temp("results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.reconstructed.bam".format(name=config["name"]))
+        params: gtffile = GTFFILE, cores_hisat = cores_hisat, cores_samtools = cores_samtools
+        log: "results/logs/reconstruct.log"
+        threads: min(config["threads"], 64)
+        benchmark: "results/benchmarks/reconstruction.benchmark.txt"
+        shell:"""
+        echo Reconstruct Molecules
+        mkdir -p results/tmp/
+        binaries/basic_reconstruction --input {input.bam} --output {output} --gtf {params.gtffile}.gff3 --sample-map {input.sample_map} --threads {threads} --gene-identifier {config[gff_gene_identifier]} --reverse | samtools view -F 256 -b -@ {params.cores_samtools} -o {output} > {log} 2>&1
+        """
+else:
+    rule reconstruct:
+        input: bam = "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.bam".format(name=config["name"]),
+            bai = "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.bam.bai".format(name=config["name"]),
+            sample_map = "results/metadata/{name}_sample_map.yaml".format(name=config["name"])
+        output: temp("results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.reconstructed.bam".format(name=config["name"]))
+        params: gtffile = GTFFILE, cores_hisat = cores_hisat, cores_samtools = cores_samtools
+        log: "results/logs/reconstruct.log"
+        threads: min(config["threads"], 64)
+        benchmark: "results/benchmarks/reconstruction.benchmark.txt"
+        shell:"""
+        echo Reconstruct Molecules
+        mkdir -p results/tmp/
+        binaries/basic_reconstruction --input {input.bam} --output {output} --gtf {params.gtffile}.gff3 --sample-map {input.sample_map} --threads {threads} --gene-identifier {config[gff_gene_identifier]}  | samtools view -F 256 -b -@ {params.cores_samtools} -o {output} > {log} 2>&1
+        """
 
 rule sort_reconstructed:
     input: "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.reconstructed.bam".format(name=config["name"])

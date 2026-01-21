@@ -46,8 +46,14 @@ if "params" not in config:
 if "cutadapt" not in config["params"]:
     config["params"]["cutadapt"] = "-n 2 -m 25 -q 10 -a CTGTCTCTTATACACATCT -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCA -g TTTTTTTTTTTTTTTTTTTT -g GGAGGAGGAGAGAAGA -g AAAAAAAAAAAAAAAAAAAA -A CTGTCTCTTATACACATCT -A AAAAAAAAAAAAAAAAAAAA -A AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT"
 
+if "reverse" not in config:
+    config["reverse"] = False
+
 if "hisat3n" not in config["params"]:
-    config["params"]["hisat3n"] = "-k 5 --max-seeds 8 --score-min L,0,-0.5 --base-change G,A --no-temp-splicesite"
+    if config["reverse"]:
+        config["params"]["hisat3n"] = "-k 5 --max-seeds 8 --score-min L,0,-0.5 --base-change A,G --no-temp-splicesite"
+    else:
+        config["params"]["hisat3n"] = "-k 5 --max-seeds 8 --score-min L,0,-0.5 --base-change G,A --no-temp-splicesite"
 
 SPLICESITES = "{resource_dir}/genome_references/{reference}/splicesites.ss".format(resource_dir=config["resource_dir"], reference=config["reference"]) 
 GENOMEREF = "{resource_dir}/genome_references/{reference}/genomeref".format(resource_dir=config["resource_dir"], reference=config["reference"])
