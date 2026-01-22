@@ -1,3 +1,8 @@
+rule log_python_version:
+    conda: "../envs/full.yaml"
+    output: "results/logs/python_version.log"
+    shell: "python3 --version > {output}"
+
 rule get_cell_barcodes:
     input: fastq_r1 = config["r1"], fastq_r2 = config["r2"]
     output: r1_out = "results/barcodes/{}_R1.fq.gz".format(config['name']),
@@ -7,8 +12,8 @@ rule get_cell_barcodes:
     params: barcode_cfg = BARCODE_CFG,
             prefix = config["name"]
     log: "results/logs/get_cell_barcodes.log"
-    benchmark: "results/benchmarks/get_cell_barcodes.benchmark.txt"
-    shell: "echo Get barcode whitelist && binaries/pipspeak_basecode -c params.barcode_cfg -i {input.fastq_r1} -I {input.fastq_r2} -l -u 0 -p {params.prefix} > {log} 2>&1"
+    benchmark: "results/barcodes/benchmarks/get_cell_barcodes.benchmark.txt"
+    shell: "echo Get barcode whitelist && binaries/pipspeak_basecode -c {params.barcode_cfg} -i {input.fastq_r1} -I {input.fastq_r2} -l -u 0 -p results/barcodes/{params.prefix} > {log} 2>&1"
 
 rule make_barcode_files:
     input: samplesheet = config["samplesheet"], fastq = config["r2"], index_sequences = "workflow/resources/index_sequences.yaml", cell_barcodes = "results/barcodes/{name}_whitelist.txt".format(name=config['name'])

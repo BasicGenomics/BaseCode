@@ -4,11 +4,13 @@
 # in particular regarding the standardized folder structure mentioned there. 
 
 from snakemake.utils import min_version
+from pathlib import Path
 min_version("6.0")
 
-# configfile: "/config/config.yaml"
-configfile: "/mnt/nvme/kawail/analysis/sc/20251217_G400/PR205/PR205_10/basecode/config.yaml"
 
+BASE = Path(workflow.basedir)
+PROJECT_ROOT = BASE.parent
+configfile: Path(PROJECT_ROOT) / "config/config.yaml"
 
 if 'resource_dir' not in config:
     config['resource_dir'] = '/usr/local/app/resources/'
@@ -65,11 +67,15 @@ REFFILE = "{resource_dir}/genome_references/{reference}/reference.fa".format(res
 cores_samtools = int(config["threads"]*0.05)+1
 cores_hisat = config["threads"]-cores_samtools
 
-#barcode whitelist config
-BARCODE_CFG = "{resource_dir}/pipspeak/barcodes_v5.yaml".format(resource_dir=config["resource_dir"])
+# #barcode whitelist config
+BARCODE_CFG = Path(PROJECT_ROOT) / "config/config_bc.yaml"
+
+# #barcode results directory
+BARCODE_RES = Path(PROJECT_ROOT) / "results/barcodes"
 
 include: "rules/runs.smk"
 include: "rules/common.smk"
+
 
 # include: "rules/processing.smk"
 # include: "rules/collect_stats.smk"
@@ -79,4 +85,4 @@ include: "rules/common.smk"
 
 rule all:
     input:
-        get_final_output_sc,
+        get_final_output_sc

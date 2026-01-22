@@ -228,11 +228,19 @@ def make_dt_structure_from_cellbc(cellbc_file: str,
                                     umilen:int = 6,
                                     dts:int = 25,
                                     cutoff: int = 8):
+
+    entries = []
     with open(cellbc_file, 'r') as f:
-        for line in f.readlines():
-            entry = '- {barcode: {}, sequence: {}, umilen: {}, cutoff: {}}\n'.format(line.strip(), 'T'*dts, umilen, cutoff)
-            with open(output_file, 'a') as out_f:
-                out_f.write(entry)
+        for line in f:
+            entries.append({
+                'barcode': line.strip(),
+                'sequence': "T" * dts,
+                'umilen': umilen,
+                'cutoff': cutoff
+            })
+
+    with open(output_file, 'a') as out_f:
+        yaml.dump(entries, out_f,default_flow_style=True)
 
 def main():
     parser = argparse.ArgumentParser(description='', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -242,7 +250,7 @@ def main():
     parser.add_argument('--cell-barcodes', metavar='cell_barcodes', type=str, help='Cell barcode file')
     parser.add_argument('--sample-barcodes', metavar='sample_barcodes', type=str, help='Sample barcode output')
     # parser.add_argument('--cell-barcodes', metavar='barcodes', type=str, help='Cell barcode output')
-    parser.add_argument('--sample-map', metavar='samples', type=str, help='Sample map output')
+    parser.add_argument('--sample-map', metavar='sample_map', type=str, help='Sample map output')
     parser.add_argument('--readtype-map', metavar='readtypes', type=str, help='readtype map output')
     parser.add_argument('--dt-structure', metavar='dt_structure', type=str, help='dt structure output')
     parser.add_argument('--samplesheet-out', metavar='samplesheet_out', type=str, help='Samplesheet output')

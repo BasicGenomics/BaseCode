@@ -22,10 +22,9 @@ def get_final_output(wildcards):
 
 
 def get_final_output_sc(wildcards):
-    final_output = ['results/barcodes/{name}_whitelist.txt'.format(name=config["name"]),
+    final_output = ["results/barcodes/{name}_whitelist.txt".format(name=config["name"]),
+                    "results/metadata/{name}_dt_structure.yaml".format(name=config["name"]),
                     "results/intermediate/{name}.read1.fastq.gz".format(name=config["name"])
-    
-    
     ]
 
     return final_output
