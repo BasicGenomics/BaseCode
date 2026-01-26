@@ -240,7 +240,7 @@ def make_dt_structure_from_cellbc(cellbc_file: str,
             })
 
     with open(output_file, 'a') as out_f:
-        yaml.dump(entries, out_f,default_flow_style=True)
+        yaml.dump(entries, out_f,default_flow_style=False)
 
 def main():
     parser = argparse.ArgumentParser(description='', formatter_class=argparse.ArgumentDefaultsHelpFormatter)

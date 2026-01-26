@@ -58,6 +58,8 @@ if 'dts' not in config["params"]:
     config["params"]["dts"] = "25"
 if 'cutoff' not in config["params"]:
     config["params"]["cutoff"] = "8"
+if 'cbc_offset' not in config['params']:
+    config['params']['cbc_offset'] = 5 ### pipseq position that needs to search for cell bc
 
 
 SPLICESITES = "{resource_dir}/genome_references/{reference}/splicesites.ss".format(resource_dir=config["resource_dir"], reference=config["reference"]) 
@@ -74,6 +76,7 @@ BARCODE_CFG = Path(PROJECT_ROOT) / "config/config_bc.yaml"
 BARCODE_RES = Path(PROJECT_ROOT) / "results/barcodes"
 
 include: "rules/runs.smk"
+# include: "rules/parse_fastq.smk"
 include: "rules/common.smk"
 
 

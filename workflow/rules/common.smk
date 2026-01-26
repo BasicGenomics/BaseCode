@@ -28,3 +28,11 @@ def get_final_output_sc(wildcards):
     ]
 
     return final_output
+
+
+def get_final_output_test(wildcards):
+    final_output = [
+                    "results/intermediate/{name}.read1.fastq.gz".format(name=config["name"])
+    ]
+
+    return final_output
