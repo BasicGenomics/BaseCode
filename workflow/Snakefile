@@ -46,11 +46,18 @@ if "gff_gene_identifier" not in config:
 if "params" not in config:
     config["params"] = {}
 
-if "cutadapt" not in config["params"]:
-    config["params"]["cutadapt"] = "-n 2 -m 25 -q 10 -a CTGTCTCTTATACACATCT -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCA -g TTTTTTTTTTTTTTTTTTTT -g GGAGGAGGAGAGAAGA -g AAAAAAAAAAAAAAAAAAAA -A CTGTCTCTTATACACATCT -A AAAAAAAAAAAAAAAAAAAA -A AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT"
+
+if "reverse" not in config:
+    config["reverse"] = False
 
 if "hisat3n" not in config["params"]:
-    config["params"]["hisat3n"] = "-k 5 --max-seeds 8 --score-min L,0,-0.5 --base-change G,A --no-temp-splicesite"
+    if config["reverse"]:
+        config["params"]["hisat3n"] = "-k 5 --max-seeds 8 --score-min L,0,-0.5 --base-change A,G --no-temp-splicesite"
+    else:
+        config["params"]["hisat3n"] = "-k 5 --max-seeds 8 --score-min L,0,-0.5 --base-change G,A --no-temp-splicesite"
+
+if "cutadapt" not in config["params"]:
+    config["params"]["cutadapt"] = "-n 2 -m 25 -q 10 -a CTGTCTCTTATACACATCT -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCA -g TTTTTTTTTTTTTTTTTTTT -g GGAGGAGGAGAGAAGA -g AAAAAAAAAAAAAAAAAAAA -A CTGTCTCTTATACACATCT -A AAAAAAAAAAAAAAAAAAAA -A AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT"
 
 if 'umilen' not in config["params"]:
     config["params"]["umilen"] = "6"
@@ -58,14 +65,17 @@ if 'dts' not in config["params"]:
     config["params"]["dts"] = "25"
 if 'cutoff' not in config["params"]:
     config["params"]["cutoff"] = "8"
+
 if 'cbc_offset' not in config['params']:
-    config['params']['cbc_offset'] = 5 ### pipseq position that needs to search for cell bc
+    if config['run'] == 'pipseq':
+        config['params']['cbc_offset'] = 5 ### pipseq position that needs to search for cell bc
+else:
+    config['params']['cbc_offset'] = 0
 
-
-SPLICESITES = "{resource_dir}/genome_references/{reference}/splicesites.ss".format(resource_dir=config["resource_dir"], reference=config["reference"]) 
-GENOMEREF = "{resource_dir}/genome_references/{reference}/genomeref".format(resource_dir=config["resource_dir"], reference=config["reference"])
-GTFFILE = "{resource_dir}/genome_references/{reference}/geneannotations".format(resource_dir=config["resource_dir"], reference=config["reference"])
-REFFILE = "{resource_dir}/genome_references/{reference}/reference.fa".format(resource_dir = config["resource_dir"], reference = config["reference"])
+SPLICESITES = "{resource_dir}/genome_references/{reference}/splicesites.ss".format(resource_dir=Path(config["resource_dir"]), reference=config["reference"]) 
+GENOMEREF = "{resource_dir}/genome_references/{reference}/genomeref".format(resource_dir=Path(config["resource_dir"]), reference=config["reference"])
+GTFFILE = "{resource_dir}/genome_references/{reference}/geneannotations".format(resource_dir=Path(config["resource_dir"]), reference=config["reference"])
+REFFILE = "{resource_dir}/genome_references/{reference}/reference.fa".format(resource_dir = Path(config["resource_dir"]), reference = config["reference"])
 cores_samtools = int(config["threads"]*0.05)+1
 cores_hisat = config["threads"]-cores_samtools
 
@@ -75,9 +85,15 @@ BARCODE_CFG = Path(PROJECT_ROOT) / "config/config_bc.yaml"
 # #barcode results directory
 BARCODE_RES = Path(PROJECT_ROOT) / "results/barcodes"
 
-include: "rules/runs.smk"
+
+if config['run'] == 'pipseq':
+    include: "rules/processing_sc.smk"
+else: 
+    include: "rules/processing.smk"
+
 # include: "rules/parse_fastq.smk"
 include: "rules/common.smk"
+
 
 
 # include: "rules/processing.smk"
