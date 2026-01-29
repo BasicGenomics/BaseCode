@@ -58,7 +58,7 @@ if config["i1"] != "" and config["i2"] != "":
         benchmark: "results/benchmarks/parse_fastq.benchmark.txt"
         params: comp_threads = int(config["threads"]*0.2),
                 proc_threads = config["threads"]-int(config["threads"]*0.2),
-                cbc_offset = config['params']['cbc_offset']
+                cbc_offset = config['params']['parse_fq']['cbc_offset']
         shell: "echo Parse FASTQ && binaries/parse_fastq --read1 {input.r1_in} --read2 {input.r2_in} --index1 {input.i1_in} --index2 {input.i2_in} --r1-out {output.r1_out} --r2-out {output.r2_out} --cbcpath {input.cell_barcodes} --pbcpath {input.pbcpath} --readtype-structure {input.readtype_map} --dt-structure {input.dt_structure} --index-layout {config[index_layout]} --sample-structure {input.sample_map} --processing-threads {params.proc_threads} --compression-threads {params.comp_threads} --ts-sequence {config[ts_sequence]} --ts-pad {config[ts_pad]} --ts-cutoff {config[ts_cutoff]} --cbc-offset {params.cbc_offset} > {log} 2>&1"
 else:
     rule parse_fastq:
@@ -69,7 +69,7 @@ else:
         benchmark: "results/benchmarks/parse_fastq.benchmark.txt"
         params: comp_threads = int(config["threads"]*0.2),
                 proc_threads = config["threads"]-int(config["threads"]*0.2),
-                cbc_offset = config['params']['cbc_offset']
+                cbc_offset = config['params']['parse_fq']['cbc_offset']
         shell: "echo Parse FASTQ && binaries/parse_fastq --read1 {input.r1_in} --read2 {input.r2_in} --r1-out {output.r1_out} --r2-out {output.r2_out} --cbcpath {input.cell_barcodes} --pbcpath {input.pbcpath} --readtype-structure {input.readtype_map} --dt-structure {input.dt_structure} --index-layout {config[index_layout]} --sample-structure {input.sample_map} --processing-threads {params.proc_threads} --compression-threads {params.comp_threads} --ts-sequence {config[ts_sequence]} --ts-pad {config[ts_pad]} --ts-cutoff {config[ts_cutoff]} --cbc-offset {params.cbc_offset} > {log} 2>&1"
 rule trim_fastq:
     input: r1 = "results/intermediate/{name}.read1.fastq.gz".format(name=config["name"]),

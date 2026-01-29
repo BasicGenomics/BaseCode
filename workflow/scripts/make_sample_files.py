@@ -225,9 +225,9 @@ def scan_fastq_for_order_and_orientation(fastq_files: list, index_sequence_map: 
 
 def make_dt_structure_from_cellbc(cellbc_file: str,
                                     output_file: str, 
-                                    umilen:int = 6,
-                                    dts:int = 25,
-                                    cutoff: int = 8):
+                                    umilen:int,
+                                    dts:int,
+                                    cutoff: int):
 
     entries = []
     with open(cellbc_file, 'r') as f:
@@ -249,12 +249,13 @@ def main():
     parser.add_argument('--fastq', metavar='fastq', type=str, nargs = '+', help='fastq file with index sequences')
     parser.add_argument('--cell-barcodes', metavar='cell_barcodes', type=str, help='Cell barcode file')
     parser.add_argument('--sample-barcodes', metavar='sample_barcodes', type=str, help='Sample barcode output')
-    # parser.add_argument('--cell-barcodes', metavar='barcodes', type=str, help='Cell barcode output')
     parser.add_argument('--sample-map', metavar='sample_map', type=str, help='Sample map output')
     parser.add_argument('--readtype-map', metavar='readtypes', type=str, help='readtype map output')
     parser.add_argument('--dt-structure', metavar='dt_structure', type=str, help='dt structure output')
     parser.add_argument('--samplesheet-out', metavar='samplesheet_out', type=str, help='Samplesheet output')
     parser.add_argument('--ignore-none', action='store_true', help='Ignore empty cells in samplesheet')
+    parser.add_argument('--cells',action='store_true',help='for cells')
+
     args = parser.parse_args()
 
     samplesheet_file = args.samplesheet
@@ -269,6 +270,7 @@ def main():
     dt_structure_file = args.dt_structure
     samplesheet_out = args.samplesheet_out
     ignore_none = args.ignore_none
+
 
     with open(index_sequences, 'r') as f_is:
         index_sequence_map = yaml.safe_load(f_is)
@@ -307,13 +309,21 @@ def main():
         f.write('\n')
         f.writelines("\n".join(make_sample_barcode_list(set(samplesheet_df["SAMPLE_BARCODES_PCR_B"]))))
 
-    if os.path.exists(cell_barcodes_file) == False: # bulk mode
+
+    if args.cells:
+
+        params_fname = 'workflow/resources/params.yaml'
+        with open(params_fname, 'r') as f:
+            params = yaml.safe_load(f)
+        params = params['pipseq']['dt_structure']
+        make_dt_structure_from_cellbc(cell_barcodes_file, dt_structure_file,  params['umilen'],  params['dts'],  params['cutoff'])
+
+    else:  # bulk
         samplesheet_df['BARCODE'] = 'nan'
         with open(cell_barcodes_file, 'w') as f:
             f.writelines("\n".join(make_sample_barcode_list(set(samplesheet_df['BARCODE']))))
-    else: # single cell mode
-        make_dt_structure_from_cellbc(cell_barcodes_file, dt_structure_file)
 
+  
     samplesheet_df['SAMPLE_ID'] = samplesheet_df.apply(fix_SAMPLE_ID, axis=1)
     # samplesheet_df.index = samplesheet_df.apply(lambda row: row['SAMPLE_ID']+row['BARCODE'], axis=1) 
     samplesheet_df.index = samplesheet_df.apply(lambda row: row['SAMPLE_ID'], axis=1) 
@@ -325,8 +335,9 @@ def main():
     
     with open(readtype_map_file, 'w') as f:
         yaml.dump(sample_barcode_to_readType_map, f)
-
     
     samplesheet_df.to_csv(samplesheet_out)
+
+
 if __name__ == "__main__":
     main()

@@ -30,9 +30,6 @@ if "i1" not in config:
 if "i2" not in config:
     config["i2"] = ""
 
-if "dt_structure" not in config:
-    config["dt_structure"] = "workflow/resources/dt_structure.yaml"
-
 if "ts_sequence" not in config:
     config["ts_sequence"] = "TCTTCTCTCCTCCTCC"
 if "ts_pad" not in config:
@@ -46,7 +43,6 @@ if "gff_gene_identifier" not in config:
 if "params" not in config:
     config["params"] = {}
 
-
 if "reverse" not in config:
     config["reverse"] = False
 
@@ -59,18 +55,6 @@ if "hisat3n" not in config["params"]:
 if "cutadapt" not in config["params"]:
     config["params"]["cutadapt"] = "-n 2 -m 25 -q 10 -a CTGTCTCTTATACACATCT -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCA -g TTTTTTTTTTTTTTTTTTTT -g GGAGGAGGAGAGAAGA -g AAAAAAAAAAAAAAAAAAAA -A CTGTCTCTTATACACATCT -A AAAAAAAAAAAAAAAAAAAA -A AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT"
 
-if 'umilen' not in config["params"]:
-    config["params"]["umilen"] = "6"
-if 'dts' not in config["params"]:
-    config["params"]["dts"] = "25"
-if 'cutoff' not in config["params"]:
-    config["params"]["cutoff"] = "8"
-
-if 'cbc_offset' not in config['params']:
-    if config['run'] == 'pipseq':
-        config['params']['cbc_offset'] = 5 ### pipseq position that needs to search for cell bc
-else:
-    config['params']['cbc_offset'] = 0
 
 SPLICESITES = "{resource_dir}/genome_references/{reference}/splicesites.ss".format(resource_dir=Path(config["resource_dir"]), reference=config["reference"]) 
 GENOMEREF = "{resource_dir}/genome_references/{reference}/genomeref".format(resource_dir=Path(config["resource_dir"]), reference=config["reference"])
@@ -79,27 +63,50 @@ REFFILE = "{resource_dir}/genome_references/{reference}/reference.fa".format(res
 cores_samtools = int(config["threads"]*0.05)+1
 cores_hisat = config["threads"]-cores_samtools
 
-# #barcode whitelist config
-BARCODE_CFG = Path(PROJECT_ROOT) / "config/config_bc.yaml"
 
-# #barcode results directory
-BARCODE_RES = Path(PROJECT_ROOT) / "results/barcodes"
+###### bulk vs sc (now only pipseq)
 
+params_fname = 'workflow/resources/params.yaml'
+with open(params_fname, 'r') as f:
+    params = yaml.safe_load(f)
+
+if config['run'] == 'pipseq':
+    # #barcode whitelist config
+    BARCODE_CFG = Path(PROJECT_ROOT) / "config/config_bc.yaml"
+    # #barcode results directory
+    BARCODE_RES = Path(PROJECT_ROOT) / "results/barcodes"
+
+    config['params_key'] = 'pipseq'
+
+else:
+    if "dt_structure" not in config:
+        config["dt_structure"] = "workflow/resources/dt_structure.yaml"
+
+    config['params_key'] = 'bulk'
+
+config['params']['parse_fq']['cbc_offset'] = params[config['params_key']]['parse_fq']['cbc_offset']
+
+##### smk
+
+
+#### helper function for collect_stats
+def bulk_flag(config):
+
+    if config['params_key'] =='bulk':
+        return "--only-samples"
+    else:
+        return ""
+####
 
 if config['run'] == 'pipseq':
     include: "rules/processing_sc.smk"
 else: 
     include: "rules/processing.smk"
 
-# include: "rules/parse_fastq.smk"
 include: "rules/common.smk"
-
-
-
-# include: "rules/processing.smk"
-# include: "rules/collect_stats.smk"
-# include: "rules/read_flow.smk"
-# include: "rules/reconstruction_stats.smk"
+include: "rules/collect_stats.smk"
+include: "rules/read_flow.smk"
+include: "rules/reconstruction_stats.smk"
 
 
 rule all:

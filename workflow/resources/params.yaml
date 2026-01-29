@@ -1,0 +1,10 @@
+pipseq: 
+  dt_structure:
+    umilen: 6
+    dts: 25
+    cutoff: 8
+  parse_fq:
+    cbc_offset: 5
+bulk:
+  parse_fq:
+    cbc_offset: 0

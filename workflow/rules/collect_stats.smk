@@ -15,11 +15,14 @@ rule insertion_sizes:
 rule conversion:
     input: bam = "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.bam".format(name=config["name"]), bai = "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.bam.bai".format(name=config["name"]), samplesheet = "results/metadata/{name}_samplesheet.csv".format(name=config["name"])
     output: "results/QC_files/{name}_conversion_rate_pos.csv".format(name=config["name"]),"results/QC_files/{name}_conversion_rate_total.csv".format(name=config["name"])
-    params: fasta = REFFILE, gtf =  "{}.gff3".format(GTFFILE)
+    params: 
+        fasta = REFFILE, 
+        gtf =  "{}.gff3".format(GTFFILE),
+        only_sample_flag = lambda wc: bulk_flag(config)
     threads: int(config["threads"]/2)
     conda: "../envs/full.yaml"
     log: "results/logs/conversion.log"
-    shell: "python3 workflow/scripts/conversion_rates.py -i {input.bam} -f {params.fasta} -g {params.gtf} -o results/QC_files -s {input.samplesheet} -p {config[name]} -t {threads} --gene-identifier {config[gff_gene_identifier]} > {log} 2>&1"
+    shell: "python3 workflow/scripts/conversion_rates.py -i {input.bam} -f {params.fasta} -g {params.gtf} -o results/QC_files -s {input.samplesheet} -p {config[name]} -t {threads} --gene-identifier {config[gff_gene_identifier]} {params.only_sample_flag}> {log} 2>&1"
 
 rule summary_stats:
     input: long_form = "results/QC_files/{name}_long_form_reconstruction_stats.csv".format(name=config["name"]), json = "results/read_flow_files/{name}_fastq_processed_stats.json".format(name=config["name"]), sample_map = "results/metadata/{name}_sample_map.yaml".format(name=config["name"]), bam = "results/{name}.stitched.molecules.sorted.bam".format(name=config["name"])
