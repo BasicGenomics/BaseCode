@@ -38,15 +38,7 @@ rule make_barcode_files:
 
 if config["i1"] != "" and config["i2"] != "":
     checkpoint parse_fastq:
-        input:  r1_in = config["r1"], 
-                r2_in = config["r2"], 
-                i1_in = config["i1"], 
-                i2_in = config["i2"], 
-                pbcpath = "results/metadata/{name}_sample_barcodes.txt".format(name=config["name"]), 
-                cell_barcodes = "results/barcodes/{name}_whitelist.txt".format(name=config["name"]), 
-                sample_map = "results/metadata/{name}_sample_map.yaml".format(name=config["name"]), 
-                readtype_map = "results/metadata/{name}_readtype_map.yaml".format(name=config["name"]), 
-                dt_structure = "results/metadata/{}_dt_structure.yaml".format(config["name"])
+        input: r1_in = config["r1"], r2_in = config["r2"], i1_in = config["i1"], i2_in = config["i2"], pbcpath = "results/metadata/{name}_sample_barcodes.txt".format(name=config["name"]), cell_barcodes = "results/metadata/{name}_whitelist.txt".format(name=config["name"]), sample_map = "results/metadata/{name}_sample_map.yaml".format(name=config["name"]), readtype_map = "results/metadata/{name}_readtype_map.yaml".format(name=config["name"]), dt_structure = "results/metadata/{}_dt_structure.yaml".format(config["name"])
         output: directory(FASTQ_DIR)
         log: "results/logs/parse_fastq.log"
         benchmark: "results/benchmarks/parse_fastq.benchmark.txt"
@@ -58,13 +50,7 @@ if config["i1"] != "" and config["i2"] != "":
         shell: "echo Parse FASTQ && binaries/parse_fastq --read1 {input.r1_in} --read2 {input.r2_in} --index1 {input.i1_in} --index2 {input.i2_in} --cbcpath {input.cell_barcodes} --pbcpath {input.pbcpath} --readtype-structure {input.readtype_map} --dt-structure {input.dt_structure} --index-layout {config[index_layout]} --sample-structure {input.sample_map} --processing-threads {params.proc_threads} --compression-threads {params.comp_threads} --ts-sequence {config[ts_sequence]} --ts-pad {config[ts_pad]} --ts-cutoff {config[ts_cutoff]} --cbc-offset {params.cbc_offset} {params.demultiplex_flag} --prefix {params.prefix} > {log} 2>&1"
 else:
     checkpoint parse_fastq:
-        input:  r1_in = config["r1"], 
-                r2_in = config["r2"], 
-                pbcpath = "results/metadata/{name}_sample_barcodes.txt".format(name=config["name"]), 
-                cell_barcodes = "results/barcodes/{name}_whitelist.txt".format(name=config["name"]), 
-                sample_map = "results/metadata/{name}_sample_map.yaml".format(name=config["name"]), 
-                readtype_map = "results/metadata/{name}_readtype_map.yaml".format(name=config["name"]), 
-                dt_structure = "results/metadata/{}_dt_structure.yaml".format(config["name"])
+        input: r1_in = config["r1"], r2_in = config["r2"], pbcpath = "results/metadata/{name}_sample_barcodes.txt".format(name=config["name"]), cell_barcodes = "results/metadata/{name}_whitelist.txt".format(name=config["name"]), sample_map = "results/metadata/{name}_sample_map.yaml".format(name=config["name"]), readtype_map = "results/metadata/{name}_readtype_map.yaml".format(name=config["name"]), dt_structure = "results/metadata/{}_dt_structure.yaml".format(config["name"])
         output: directory(FASTQ_DIR)
         log: "results/logs/parse_fastq.log"
         benchmark: "results/benchmarks/parse_fastq.benchmark.txt"
@@ -75,24 +61,21 @@ else:
                 demultiplex_flag = FLAG_demultiplex
         shell: "echo Parse FASTQ && binaries/parse_fastq --read1 {input.r1_in} --read2 {input.r2_in} --cbcpath {input.cell_barcodes} --pbcpath {input.pbcpath} --readtype-structure {input.readtype_map} --dt-structure {input.dt_structure} --index-layout {config[index_layout]} --sample-structure {input.sample_map} --processing-threads {params.proc_threads} --compression-threads {params.comp_threads} --ts-sequence {config[ts_sequence]} --ts-pad {config[ts_pad]} --ts-cutoff {config[ts_cutoff]} --cbc-offset {params.cbc_offset} {params.demultiplex_flag} --prefix {params.prefix} > {log} 2>&1"
 
-def get_samples():
-    checkpoint_output = checkpoints.parse_fastq.get().output[0]
-    print("Samples to be processed:")
-    for f in os.listdir(checkpoint_output):
-        if f.endswith("_1.fq.gz"):
-            print(f.replace("_1.fq.gz", ""))
+def get_samples(wildcards):
+    checkpoint_output = checkpoints.parse_fastq.get(**wildcards).output[0]
+    print(checkpoint_output)
     return [f.replace("_1.fq.gz", "") for f in os.listdir(checkpoint_output) if f.endswith("_1.fq.gz")]
 
 def parse_fq_dir(_wc):
     return checkpoints.parse_fastq.get().output[0]
 
 rule trim_fastq:
-    input:  r1 = lambda wc: os.path.join(parse_fq_dir(wc), f"{wc.sample}_1.fq.gz"),
-            r2 = lambda wc: os.path.join(parse_fq_dir(wc), f"{wc.sample}_2.fq.gz")
-    output: r1 = temp("results/intermediate/{sample}.trimmed.read1.fastq.gz"),
-           r2 = temp("results/intermediate/{sample}.trimmed.read2.fastq.gz"),
-           r1_short = temp("results/intermediate/{sample}.tooshort.read1.fastq.gz"),
-           r2_short = temp("results/intermediate/{sample}.tooshort.read2.fastq.gz")
+    input: r1 = os.path.join(FASTQ_DIR,"{sample}_1.fq.gz"),
+           r2 = os.path.join(FASTQ_DIR,"{sample}_2.fq.gz")
+    output: r1 = temp(os.path.join(FASTQ_DIR,"{sample}.trimmed.read1.fastq.gz")),
+           r2 = temp(os.path.join(FASTQ_DIR,"{sample}.trimmed.read2.fastq.gz")),
+           r1_short = temp(os.path.join(FASTQ_DIR,"{sample}.tooshort.read1.fastq.gz")),
+           r2_short = temp(os.path.join(FASTQ_DIR,"{sample}.tooshort.read2.fastq.gz"))
     log: stdout = "results/logs/{sample}.trim_fastq.log",
          summary = "results/summaries/{sample}.cutadapt.json"
     benchmark: "results/benchmarks/{sample}.trim_fastq.benchmark.txt"
@@ -100,10 +83,9 @@ rule trim_fastq:
     threads: config["threads"]
     shell: "echo Trim FASTQ && cutadapt -j {threads} --json {log.summary} {config[params][cutadapt]} --too-short-output {output.r1_short} --too-short-paired-output {output.r2_short} -o {output.r1} -p {output.r2} {input.r1} {input.r2} > {log.stdout} 2>&1"
 
-
 rule map_reads:
-    input:  r1 = "results/intermediate/{sample}.trimmed.read1.fastq.gz",
-            r2 = "results/intermediate/{sample}.trimmed.read2.fastq.gz"
+    input: r1 = os.path.join(FASTQ_DIR,"{sample}.trimmed.read1.fastq.gz"),
+        r2 = os.path.join(FASTQ_DIR,"{sample}.trimmed.read2.fastq.gz")
     output: temp("results/intermediate/{sample}.trimmed.aligned.bam")
     log: stdout = "results/logs/{sample}.map_reads.log",
         summary = "results/summaries/{sample}.hisat2.summary.txt"

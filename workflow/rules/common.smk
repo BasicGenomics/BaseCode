@@ -1,41 +1,30 @@
 def get_final_output(wildcards):
-    final_output = ["results/{name}.stitched.molecules.sorted.bam".format(name=config["name"]),
-    "results/QC_files/{name}_read_type_per_sample.csv".format(name=config["name"]),
-    "results/QC_files/{name}_conversion_rate_total.csv".format(name=config["name"]),
-    "results/read_flow_files/{name}_fastq_processed_stats.json".format(name=config["name"]),
-    "results/read_flow_files/{name}_fastq_trimmed_stats.json".format(name=config["name"]),
-    "results/read_flow_files/{name}_fastq_tooshort_stats.json".format(name=config["name"]),
-    "results/read_flow_files/{name}_mapping_group.csv".format(name=config["name"]),
-    "results/read_flow_files/{name}_status_group.csv".format(name=config["name"]),
-    "results/QC_files/{name}_long_form_reconstruction_stats.csv".format(name=config["name"]),
-    "results/QC_files/{name}_overlap_and_mi_genes.csv".format(name=config["name"]),
-    "results/QC_files/{name}_overlap_and_mi_cells.csv".format(name=config["name"]),
-    "results/QC_files/{name}_counts_per_gene.csv".format(name=config["name"]),
-    "results/QC_files/{name}_status_sum.csv".format(name=config["name"]),
-    "results/QC_files/{name}_status_fraction_per_gene.csv".format(name=config["name"]),
-    "results/QC_files/{name}_insert_sizes_per_sample_barcode.csv".format(name=config["name"]),
-    "results/QC_files/{name}_double_reads_per_sample_barcode.csv".format(name=config["name"]),
-    "results/logs/python_version.log",
-    "results/QC_files/{name}_summary_stats.csv".format(name=config["name"])]
+    final_output = [
+    "results/metadata/{}_cell_barcodes.txt".format(config['name']),
+    *expand("results/QC_files/{sample}_read_type_per_sample.csv",sample=get_samples()),
+    *expand("results/QC_files/{sample}_conversion_rate_total.csv",sample=get_samples()),
+    *expand("results/read_flow_files/{sample}_fastq_processed_stats.json",sample=get_samples()),
+    *expand("results/read_flow_files/{sample}_fastq_trimmed_stats.json",sample=get_samples()),
+    *expand("results/read_flow_files/{sample}_fastq_tooshort_stats.json",sample=get_samples()),
+    *expand("results/read_flow_files/{sample}_mapping_group.csv",sample=get_samples()),
+    *expand("results/read_flow_files/{sample}_status_group.csv",sample=get_samples()),
+    *expand("results/QC_files/{sample}_long_form_reconstruction_stats.csv",sample=get_samples()),
+    *expand("results/QC_files/{sample}_overlap_and_mi_genes.csv",sample=get_samples()),
+    *expand("results/QC_files/{sample}_overlap_and_mi_cells.csv",sample=get_samples()),
+    *expand("results/QC_files/{sample}_counts_per_gene.csv",sample=get_samples()),
+    *expand("results/QC_files/{sample}_status_sum.csv",sample=get_samples()),
+    *expand("results/QC_files/{sample}_status_fraction_per_gene.csv",sample=get_samples()),
+    *expand("results/QC_files/{sample}_insert_sizes_per_sample_barcode.csv",sample=get_samples()),
+    *expand("results/QC_files/{sample}_double_reads_per_sample_barcode.csv",sample=get_samples()),
+    *expand("results/logs/python_version.log",sample=get_samples()),
+    *expand("results/QC_files/{sample}_summary_stats.csv",sample=get_samples())
+    ]
 
     return final_output
 
 
 def get_final_output_sc(wildcards):
-    final_output = ["results/barcodes/{name}_whitelist.txt".format(name=config["name"]),
-                    "results/metadata/{name}_dt_structure.yaml".format(name=config["name"]),
-                    "results/intermediate/{name}.read1.fastq.gz".format(name=config["name"]),
-                    "results/intermediate/{name}.trimmed.aligned.bam".format(name=config["name"]),
-                    "results/intermediate/{name}.trimmed.aligned.pstrand.bam".format(name=config["name"]),
-                   "results/{name}.reads.stitched.molecules.sorted.bam".format(name=config["name"])
-    ]
-
-    return final_output
-
-
-def get_final_output_test(wildcards):
     final_output = [
-                    "results/intermediate/{name}.read1.fastq.gz".format(name=config["name"])
-    ]
+    "results/metadata/{}_cell_barcodes.txt".format(config['name'])]
 
     return final_output

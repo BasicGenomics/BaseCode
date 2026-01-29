@@ -4,6 +4,7 @@
 # in particular regarding the standardized folder structure mentioned there. 
 
 from snakemake.utils import min_version
+import yaml
 from pathlib import Path
 min_version("6.0")
 
@@ -60,9 +61,38 @@ SPLICESITES = "{resource_dir}/genome_references/{reference}/splicesites.ss".form
 GENOMEREF = "{resource_dir}/genome_references/{reference}/genomeref".format(resource_dir=Path(config["resource_dir"]), reference=config["reference"])
 GTFFILE = "{resource_dir}/genome_references/{reference}/geneannotations".format(resource_dir=Path(config["resource_dir"]), reference=config["reference"])
 REFFILE = "{resource_dir}/genome_references/{reference}/reference.fa".format(resource_dir = Path(config["resource_dir"]), reference = config["reference"])
+
 cores_samtools = int(config["threads"]*0.05)+1
 cores_hisat = config["threads"]-cores_samtools
 
+
+### helper func
+
+# write params if not already specified in config  
+def deep_setdefault(d, defaults):
+    for k, v in defaults.items():
+        if isinstance(v, dict):
+            d.setdefault(k, {})
+            deep_setdefault(d[k], v)
+        else:
+            d.setdefault(k, v)
+
+# different fastq directory 
+def set_fastq_dir(config):
+    if config['processing']['demultiplex']:
+        return "results/intermediate/demultiplexed_fastq/", "--demultiplex"
+    else:
+        return "results/intermediate/fastq/", ""
+
+# for .smk collect_stats
+def bulk_flag(config):
+
+    if config['params_key'] =='bulk':
+        return "--only-samples"
+    else:
+        return ""
+
+####
 
 ###### bulk vs sc (now only pipseq)
 
@@ -78,25 +108,21 @@ if config['run'] == 'pipseq':
 
     config['params_key'] = 'pipseq'
 
-else:
+else: # bulk
     if "dt_structure" not in config:
         config["dt_structure"] = "workflow/resources/dt_structure.yaml"
 
     config['params_key'] = 'bulk'
 
-config['params']['parse_fq']['cbc_offset'] = params[config['params_key']]['parse_fq']['cbc_offset']
+
+deep_setdefault(config['params'],params['method'][config['params_key']])
+config.setdefault('processing',{})
+deep_setdefault(config['processing'],params['processing'])
+
+FASTQ_DIR,FLAG_demultiplex = set_fastq_dir(config)
 
 ##### smk
 
-
-#### helper function for collect_stats
-def bulk_flag(config):
-
-    if config['params_key'] =='bulk':
-        return "--only-samples"
-    else:
-        return ""
-####
 
 if config['run'] == 'pipseq':
     include: "rules/processing_sc.smk"
@@ -111,4 +137,11 @@ include: "rules/reconstruction_stats.smk"
 
 rule all:
     input:
-        get_final_output_sc
+        get_final_output,
+        lambda wildcards: expand("results/{sample}.stitched.molecules.sorted.bam",sample=get_samples())
+
+
+# rule all:
+#     input:
+#         get_final_output_sc,
+#         lambda wildcards: expand("results/intermediate/demultiplexed_fastq/{sample}.trimmed.read1.fastq.gz",sample=get_samples())

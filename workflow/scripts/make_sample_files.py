@@ -315,7 +315,7 @@ def main():
         params_fname = 'workflow/resources/params.yaml'
         with open(params_fname, 'r') as f:
             params = yaml.safe_load(f)
-        params = params['pipseq']['dt_structure']
+        params = params['method']['pipseq']['dt_structure']
         make_dt_structure_from_cellbc(cell_barcodes_file, dt_structure_file,  params['umilen'],  params['dts'],  params['cutoff'])
 
     else:  # bulk
