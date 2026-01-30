@@ -79,7 +79,7 @@ def deep_setdefault(d, defaults):
 
 # different fastq directory 
 def set_fastq_dir(config):
-    if config['processing']['demultiplex']:
+    if config['processing']['demultiplex']==True:
         return "results/intermediate/demultiplexed_fastq/", "--demultiplex"
     else:
         return "results/intermediate/fastq/", ""
@@ -99,6 +99,8 @@ def bulk_flag(config):
 params_fname = 'workflow/resources/params.yaml'
 with open(params_fname, 'r') as f:
     params = yaml.safe_load(f)
+
+config.setdefault('run',{})
 
 if config['run'] == 'pipseq':
     # #barcode whitelist config
@@ -134,14 +136,9 @@ include: "rules/collect_stats.smk"
 include: "rules/read_flow.smk"
 include: "rules/reconstruction_stats.smk"
 
+EXCLUDE = {"Unassigned"}
 
 rule all:
     input:
-        get_final_output,
-        lambda wildcards: expand("results/{sample}.stitched.molecules.sorted.bam",sample=get_samples())
-
-
-# rule all:
-#     input:
-#         get_final_output_sc,
-#         lambda wildcards: expand("results/intermediate/demultiplexed_fastq/{sample}.trimmed.read1.fastq.gz",sample=get_samples())
+        # get_final_output,
+        lambda wildcards: expand("results/{sample}.stitched.molecules.sorted.bam",sample=[s for s in get_samples() if s not in EXCLUDE])

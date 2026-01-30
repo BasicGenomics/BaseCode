@@ -5,9 +5,9 @@ rule log_python_version:
 
 rule get_cell_barcodes:
     input: fastq_r1 = config["r1"], fastq_r2 = config["r2"]
-    output: r1_out = "results/barcodes/{}_R1.fq.gz".format(config['name']),
-        r2_out = "results/barcodes/{}_R2.fq.gz".format(config['name']),
-        log_yaml = "results/barcodes/{}_log.yaml".format(config['name']),
+    output: r1_out = temp("results/barcodes/{}_R1.fq.gz".format(config['name'])),
+        r2_out = temp("results/barcodes/{}_R2.fq.gz".format(config['name'])),
+        log_yaml = "results/barcodes/{}_log.yaml.format(config['name'])",
         cell_whitelist =  "results/barcodes/{}_whitelist.txt".format(config['name']),
         cell_barcodes = "results/metadata/{}_cell_barcodes.txt".format(config['name'])
     params: barcode_cfg = BARCODE_CFG,
@@ -21,7 +21,10 @@ rule get_cell_barcodes:
     """
 
 rule make_barcode_files:
-    input: samplesheet = config["samplesheet"], fastq = config["r2"], index_sequences = "workflow/resources/index_sequences.yaml", cell_barcodes = "results/barcodes/{name}_whitelist.txt".format(name=config['name'])
+    input:  samplesheet = config["samplesheet"], 
+            fastq = config["r2"], 
+            index_sequences = "workflow/resources/index_sequences.yaml", 
+            cell_barcodes = "results/barcodes/{name}_whitelist.txt".format(name=config['name'])
     output: barcodes = "results/metadata/{name}_sample_barcodes.txt".format(name=config["name"]),
         sample_map = "results/metadata/{name}_sample_map.yaml".format(name=config["name"]),
         readtype_map = "results/metadata/{name}_readtype_map.yaml".format(name=config["name"]),
@@ -60,10 +63,10 @@ else:
     checkpoint parse_fastq:
         input:  r1_in = config["r1"], 
                 r2_in = config["r2"], 
-                pbcpath = "results/metadata/{name}_sample_barcodes.txt".format(name=config["name"]), 
-                cell_barcodes = "results/barcodes/{name}_whitelist.txt".format(name=config["name"]), 
-                sample_map = "results/metadata/{name}_sample_map.yaml".format(name=config["name"]), 
-                readtype_map = "results/metadata/{name}_readtype_map.yaml".format(name=config["name"]), 
+                pbcpath = "results/metadata/{}_sample_barcodes.txt".format(config["name"]), 
+                cell_barcodes = "results/barcodes/{}_whitelist.txt".format(config["name"]), 
+                sample_map = "results/metadata/{}_sample_map.yaml".format(config["name"]), 
+                readtype_map = "results/metadata/{}_readtype_map.yaml".format(config["name"]), 
                 dt_structure = "results/metadata/{}_dt_structure.yaml".format(config["name"])
         output: directory(FASTQ_DIR)
         log: "results/logs/parse_fastq.log"
@@ -77,10 +80,6 @@ else:
 
 def get_samples():
     checkpoint_output = checkpoints.parse_fastq.get().output[0]
-    print("Samples to be processed:")
-    for f in os.listdir(checkpoint_output):
-        if f.endswith("_1.fq.gz"):
-            print(f.replace("_1.fq.gz", ""))
     return [f.replace("_1.fq.gz", "") for f in os.listdir(checkpoint_output) if f.endswith("_1.fq.gz")]
 
 def parse_fq_dir(_wc):
@@ -324,11 +323,13 @@ rule make_molecule_bams:
 
 rule sort_molecule_bams:
     input: molecules_out = "results/intermediate/{sample}.reads.aligned_trimmed_genetagged_sorted_umicorrected.stitched.molecules.bam"
-    output: molecules_out = "results/{sample}.stitched.molecules.sorted.bam"
+    output: molecules_out = "results/{sample}.stitched.molecules.sorted.bam",
+            done = "results/{sample}.processing.done"
     log: "results/logs/{sample}.sort_molecules.log"
     conda: "../envs/full.yaml"
     shell:"""
     echo Creating final output file
     samtools sort -m 1000M -@ {config[threads]} -T results/.tmp_bgab/sorttmp. -o {output.molecules_out} {input.molecules_out} &> {log}
     samtools index -@ {config[threads]} {output.molecules_out}
+    touch {output.done}
     """
