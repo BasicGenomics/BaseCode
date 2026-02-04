@@ -3,6 +3,8 @@
 from argparse import ArgumentParser
 import os
 import sys
+import yaml
+from workflow.scripts.make_sample_files import peep_sampleid
 
 logo = r"""
 ╔═══════════════════════════════════════════════════════════════════════╗
@@ -45,5 +47,44 @@ if __name__ == '__main__':
     if args.dry_run:
         snakemake_cmd += '--dry-run -p'
 
+
+    run_config_fname = 'config/run.yaml'
+    run_config = dict({'stage': {
+                    'step':'preprocess'
+                    }})
+    with open(run_config_fname,'w') as f:
+        yaml.dump(run_config,f)
+
     os.system(snakemake_cmd)
 
+    with open(args.config, 'r') as f:
+        config = yaml.safe_load(f)
+        demultiplex = config.get('processing',{}).get('demultiplex',True)
+
+        samplesheet = config['samplesheet']
+
+    if demultiplex:
+    
+        sampleid = peep_sampleid(samplesheet)
+        for s in sampleid:
+            with open(run_config_fname, 'r') as f:
+                run_config = yaml.safe_load(f)
+            
+            run_config['stage']['step'] = 'main'
+            run_config['sample_i'] = s
+
+            with open(run_config_fname, 'w') as f:
+                yaml.dump(run_config, f)
+
+            os.system(snakemake_cmd)
+
+    else:
+        with open(run_config_fname, 'r') as f:
+            run_config = yaml.safe_load(f)
+        run_config['stage']['step'] = 'main'
+        run_config['sample_i'] = None
+
+        with open(run_config_fname, 'w') as f:
+            yaml.dump(run_config, f)
+
+        os.system(snakemake_cmd)

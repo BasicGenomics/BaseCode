@@ -7,7 +7,7 @@ rule fastq_processed:
            pbcpath = "results/metadata/{name}_sample_barcodes.txt".format(name=config["name"])
     output: "results/read_flow_files/{sample}_fastq_processed_stats.json"
     threads: int(config["threads"])-1
-    log: "results/logs/{sample}.fastq_processed.log"
+    log: "results/read_flow_files/logs/{sample}.fastq_processed.log"
     shell: "binaries/analyze_fastq --read1 {input.r1} --read2 {input.r2} --cbcpath {input.cbcpath} --pbcpath {input.pbcpath} --threads {config[threads]} --output {output}  > {log} 2>&1"
 
 rule fastq_trimmed:
@@ -17,7 +17,7 @@ rule fastq_trimmed:
            pbcpath = "results/metadata/{name}_sample_barcodes.txt".format(name=config["name"])
     output: "results/read_flow_files/{sample}_fastq_trimmed_stats.json"
     threads: int(config["threads"])-1
-    log: "results/logs/{sample}.fastq_trimmed.log"
+    log: "results/read_flow_files/logs/{sample}.fastq_trimmed.log"
     shell: "binaries/analyze_fastq --read1 {input.r1} --read2 {input.r2} --cbcpath {input.cbcpath} --pbcpath {input.pbcpath} --threads {config[threads]} --output {output}  > {log} 2>&1"
 
 rule fastq_too_short:
@@ -27,7 +27,7 @@ rule fastq_too_short:
            pbcpath = "results/metadata/{name}_sample_barcodes.txt".format(name=config["name"])
     output: "results/read_flow_files/{sample}_fastq_tooshort_stats.json"
     threads: int(config["threads"])-1
-    log: "results/logs/{sample}.fastq_too_short.log"
+    log: "results/read_flow_files/logs/{sample}.fastq_too_short.log"
     shell: "binaries/analyze_fastq --read1 {input.r1} --read2 {input.r2} --cbcpath {input.cbcpath} --pbcpath {input.pbcpath} --threads {config[threads]} --output {output}  > {log} 2>&1"
 
 rule bam_geneassigned:
@@ -36,7 +36,7 @@ rule bam_geneassigned:
            pbcpath = "results/metadata/{name}_sample_barcodes.txt".format(name=config["name"])
     output: mapping_group = "results/read_flow_files/{sample}_mapping_group.csv"
     conda: "../envs/full.yaml"
-    log: "results/logs/{sample}.bam_geneassigned.log"
+    log: "results/read_flow_files/logs/{sample}.bam_geneassigned.log"
     shell: "python3 workflow/scripts/read_flow_mapped.py -i {input.bam} -c {input.cbcpath} -s {input.pbcpath} --mapping-group-out {output.mapping_group}  > {log} 2>&1"
 
 
@@ -57,5 +57,5 @@ rule bam_reconstructed:
             pbcpath = "results/metadata/{name}_sample_barcodes.txt".format(name=config["name"])
     output: status_group = "results/read_flow_files/{sample}_status_group.csv"
     conda: "../envs/full.yaml"
-    log: "results/logs/{sample}.bam_reconstructed.log"
+    log: "results/read_flow_files/logs/{sample}.bam_reconstructed.log"
     shell: "python3 workflow/scripts/read_flow_reconstructed.py -i {input.bam} -c {input.cbcpath} -s {input.pbcpath} --status-group-out {output.status_group}  > {log} 2>&1"

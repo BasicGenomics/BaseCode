@@ -1,5 +1,6 @@
 processing: 
   demultiplex: True
+  include_unassigned: False
 method:
   pipseq: 
     dt_structure:

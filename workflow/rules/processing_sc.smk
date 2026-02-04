@@ -5,19 +5,19 @@ rule log_python_version:
 
 rule get_cell_barcodes:
     input: fastq_r1 = config["r1"], fastq_r2 = config["r2"]
-    output: r1_out = temp("results/barcodes/{}_R1.fq.gz".format(config['name'])),
-        r2_out = temp("results/barcodes/{}_R2.fq.gz".format(config['name'])),
-        log_yaml = "results/barcodes/{}_log.yaml.format(config['name'])",
-        cell_whitelist =  "results/barcodes/{}_whitelist.txt".format(config['name']),
-        cell_barcodes = "results/metadata/{}_cell_barcodes.txt".format(config['name'])
+    output: r1_out = "results/barcodes/{}_R1.fq.gz".format(config['name']),
+        r2_out = "results/barcodes/{}_R2.fq.gz".format(config['name']),
+        log_yaml = "results/barcodes/{}_log.yaml".format(config['name']),
+        cell_barcodes =  "results/barcodes/{}_whitelist.txt".format(config['name'])
     params: barcode_cfg = BARCODE_CFG,
             prefix = config["name"]
     log: "results/logs/get_cell_barcodes.log"
     benchmark: "results/barcodes/benchmarks/get_cell_barcodes.benchmark.txt"
     shell: """
-    echo Get cell barcodes 
+    echo Get cell barcodes
     binaries/pipspeak_basecode -c {params.barcode_cfg} -i {input.fastq_r1} -I {input.fastq_r2} -l -u 0 -p results/barcodes/{params.prefix} > {log} 2>&1
-    cp {output.cell_whitelist} {output.cell_barcodes}
+    mkdir -p results/metadata/
+    cp {output.cell_barcodes} results/metadata/{params.prefix}_cell_barcodes.txt
     """
 
 rule make_barcode_files:
@@ -57,8 +57,9 @@ if config["i1"] != "" and config["i2"] != "":
                 proc_threads = config["threads"]-int(config["threads"]*0.2),
                 cbc_offset = config['params']['parse_fq']['cbc_offset'],
                 prefix = FASTQ_DIR,
-                demultiplex_flag = FLAG_demultiplex
-        shell: "echo Parse FASTQ && binaries/parse_fastq --read1 {input.r1_in} --read2 {input.r2_in} --index1 {input.i1_in} --index2 {input.i2_in} --cbcpath {input.cell_barcodes} --pbcpath {input.pbcpath} --readtype-structure {input.readtype_map} --dt-structure {input.dt_structure} --index-layout {config[index_layout]} --sample-structure {input.sample_map} --processing-threads {params.proc_threads} --compression-threads {params.comp_threads} --ts-sequence {config[ts_sequence]} --ts-pad {config[ts_pad]} --ts-cutoff {config[ts_cutoff]} --cbc-offset {params.cbc_offset} {params.demultiplex_flag} --prefix {params.prefix} > {log} 2>&1"
+                demultiplex_flag = FLAG_demultiplex,
+                run_name = config["name"]
+        shell: "echo Parse FASTQ && binaries/parse_fastq --read1 {input.r1_in} --read2 {input.r2_in} --index1 {input.i1_in} --index2 {input.i2_in} --cbcpath {input.cell_barcodes} --pbcpath {input.pbcpath} --readtype-structure {input.readtype_map} --dt-structure {input.dt_structure} --index-layout {config[index_layout]} --sample-structure {input.sample_map} --processing-threads {params.proc_threads} --compression-threads {params.comp_threads} --ts-sequence {config[ts_sequence]} --ts-pad {config[ts_pad]} --ts-cutoff {config[ts_cutoff]} --cbc-offset {params.cbc_offset} {params.demultiplex_flag} --prefix {params.prefix} --run-name {params.run_name} > {log} 2>&1"
 else:
     checkpoint parse_fastq:
         input:  r1_in = config["r1"], 
@@ -75,23 +76,25 @@ else:
                 proc_threads = config["threads"]-int(config["threads"]*0.2),
                 cbc_offset = config['params']['parse_fq']['cbc_offset'],
                 prefix = FASTQ_DIR,
-                demultiplex_flag = FLAG_demultiplex
-        shell: "echo Parse FASTQ && binaries/parse_fastq --read1 {input.r1_in} --read2 {input.r2_in} --cbcpath {input.cell_barcodes} --pbcpath {input.pbcpath} --readtype-structure {input.readtype_map} --dt-structure {input.dt_structure} --index-layout {config[index_layout]} --sample-structure {input.sample_map} --processing-threads {params.proc_threads} --compression-threads {params.comp_threads} --ts-sequence {config[ts_sequence]} --ts-pad {config[ts_pad]} --ts-cutoff {config[ts_cutoff]} --cbc-offset {params.cbc_offset} {params.demultiplex_flag} --prefix {params.prefix} > {log} 2>&1"
+                demultiplex_flag = FLAG_demultiplex,
+                run_name = config["name"]
+        shell: "echo Parse FASTQ && binaries/parse_fastq --read1 {input.r1_in} --read2 {input.r2_in} --cbcpath {input.cell_barcodes} --pbcpath {input.pbcpath} --readtype-structure {input.readtype_map} --dt-structure {input.dt_structure} --index-layout {config[index_layout]} --sample-structure {input.sample_map} --processing-threads {params.proc_threads} --compression-threads {params.comp_threads} --ts-sequence {config[ts_sequence]} --ts-pad {config[ts_pad]} --ts-cutoff {config[ts_cutoff]} --cbc-offset {params.cbc_offset} {params.demultiplex_flag} --prefix {params.prefix} --run-name {params.run_name} > {log} 2>&1"
 
 def get_samples():
     checkpoint_output = checkpoints.parse_fastq.get().output[0]
     return [f.replace("_1.fq.gz", "") for f in os.listdir(checkpoint_output) if f.endswith("_1.fq.gz")]
 
-def parse_fq_dir(_wc):
+def parse_fq_dir(wc):
     return checkpoints.parse_fastq.get().output[0]
 
 rule trim_fastq:
     input:  r1 = lambda wc: os.path.join(parse_fq_dir(wc), f"{wc.sample}_1.fq.gz"),
             r2 = lambda wc: os.path.join(parse_fq_dir(wc), f"{wc.sample}_2.fq.gz")
-    output: r1 = temp("results/intermediate/{sample}.trimmed.read1.fastq.gz"),
-           r2 = temp("results/intermediate/{sample}.trimmed.read2.fastq.gz"),
-           r1_short = temp("results/intermediate/{sample}.tooshort.read1.fastq.gz"),
-           r2_short = temp("results/intermediate/{sample}.tooshort.read2.fastq.gz")
+    output: 
+            r1 = temp("results/intermediate/{sample}.trimmed.read1.fastq.gz"),
+            r2 = temp("results/intermediate/{sample}.trimmed.read2.fastq.gz"),
+            r1_short = temp("results/intermediate/{sample}.tooshort.read1.fastq.gz"),
+            r2_short = temp("results/intermediate/{sample}.tooshort.read2.fastq.gz")
     log: stdout = "results/logs/{sample}.trim_fastq.log",
          summary = "results/summaries/{sample}.cutadapt.json"
     benchmark: "results/benchmarks/{sample}.trim_fastq.benchmark.txt"
@@ -324,7 +327,7 @@ rule make_molecule_bams:
 rule sort_molecule_bams:
     input: molecules_out = "results/intermediate/{sample}.reads.aligned_trimmed_genetagged_sorted_umicorrected.stitched.molecules.bam"
     output: molecules_out = "results/{sample}.stitched.molecules.sorted.bam",
-            done = "results/{sample}.processing.done"
+            done = "results/done/{sample}.processing.done"
     log: "results/logs/{sample}.sort_molecules.log"
     conda: "../envs/full.yaml"
     shell:"""

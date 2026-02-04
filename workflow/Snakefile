@@ -12,6 +12,8 @@ min_version("6.0")
 BASE = Path(workflow.basedir)
 PROJECT_ROOT = BASE.parent
 configfile: Path(PROJECT_ROOT) / "config/config.yaml"
+configfile: Path(PROJECT_ROOT) / "config/run.yaml"
+
 
 if 'resource_dir' not in config:
     config['resource_dir'] = '/usr/local/app/resources/'
@@ -79,7 +81,8 @@ def deep_setdefault(d, defaults):
 
 # different fastq directory 
 def set_fastq_dir(config):
-    if config['processing']['demultiplex']==True:
+    b00l = config.get('processing',{}).get('demultiplex',True)
+    if b00l:
         return "results/intermediate/demultiplexed_fastq/", "--demultiplex"
     else:
         return "results/intermediate/fastq/", ""
@@ -122,23 +125,31 @@ config.setdefault('processing',{})
 deep_setdefault(config['processing'],params['processing'])
 
 FASTQ_DIR,FLAG_demultiplex = set_fastq_dir(config)
-
+INCLUDE_unassigned = config['processing']['include_unassigned']
 ##### smk
 
+include: "rules/common.smk" ## use for both steps
 
 if config['run'] == 'pipseq':
     include: "rules/processing_sc.smk"
 else: 
     include: "rules/processing.smk"
 
-include: "rules/common.smk"
-include: "rules/collect_stats.smk"
-include: "rules/read_flow.smk"
-include: "rules/reconstruction_stats.smk"
+if config['stage']['step'] == 'preprocess':
+    
+    rule all:
+        input:
+            get_preprocessing_output
+    
+else:
 
-EXCLUDE = {"Unassigned"}
+    include: "rules/common.smk" ## use for both steps
 
-rule all:
-    input:
-        # get_final_output,
-        lambda wildcards: expand("results/{sample}.stitched.molecules.sorted.bam",sample=[s for s in get_samples() if s not in EXCLUDE])
+    include: "rules/collect_stats.smk"
+    include: "rules/read_flow.smk"
+    include: "rules/reconstruction_stats.smk"
+
+
+    rule all:
+        input:
+            lambda wc: get_final_output()

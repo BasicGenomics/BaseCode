@@ -14,7 +14,10 @@ if config["ignore_none"]:
                 samplesheet_out = "results/metadata/{name}_samplesheet.csv".format(name=config["name"])
             log: "results/logs/make_barcode_files.log"
             conda: "../envs/full.yaml"
-            shell: "echo Process Samplesheet && python3 workflow/scripts/make_sample_files.py -s {input.samplesheet} --fastq {input.fastq_i1} {input.fastq_i2} --index-sequences {input.index_sequences} --sample-barcodes {output.barcodes} --cell-barcodes {output.cell_barcodes} --sample-map {output.sample_map} --readtype-map {output.readtype_map} --samplesheet-out {output.samplesheet_out} --ignore-none  > {log} 2>&1"
+            shell: """
+            echo Process Samplesheet
+            python3 workflow/scripts/make_sample_files.py -s {input.samplesheet} --fastq {input.fastq_i1} {input.fastq_i2} --index-sequences {input.index_sequences} --sample-barcodes {output.barcodes} --cell-barcodes {output.cell_barcodes} --sample-map {output.sample_map} --readtype-map {output.readtype_map} --samplesheet-out {output.samplesheet_out} --ignore-none  > {log} 2>&1
+            """
     else:
         rule make_barcode_files:
             input: samplesheet = config["samplesheet"], fastq = config["r2"], index_sequences = "workflow/resources/index_sequences.yaml"
@@ -25,7 +28,10 @@ if config["ignore_none"]:
                 samplesheet_out = "results/metadata/{name}_samplesheet.csv".format(name=config["name"])
             log: "results/logs/make_barcode_files.log"
             conda: "../envs/full.yaml"
-            shell: "echo Process Samplesheet && python3 workflow/scripts/make_sample_files.py -s {input.samplesheet} --fastq {input.fastq} --index-sequences {input.index_sequences} --sample-barcodes {output.barcodes} --cell-barcodes {output.cell_barcodes} --sample-map {output.sample_map} --readtype-map {output.readtype_map} --samplesheet-out {output.samplesheet_out} --ignore-none  > {log} 2>&1"
+            shell: """
+            echo Process Samplesheet
+            python3 workflow/scripts/make_sample_files.py -s {input.samplesheet} --fastq {input.fastq} --index-sequences {input.index_sequences} --sample-barcodes {output.barcodes} --cell-barcodes {output.cell_barcodes} --sample-map {output.sample_map} --readtype-map {output.readtype_map} --samplesheet-out {output.samplesheet_out} --ignore-none  > {log} 2>&1
+            """
 else:
     if config["i1"] != "" and config["i2"] != "":
         rule make_barcode_files:
@@ -85,10 +91,10 @@ def parse_fq_dir(_wc):
 rule trim_fastq:
     input:  r1=lambda wc: os.path.join(parse_fq_dir(wc), f"{wc.sample}_1.fq.gz"),
             r2=lambda wc: os.path.join(parse_fq_dir(wc), f"{wc.sample}_2.fq.gz")
-    output: r1 = temp(os.path.join(FASTQ_DIR,"{sample}.trimmed.read1.fastq.gz")),
-           r2 = temp(os.path.join(FASTQ_DIR,"{sample}.trimmed.read2.fastq.gz")),
-           r1_short = temp(os.path.join(FASTQ_DIR,"{sample}.tooshort.read1.fastq.gz")),
-           r2_short = temp(os.path.join(FASTQ_DIR,"{sample}.tooshort.read2.fastq.gz"))
+    output: r1 = temp("results/intermediate/{sample}.trimmed.read1.fastq.gz"),
+            r2 = temp("results/intermediate/{sample}.trimmed.read2.fastq.gz"),
+            r1_short = temp("results/intermediate/{sample}.tooshort.read1.fastq.gz"),
+            r2_short = temp("results/intermediate/{sample}.tooshort.read2.fastq.gz")
     log: stdout = "results/logs/{sample}.trim_fastq.log",
          summary = "results/summaries/{sample}.cutadapt.json"
     benchmark: "results/benchmarks/{sample}.trim_fastq.benchmark.txt"
@@ -97,8 +103,8 @@ rule trim_fastq:
     shell: "echo Trim FASTQ && cutadapt -j {threads} --json {log.summary} {config[params][cutadapt]} --too-short-output {output.r1_short} --too-short-paired-output {output.r2_short} -o {output.r1} -p {output.r2} {input.r1} {input.r2} > {log.stdout} 2>&1"
 
 rule map_reads:
-    input: r1 = os.path.join(FASTQ_DIR,"{sample}.trimmed.read1.fastq.gz"),
-        r2 = os.path.join(FASTQ_DIR,"{sample}.trimmed.read2.fastq.gz")
+    input:  r1 = "results/intermediate/{sample}.trimmed.read1.fastq.gz",
+            r2 = "results/intermediate/{sample}.trimmed.read2.fastq.gz"
     output: temp("results/intermediate/{sample}.trimmed.aligned.bam")
     log: stdout = "results/logs/{sample}.map_reads.log",
         summary = "results/summaries/{sample}.hisat2.summary.txt"
@@ -291,7 +297,7 @@ rule make_molecule_bams:
 rule sort_molecule_bams:
     input: molecules_out = "results/intermediate/{sample}.stitched.molecules.bam"
     output: molecules_out = "results/{sample}.stitched.molecules.sorted.bam",
-            done = "results/{sample}.processing.done"
+            done = "results/done/{sample}.processing.done"
     log: "results/logs/{sample}.sort_molecules.log"
     conda: "../envs/full.yaml"
     shell:"""

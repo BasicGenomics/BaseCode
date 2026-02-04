@@ -116,6 +116,25 @@ def fix_SAMPLE_ID(row):
     s = s.replace("-", "_")
     return s
 
+def peep_sampleid(samplesheet_file):
+    _filename, file_extension = os.path.splitext(samplesheet_file)
+
+    if file_extension == '.csv':
+        samplesheet_df = pd.read_csv(samplesheet_file, index_col=0)
+    else:
+        df_excel = pl.read_excel(samplesheet_file)
+        df_excel[0, 'PCR A'] = 'FW1_PCR_A'
+        df_excel[0, 'PCR B'] = 'FW1_PCR_B'
+        df_excel.columns = df_excel.iter_rows().__next__()
+        df_excel = df_excel.remove(pl.col("RV1") == "RV1")
+
+        samplesheet_df = df_excel.to_pandas()
+
+    samplesheet_df['SAMPLE_ID'] = samplesheet_df.apply(fix_SAMPLE_ID, axis=1)
+
+    return set(samplesheet_df['SAMPLE_ID'])
+
+
 def make_sample_barcode_to_readType_map(df):
     map_dict = {}
     for idx, row in df.iterrows():

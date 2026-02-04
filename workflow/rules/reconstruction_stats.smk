@@ -4,7 +4,7 @@ rule count_lengths:
     threads: config["threads"]
     params: gtf =  "{}.gff3".format(GTFFILE)
     conda: "../envs/full.yaml"
-    log: "results/logs/{sample}.count_lengths.log"
+    log: "results/QC_files/logs/{sample}.count_lengths.log"
     shell: "python3 workflow/scripts/reconstruction_lengths.py -i {input.bam} -o {output} > {log} 2>&1"
 
 
@@ -32,7 +32,7 @@ rule overlap_and_mi:
     threads: config["threads"]
     params: gtf =  "{}.gff3".format(GTFFILE)
     conda: "../envs/full.yaml"
-    log: "results/logs/{sample}.overlap_and_mi.log"
+    log: "results/QC_files/logs/{sample}.overlap_and_mi.log"
     shell: "python3 workflow/scripts/overlap_and_mi.py -i {input.bam} -g {params.gtf} --genes-out {output.genes_out} --cells-out {output.cells_out} -t {threads} --gene-identifier {config[gff_gene_identifier]} > {log} 2>&1"
 
 rule status_stats:
@@ -44,6 +44,6 @@ rule status_stats:
     threads: config["threads"]
     params: gtf =  "{}.gff3".format(GTFFILE)
     conda: "../envs/full.yaml"
-    log: "results/logs/{sample}.status_stats.log"
+    log: "results/QC_files/logs/{sample}.status_stats.log"
     shell: "python3 workflow/scripts/count_status_per_gene.py -i {input.bam} -g {params.gtf} --counts {output.counts_per_gene} --sum {output.sum_over_genes} --fraction {output.fraction_per_gene} -t {threads} --gene-identifier {config[gff_gene_identifier]} > {log} 2>&1"
 
