@@ -66,8 +66,9 @@ if config["i1"] != "" and config["i2"] != "":
                 proc_threads = config["threads"]-int(config["threads"]*0.2),
                 cbc_offset = config['params']['parse_fq']['cbc_offset'],
                 prefix = FASTQ_DIR,
-                demultiplex_flag = FLAG_demultiplex
-        shell: "echo Parse FASTQ && binaries/parse_fastq --read1 {input.r1_in} --read2 {input.r2_in} --index1 {input.i1_in} --index2 {input.i2_in} --cbcpath {input.cell_barcodes} --pbcpath {input.pbcpath} --readtype-structure {input.readtype_map} --dt-structure {input.dt_structure} --index-layout {config[index_layout]} --sample-structure {input.sample_map} --processing-threads {params.proc_threads} --compression-threads {params.comp_threads} --ts-sequence {config[ts_sequence]} --ts-pad {config[ts_pad]} --ts-cutoff {config[ts_cutoff]} --cbc-offset {params.cbc_offset}  {params.demultiplex_flag} --prefix {params.prefix} > {log} 2>&1"
+                demultiplex_flag = FLAG_demultiplex,
+                run_name = config["name"]
+        shell: "echo Parse FASTQ && binaries/parse_fastq --read1 {input.r1_in} --read2 {input.r2_in} --index1 {input.i1_in} --index2 {input.i2_in} --cbcpath {input.cell_barcodes} --pbcpath {input.pbcpath} --readtype-structure {input.readtype_map} --dt-structure {input.dt_structure} --index-layout {config[index_layout]} --sample-structure {input.sample_map} --processing-threads {params.proc_threads} --compression-threads {params.comp_threads} --ts-sequence {config[ts_sequence]} --ts-pad {config[ts_pad]} --ts-cutoff {config[ts_cutoff]} --cbc-offset {params.cbc_offset}  {params.demultiplex_flag} --prefix {params.prefix} --run-name {params.run_name}> {log} 2>&1"
 else:
     checkpoint parse_fastq:
         input: r1_in = config["r1"], r2_in = config["r2"], pbcpath = "results/metadata/{name}_sample_barcodes.txt".format(name=config["name"]), cell_barcodes = "results/metadata/{name}_cell_barcodes.txt".format(name=config["name"]), sample_map = "results/metadata/{name}_sample_map.yaml".format(name=config["name"]), readtype_map = "results/metadata/{name}_readtype_map.yaml".format(name=config["name"]), dt_structure = config["dt_structure"]
@@ -78,14 +79,15 @@ else:
                 proc_threads = config["threads"]-int(config["threads"]*0.2),
                 cbc_offset = config['params']['parse_fq']['cbc_offset'],
                 prefix = FASTQ_DIR,
-                demultiplex_flag = FLAG_demultiplex
-        shell: "echo Parse FASTQ && binaries/parse_fastq --read1 {input.r1_in} --read2 {input.r2_in} --cbcpath {input.cell_barcodes} --pbcpath {input.pbcpath} --readtype-structure {input.readtype_map} --dt-structure {input.dt_structure} --index-layout {config[index_layout]} --sample-structure {input.sample_map} --processing-threads {params.proc_threads} --compression-threads {params.comp_threads} --ts-sequence {config[ts_sequence]} --ts-pad {config[ts_pad]} --ts-cutoff {config[ts_cutoff]} --cbc-offset {params.cbc_offset}  {params.demultiplex_flag} --prefix {params.prefix} > {log} 2>&1"
+                demultiplex_flag = FLAG_demultiplex,
+                run_name = config["name"]
+        shell: "echo Parse FASTQ && binaries/parse_fastq --read1 {input.r1_in} --read2 {input.r2_in} --cbcpath {input.cell_barcodes} --pbcpath {input.pbcpath} --readtype-structure {input.readtype_map} --dt-structure {input.dt_structure} --index-layout {config[index_layout]} --sample-structure {input.sample_map} --processing-threads {params.proc_threads} --compression-threads {params.comp_threads} --ts-sequence {config[ts_sequence]} --ts-pad {config[ts_pad]} --ts-cutoff {config[ts_cutoff]} --cbc-offset {params.cbc_offset}  {params.demultiplex_flag} --prefix {params.prefix} --run-name {params.run_name} > {log} 2>&1"
 
 def get_samples():
     checkpoint_output = checkpoints.parse_fastq.get().output[0]
     return [f.replace("_1.fq.gz", "") for f in os.listdir(checkpoint_output) if f.endswith("_1.fq.gz")]
 
-def parse_fq_dir(_wc):
+def parse_fq_dir(wc):
     return checkpoints.parse_fastq.get().output[0]
 
 rule trim_fastq:

@@ -57,13 +57,15 @@ if __name__ == '__main__':
 
     os.system(snakemake_cmd)
 
+
     with open(args.config, 'r') as f:
         config = yaml.safe_load(f)
         demultiplex = config.get('processing',{}).get('demultiplex',True)
+        persample = config.get('processing',{}).get('persample',True)
 
         samplesheet = config['samplesheet']
 
-    if demultiplex:
+    if demultiplex and persample:
     
         sampleid = peep_sampleid(samplesheet)
         for s in sampleid:
