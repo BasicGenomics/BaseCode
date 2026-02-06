@@ -12,7 +12,7 @@ min_version("6.0")
 BASE = Path(workflow.basedir)
 PROJECT_ROOT = BASE.parent
 configfile: Path(PROJECT_ROOT) / "config/config.yaml"
-configfile: Path(PROJECT_ROOT) / "config/run.yaml"
+# configfile: Path(PROJECT_ROOT) / "config/run.yaml"
 
 
 if 'resource_dir' not in config:
@@ -128,28 +128,18 @@ FASTQ_DIR,FLAG_demultiplex = set_fastq_dir(config)
 INCLUDE_unassigned = config['processing']['include_unassigned']
 ##### smk
 
-include: "rules/common.smk" ## use for both steps
+include: "rules/common.smk" 
 
 if config['run'] == 'pipseq':
     include: "rules/processing_sc.smk"
 else: 
     include: "rules/processing.smk"
 
-if config['stage']['step'] == 'preprocess':
-    
-    rule all:
-        input:
-            get_preprocessing_output
-    
-else:
-
-    include: "rules/common.smk" ## use for both steps
-
-    include: "rules/collect_stats.smk"
-    include: "rules/read_flow.smk"
-    include: "rules/reconstruction_stats.smk"
+include: "rules/collect_stats.smk"
+include: "rules/read_flow.smk"
+include: "rules/reconstruction_stats.smk"
 
 
-    rule all:
-        input:
-            lambda wc: get_final_output()
+rule all:
+    input:
+        lambda wc: get_final_output()

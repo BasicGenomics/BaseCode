@@ -97,9 +97,9 @@ rule trim_fastq:
             r2 = temp("results/intermediate/{sample}.trimmed.read2.fastq.gz"),
             r1_short = temp("results/intermediate/{sample}.tooshort.read1.fastq.gz"),
             r2_short = temp("results/intermediate/{sample}.tooshort.read2.fastq.gz")
-    log: stdout = "results/logs/{sample}.trim_fastq.log",
-         summary = "results/summaries/{sample}.cutadapt.json"
-    benchmark: "results/benchmarks/{sample}.trim_fastq.benchmark.txt"
+    log: stdout = "results/logs/{sample}/{sample}.trim_fastq.log",
+         summary = "results/summaries/{sample}/{sample}.cutadapt.json"
+    benchmark: "results/benchmarks/{sample}/{sample}.trim_fastq.benchmark.txt"
     conda: "../envs/full.yaml"
     threads: config["threads"]
     shell: "echo Trim FASTQ && cutadapt -j {threads} --json {log.summary} {config[params][cutadapt]} --too-short-output {output.r1_short} --too-short-paired-output {output.r2_short} -o {output.r1} -p {output.r2} {input.r1} {input.r2} > {log.stdout} 2>&1"
@@ -108,10 +108,11 @@ rule map_reads:
     input:  r1 = "results/intermediate/{sample}.trimmed.read1.fastq.gz",
             r2 = "results/intermediate/{sample}.trimmed.read2.fastq.gz"
     output: temp("results/intermediate/{sample}.trimmed.aligned.bam")
-    log: stdout = "results/logs/{sample}.map_reads.log",
-        summary = "results/summaries/{sample}.hisat2.summary.txt"
-    benchmark: "results/benchmarks/{sample}.map_reads.benchmark.txt"
+    log: stdout = "results/logs/{sample}/{sample}.map_reads.log",
+        summary = "results/summaries/{sample}/{sample}.hisat2.summary.txt"
+    benchmark: "results/benchmarks/{sample}/{sample}.map_reads.benchmark.txt"
     params: splicesites = SPLICESITES, genomeref = GENOMEREF, cores_hisat = cores_hisat, cores_samtools = cores_samtools
+    threads: min(config["threads"], 64)
     conda: "../envs/full.yaml"
     shell: "echo Map Reads && binaries/hisat-3n --new-summary --summary-file {log.summary} {config[params][hisat3n]} -p {params.cores_hisat} --known-splicesite-infile {params.splicesites} -x {params.genomeref} -1 {input.r1} -2 {input.r2} | samtools view -F 256 -b -@ {params.cores_samtools} -o {output} > {log.stdout} 2>&1"
 
@@ -120,8 +121,8 @@ rule split_bam_by_strand:
     output: pstrand = temp("results/intermediate/{sample}.trimmed.aligned.pstrand.bam"),
             mstrand = temp("results/intermediate/{sample}.trimmed.aligned.mstrand.bam"),
             nostrand = temp("results/intermediate/{sample}.trimmed.aligned.nostrand.bam")
-    log: "results/logs/{sample}.split_bam_by_strand.log"
-    benchmark: "results/benchmarks/{sample}.split_bam_by_strand.benchmark.txt"
+    log: "results/logs/{sample}/{sample}.split_bam_by_strand.log"
+    benchmark: "results/benchmarks/{sample}/{sample}.split_bam_by_strand.benchmark.txt"
     conda: "../envs/full.yaml"
     shell: "echo Assign Genes && binaries/move_tags --input {input} > {log} 2>&1"
 
@@ -132,8 +133,8 @@ rule assign_genes_exon:
     output: pstrand = temp("results/intermediate/{sample}.trimmed.aligned.pstrand.bam.featureCounts.bam"),
             mstrand = temp("results/intermediate/{sample}.trimmed.aligned.mstrand.bam.featureCounts.bam"),
             nostrand = temp("results/intermediate/{sample}.trimmed.aligned.nostrand.bam.featureCounts.bam")
-    log: "results/logs/{sample}.assign_genes.log"
-    benchmark: "results/benchmarks/{sample}.assign_genes.benchmark.txt"
+    log: "results/logs/{sample}/{sample}.assign_genes.log"
+    benchmark: "results/benchmarks/{sample}/{sample}.assign_genes.benchmark.txt"
     params: gtffile = "{}.gff3".format(GTFFILE),
             gtffile_positive = "{}.positive.gff3".format(GTFFILE),
             gtffile_negative = "{}.negative.gff3".format(GTFFILE)
@@ -154,7 +155,7 @@ rule rename_tags_exon:
     output: pstrand = temp("results/intermediate/{sample}.trimmed.aligned.pstrand.Exon.bam"),
             mstrand = temp("results/intermediate/{sample}.trimmed.aligned.mstrand.Exon.bam"),
             nostrand = temp("results/intermediate/{sample}.trimmed.aligned.nostrand.Exon.bam")
-    log: "results/logs/{sample}.rename_tags_exon.log"
+    log: "results/logs/{sample}/{sample}.rename_tags_exon.log"
     conda: "../envs/full.yaml"
     shell:"""
     binaries/rename_tags --input {input.pstrand} --output {output.pstrand} >> {log} 2>&1
@@ -169,8 +170,8 @@ rule assign_genes_intron:
     output: pstrand = temp("results/intermediate/{sample}.trimmed.aligned.pstrand.Exon.bam.featureCounts.bam"),
             mstrand = temp("results/intermediate/{sample}.trimmed.aligned.mstrand.Exon.bam.featureCounts.bam"),
             nostrand = temp("results/intermediate/{sample}.trimmed.aligned.nostrand.Exon.bam.featureCounts.bam")
-    log: "results/logs/{sample}.assign_genes.log"
-    benchmark: "results/benchmarks/{sample}.assign_genes.benchmark.txt"
+    log: "results/logs/{sample}/{sample}.assign_genes.log"
+    benchmark: "results/benchmarks/{sample}/{sample}.assign_genes.benchmark.txt"
     params: gtffile = "{}.gff3".format(GTFFILE),
             gtffile_positive = "{}.positive.gff3".format(GTFFILE),
             gtffile_negative = "{}.negative.gff3".format(GTFFILE)
@@ -190,7 +191,7 @@ rule rename_tags_intron:
     output: pstrand = temp("results/intermediate/{sample}.trimmed.aligned.pstrand.GeneTagged.bam"),
             mstrand = temp("results/intermediate/{sample}.trimmed.aligned.mstrand.GeneTagged.bam"),
             nostrand = temp("results/intermediate/{sample}.trimmed.aligned.nostrand.GeneTagged.bam")
-    log: "results/logs/{sample}.rename_tags_intron.log"
+    log: "results/logs/{sample}/{sample}.rename_tags_intron.log"
     conda: "../envs/full.yaml"
     shell:"""
     binaries/rename_tags --input {input.pstrand} --output {output.pstrand} --intron-mode >> {log} 2>&1
@@ -201,8 +202,8 @@ rule concatenate_and_sort:
     input: pstrand = "results/intermediate/{sample}.trimmed.aligned.pstrand.GeneTagged.bam",
             mstrand = "results/intermediate/{sample}.trimmed.aligned.mstrand.GeneTagged.bam",
             nostrand = "results/intermediate/{sample}.trimmed.aligned.nostrand.GeneTagged.bam"
-    log: "results/logs/{sample}.concatenate_and_sort.log"
-    benchmark: "results/benchmarks/{sample}.concatenate_and_sort.benchmark.txt"
+    log: "results/logs/{sample}/{sample}.concatenate_and_sort.log"
+    benchmark: "results/benchmarks/{sample}/{sample}.concatenate_and_sort.benchmark.txt"
     output: temp("results/intermediate/{sample}.reads.aligned_trimmed_genetagged_sorted.bam")
     conda: "../envs/full.yaml"
     threads: config["threads"]
@@ -212,7 +213,7 @@ rule first_index:
     input: "results/intermediate/{sample}.reads.aligned_trimmed_genetagged_sorted.bam"
     output: temp("results/intermediate/{sample}.reads.aligned_trimmed_genetagged_sorted.bam.bai")
     threads: config["threads"]
-    log: "results/logs/{sample}.first_index.log"
+    log: "results/logs/{sample}/{sample}.first_index.log"
     shell: "samtools index -@ {config[threads]} {input}"
 
 if config["reverse"]:
@@ -222,7 +223,7 @@ if config["reverse"]:
             sample_map = "results/metadata/{name}_sample_map.yaml".format(name=config["name"])
         output: temp("results/intermediate/{sample}.reads.aligned_trimmed_genetagged_sorted.reconstructed.bam")
         params: gtffile = GTFFILE, cores_hisat = cores_hisat, cores_samtools = cores_samtools
-        log: "results/logs/{sample}.reconstruct.log"
+        log: "results/logs/{sample}/{sample}.reconstruct.log"
         threads: min(config["threads"], 64)
         benchmark: "results/benchmarks/{sample}.reconstruction.benchmark.txt"
         shell:"""
@@ -237,9 +238,9 @@ else:
             sample_map = "results/metadata/{name}_sample_map.yaml".format(name=config["name"])
         output: temp("results/intermediate/{sample}.reads.aligned_trimmed_genetagged_sorted.reconstructed.bam")
         params: gtffile = GTFFILE, cores_hisat = cores_hisat, cores_samtools = cores_samtools
-        log: "results/logs/{sample}.reconstruct.log"
+        log: "results/logs/{sample}/{sample}.reconstruct.log"
         threads: min(config["threads"], 64)
-        benchmark: "results/benchmarks/{sample}.reconstruction.benchmark.txt"
+        benchmark: "results/benchmarks/{sample}/{sample}.reconstruction.benchmark.txt"
         shell:"""
         echo Reconstruct Molecules
         mkdir -p results/tmp/
@@ -250,7 +251,7 @@ rule sort_reconstructed:
     input: "results/intermediate/{sample}.reads.aligned_trimmed_genetagged_sorted.reconstructed.bam"
     output: "results/intermediate/{sample}.reads.aligned_trimmed_genetagged_sorted.reconstructed.sorted.bam"
     threads: config["threads"]
-    log: "results/logs/{sample}.sort_reconstructed.log"
+    log: "results/logs/{sample}/{sample}.sort_reconstructed.log"
     params:
         extra="-m 1000M",
     conda: "../envs/full.yaml"
@@ -260,7 +261,7 @@ rule index_reconstructed:
     input: "results/intermediate/{sample}.reads.aligned_trimmed_genetagged_sorted.reconstructed.sorted.bam"
     output: "results/intermediate/{sample}.reads.aligned_trimmed_genetagged_sorted.reconstructed.sorted.bam.bai"
     threads: config["threads"]
-    log: "results/logs/{sample}.index_reconstructed.log"
+    log: "results/logs/{sample}/{sample}.index_reconstructed.log"
     shell: "samtools index -@ {config[threads]} {input}"
 
 rule stitch_reconstruction:
@@ -269,7 +270,7 @@ rule stitch_reconstruction:
     output: temp("results/intermediate/{sample}.stitched.bam")
     threads: config["threads"]
     params: gtffile = GTFFILE
-    log: "results/logs/{sample}.stitch_reconstruction.log"
+    log: "results/logs/{sample}/{sample}.stitch_reconstruction.log"
     conda: "../envs/full.yaml"
     shell: "echo Stitch Molecules && python3 workflow/scripts/stitcher.py --input {input.bam} --output {output} --gtf {params.gtffile}.gff3 --threads {threads} --cell-tag CB --UMI-tag RM --gene-identifier {config[gff_gene_identifier]} >> {log} 2>&1"
 
@@ -277,7 +278,7 @@ rule sorted_stitched:
     input: "results/intermediate/{sample}.stitched.bam"
     output: temp("results/intermediate/{sample}.stitched.sorted.bam")
     threads: config["threads"]
-    log: "results/logs/{sample}.sort_stitched.log"
+    log: "results/logs/{sample}/{sample}.sort_stitched.log"
     params:
         extra="-m 1000M",
     conda: "../envs/full.yaml"
@@ -287,7 +288,7 @@ rule index_stitched:
     input: "results/intermediate/{sample}.stitched.sorted.bam"
     output: temp("results/intermediate/{sample}.stitched.sorted.bam.bai")
     threads: config["threads"]
-    log: "results/logs/{sample}.index_stitched.log"
+    log: "results/logs/{sample}/{sample}.index_stitched.log"
     shell: "samtools index -@ {config[threads]} {input}"
 
 rule make_molecule_bams:
@@ -300,7 +301,7 @@ rule sort_molecule_bams:
     input: molecules_out = "results/intermediate/{sample}.stitched.molecules.bam"
     output: molecules_out = "results/{sample}.stitched.molecules.sorted.bam",
             done = "results/done/{sample}.processing.done"
-    log: "results/logs/{sample}.sort_molecules.log"
+    log: "results/logs/{sample}/{sample}.sort_molecules.log"
     conda: "../envs/full.yaml"
     shell:"""
     echo Creating final output file
