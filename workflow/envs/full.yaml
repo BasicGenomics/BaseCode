@@ -22,3 +22,4 @@ dependencies:
 - subread=2.0.6
 - pyfastx=2.1.0
 - fastexcel=0.14.0
+- reportlab=4.4.9
