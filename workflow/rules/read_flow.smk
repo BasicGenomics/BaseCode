@@ -35,7 +35,7 @@ rule bam_geneassigned:
            cbcpath = "results/metadata/{name}_cell_barcodes.txt".format(name=config["name"]),
            pbcpath = "results/metadata/{name}_sample_barcodes.txt".format(name=config["name"])
     output: mapping_group = "results/read_flow_files/{name}_mapping_group.csv".format(name=config["name"])
-    conda: "../envs/full.yaml"
+    
     log: "results/logs/bam_geneassigned.log"
     shell: "python3 workflow/scripts/read_flow_mapped.py -i {input.bam} -c {input.cbcpath} -s {input.pbcpath} --mapping-group-out {output.mapping_group}  > {log} 2>&1"
 
@@ -44,6 +44,6 @@ rule bam_reconstructed:
             cbcpath = "results/metadata/{name}_cell_barcodes.txt".format(name=config["name"]), 
             pbcpath = "results/metadata/{name}_sample_barcodes.txt".format(name=config["name"])
     output: status_group = "results/read_flow_files/{name}_status_group.csv".format(name=config["name"])
-    conda: "../envs/full.yaml"
+    
     log: "results/logs/bam_reconstructed.log"
     shell: "python3 workflow/scripts/read_flow_reconstructed.py -i {input.bam} -c {input.cbcpath} -s {input.pbcpath} --status-group-out {output.status_group}  > {log} 2>&1"
