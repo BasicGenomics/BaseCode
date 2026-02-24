@@ -11,7 +11,7 @@ rule extract_polya:
         genome_file = temp("results/downstream/{name}.genome.txt".format(name=config["name"]))
     shell:
         """
-        python generate_polya_bed.py --input {input.bam} --output {output.bed_file}
+        python workflow/scripts/generate_polya_bed.py --input {input.bam} --output {output.bed_file}
         bedtools merge -i {output.bed_file} -c 4 -o count > {output.merged_bed_file} 
         cut -f1,2 {input.fai} | sort -k1,1V > {output.genome_file}
         bedtools genomecov -i {output.bed_file} -g {output.genome_file} -bg > {output.bedgraph_file} 

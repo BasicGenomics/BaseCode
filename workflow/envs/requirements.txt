@@ -19,3 +19,4 @@ snakemake==9.6.0
 tabulate==0.9.0
 reportlab==4.4.9 
 bedtools==2.31.1
+tabix==1.11
