@@ -38,7 +38,7 @@ if "ts_cutoff" not in config:
     config["ts_cutoff"] = 5
 
 if "gff_gene_identifier" not in config:
-    config["gff_gene_identifier"] = "gene_name"
+    config["gff_gene_identifier"] = "gene_id"
 
 if "params" not in config:
     config["params"] = {}
