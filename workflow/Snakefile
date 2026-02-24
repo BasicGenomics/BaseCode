@@ -59,6 +59,7 @@ SPLICESITES = "{resource_dir}/genome_references/{reference}/splicesites.ss".form
 GENOMEREF = "{resource_dir}/genome_references/{reference}/genomeref".format(resource_dir=config["resource_dir"], reference=config["reference"])
 GTFFILE = "{resource_dir}/genome_references/{reference}/geneannotations".format(resource_dir=config["resource_dir"], reference=config["reference"])
 REFFILE = "{resource_dir}/genome_references/{reference}/reference.fa".format(resource_dir = config["resource_dir"], reference = config["reference"])
+REFFILEINDEX = "{resource_dir}/genome_references/{reference}/reference.fa.fai".format(resource_dir = config["resource_dir"], reference = config["reference"])
 cores_samtools = int(config["threads"]*0.05)+1
 cores_hisat = config["threads"]-cores_samtools
 
@@ -67,6 +68,7 @@ include: "rules/collect_stats.smk"
 include: "rules/read_flow.smk"
 include: "rules/reconstruction_stats.smk"
 include: "rules/visualization.smk"
+include: "rules/downstream.smk"
 include: "rules/common.smk"
 
 rule all:
