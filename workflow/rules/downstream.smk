@@ -1,7 +1,7 @@
 rule extract_polya:
     input: 
         bam = "results/{name}.stitched.molecules.sorted.bam".format(name=config["name"]),
-        fai = GENOMEREFINDEX
+        fai = REFFILEINDEX
     output: 
         bed_file = temp("results/downstream/{name}_polyA.bed".format(name=config["name"])), 
         merged_bed_file = temp("results/downstream/{name}_polyA_merged.bed".format(name=config["name"])),
