@@ -1,5 +1,4 @@
 rule log_python_version:
-    
     output: "results/logs/python_version.log"
     shell: "python3 --version > {output}"
 
