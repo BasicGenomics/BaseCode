@@ -13,7 +13,6 @@ if config["ignore_none"]:
                 readtype_map = "results/metadata/{name}_readtype_map.yaml".format(name=config["name"]),
                 samplesheet_out = "results/metadata/{name}_samplesheet.csv".format(name=config["name"])
             log: "results/logs/make_barcode_files.log"
-            
             shell: "echo Process Samplesheet && python3 workflow/scripts/make_sample_files.py -s {input.samplesheet} --fastq {input.fastq_i1} {input.fastq_i2} --index-sequences {input.index_sequences} --sample-barcodes {output.barcodes} --cell-barcodes {output.cell_barcodes} --sample-map {output.sample_map} --readtype-map {output.readtype_map} --samplesheet-out {output.samplesheet_out} --ignore-none  > {log} 2>&1"
     else:
         rule make_barcode_files:
@@ -24,7 +23,6 @@ if config["ignore_none"]:
                 readtype_map = "results/metadata/{name}_readtype_map.yaml".format(name=config["name"]),
                 samplesheet_out = "results/metadata/{name}_samplesheet.csv".format(name=config["name"])
             log: "results/logs/make_barcode_files.log"
-            
             shell: "echo Process Samplesheet && python3 workflow/scripts/make_sample_files.py -s {input.samplesheet} --fastq {input.fastq} --index-sequences {input.index_sequences} --sample-barcodes {output.barcodes} --cell-barcodes {output.cell_barcodes} --sample-map {output.sample_map} --readtype-map {output.readtype_map} --samplesheet-out {output.samplesheet_out} --ignore-none  > {log} 2>&1"
 else:
     if config["i1"] != "" and config["i2"] != "":
@@ -36,7 +34,6 @@ else:
                 readtype_map = "results/metadata/{name}_readtype_map.yaml".format(name=config["name"]),
                 samplesheet_out = "results/metadata/{name}_samplesheet.csv".format(name=config["name"])
             log: "results/logs/make_barcode_files.log"
-            
             shell: "echo Process Samplesheet && python3 workflow/scripts/make_sample_files.py -s {input.samplesheet} --fastq {input.fastq_i1} {input.fastq_i2} --index-sequences {input.index_sequences} --sample-barcodes {output.barcodes} --cell-barcodes {output.cell_barcodes} --sample-map {output.sample_map} --readtype-map {output.readtype_map} --samplesheet-out {output.samplesheet_out}  > {log} 2>&1"
     else:
         rule make_barcode_files:
@@ -47,7 +44,6 @@ else:
                 readtype_map = "results/metadata/{name}_readtype_map.yaml".format(name=config["name"]),
                 samplesheet_out = "results/metadata/{name}_samplesheet.csv".format(name=config["name"])
             log: "results/logs/make_barcode_files.log"
-            
             shell: "echo Process Samplesheet && python3 workflow/scripts/make_sample_files.py -s {input.samplesheet} --fastq {input.fastq} --index-sequences {input.index_sequences} --sample-barcodes {output.barcodes} --cell-barcodes {output.cell_barcodes} --sample-map {output.sample_map} --readtype-map {output.readtype_map} --samplesheet-out {output.samplesheet_out}   > {log} 2>&1"
 if config["i1"] != "" and config["i2"] != "":
     rule parse_fastq:
@@ -79,7 +75,6 @@ rule trim_fastq:
     log: stdout = "results/logs/trim_fastq.log",
          summary = "results/summaries/{name}.cutadapt.json".format(name=config["name"])
     benchmark: "results/benchmarks/trim_fastq.benchmark.txt"
-    
     threads: config["threads"]
     shell: "echo Trim FASTQ && cutadapt -j {threads} --json {log.summary} {config[params][cutadapt]} --too-short-output {output.r1_short} --too-short-paired-output {output.r2_short} -o {output.r1} -p {output.r2} {input.r1} {input.r2} > {log.stdout} 2>&1"
 
@@ -92,7 +87,6 @@ rule map_reads:
         summary = "results/summaries/{name}.hisat2.summary.txt".format(name=config["name"])
     benchmark: "results/benchmarks/map_reads.benchmark.txt"
     params: splicesites = SPLICESITES, genomeref = GENOMEREF, cores_hisat = cores_hisat, cores_samtools = cores_samtools
-    
     shell: "echo Map Reads && binaries/hisat-3n --new-summary --summary-file {log.summary} {config[params][hisat3n]} -p {params.cores_hisat} --known-splicesite-infile {params.splicesites} -x {params.genomeref} -1 {input.r1} -2 {input.r2} | samtools view -F 256 -b -@ {params.cores_samtools} -o {output} > {log.stdout} 2>&1"
 
 rule split_bam_by_strand:
@@ -135,7 +129,6 @@ rule rename_tags_exon:
             mstrand = temp("results/intermediate/{name}.trimmed.aligned.mstrand.Exon.bam".format(name=config["name"])),
             nostrand = temp("results/intermediate/{name}.trimmed.aligned.nostrand.Exon.bam".format(name=config["name"]))
     log: "results/logs/rename_tags_exon.log"
-    
     shell:"""
     binaries/rename_tags --input {input.pstrand} --output {output.pstrand} >> {log} 2>&1
     binaries/rename_tags --input {input.mstrand} --output {output.mstrand} >> {log} 2>&1
@@ -154,7 +147,6 @@ rule assign_genes_intron:
     params: gtffile = "{}.gff3".format(GTFFILE),
             gtffile_positive = "{}.positive.gff3".format(GTFFILE),
             gtffile_negative = "{}.negative.gff3".format(GTFFILE)
-    
     threads: min(config["threads"], 64)
     shell:"""
     binaries/featureCounts -t intron --primary -g {config[gff_gene_identifier]} -T {threads} -R BAM -p --countReadPairs -O -M --largestOverlap --fracOverlap 0.1 -a {params.gtffile_positive} -o results/intermediate/pos.tmp {input.pstrand} >> {log} 2>&1
@@ -171,7 +163,6 @@ rule rename_tags_intron:
             mstrand = temp("results/intermediate/{name}.trimmed.aligned.mstrand.GeneTagged.bam".format(name=config["name"])),
             nostrand = temp("results/intermediate/{name}.trimmed.aligned.nostrand.GeneTagged.bam".format(name=config["name"]))
     log: "results/logs/rename_tags_intron.log"
-    
     shell:"""
     binaries/rename_tags --input {input.pstrand} --output {output.pstrand} --intron-mode >> {log} 2>&1
     binaries/rename_tags --input {input.mstrand} --output {output.mstrand} --intron-mode >> {log} 2>&1
@@ -184,7 +175,6 @@ rule concatenate_and_sort:
     log: "results/logs/concatenate_and_sort.log"
     benchmark: "results/benchmarks/concatenate_and_sort.benchmark.txt"
     output: temp("results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.bam".format(name=config["name"]))
-    
     threads: config["threads"]
     shell: "samtools cat {input.nostrand} {input.pstrand} {input.mstrand} | samtools sort -m 1000M -@ {threads} -T results/.tmp_bgab/sorttmp. -o {output} >> {log} 2>&1"
 
@@ -208,7 +198,7 @@ if config["reverse"]:
         shell:"""
         echo Reconstruct Molecules
         mkdir -p results/tmp/
-        binaries/basic_reconstruction --input {input.bam} --output {output} --gtf {params.gtffile}.gff3 --sample-map {input.sample_map} --threads {threads} --gene-identifier {config[gff_gene_identifier]} --reverse | samtools view -F 256 -b -@ {params.cores_samtools} -o {output} > {log} 2>&1
+        binaries/basic_reconstruction --input {input.bam} --output {output} --gtf {params.gtffile}.gff3 --sample-map {input.sample_map} --threads {threads} --gene-identifier {config[gff_gene_identifier]} --reverse --bulk > {log} 2>&1
         """
 else:
     rule reconstruct:
@@ -223,7 +213,7 @@ else:
         shell:"""
         echo Reconstruct Molecules
         mkdir -p results/tmp/
-        binaries/basic_reconstruction --input {input.bam} --output {output} --gtf {params.gtffile}.gff3 --sample-map {input.sample_map} --threads {threads} --gene-identifier {config[gff_gene_identifier]}  | samtools view -F 256 -b -@ {params.cores_samtools} -o {output} > {log} 2>&1
+        binaries/basic_reconstruction --input {input.bam} --output {output} --gtf {params.gtffile}.gff3 --sample-map {input.sample_map} --threads {threads} --gene-identifier {config[gff_gene_identifier]} --bulk > {log} 2>&1
         """
 
 rule sort_reconstructed:
@@ -233,7 +223,6 @@ rule sort_reconstructed:
     log: "results/logs/sort_reconstructed.log"
     params:
         extra="-m 1000M",
-    
     shell: "samtools sort -@ {threads} -o {output} {params.extra} -T results/.tmp_bgab/sorttmp. {input} &> {log}"
 
 rule index_reconstructed:
@@ -250,7 +239,6 @@ rule stitch_reconstruction:
     threads: config["threads"]
     params: gtffile = GTFFILE
     log: "results/logs/stitch_reconstruction.log"
-    
     shell: "echo Stitch Molecules && python3 workflow/scripts/stitcher.py --input {input.bam} --output {output} --gtf {params.gtffile}.gff3 --threads {threads} --cell-tag CB --UMI-tag RM --gene-identifier {config[gff_gene_identifier]} >> {log} 2>&1"
 
 rule sorted_stitched:
