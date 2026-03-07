@@ -31,7 +31,7 @@ if __name__ == '__main__':
     
     
 
-    args = aparser.parse_args()
+    args, unknown = aparser.parse_known_args()
 
     snakemake_cmd = 'snakemake -j {} --rerun-incomplete '.format(args.threads)
 
@@ -44,6 +44,8 @@ if __name__ == '__main__':
         snakemake_cmd += '-q all '
     if args.dry_run:
         snakemake_cmd += '--dry-run -p'
-
+    if unknown:
+        snakemake_cmd += " ".join(unknown) + " "
+        
     os.system(snakemake_cmd)
 
