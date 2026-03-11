@@ -16,8 +16,8 @@ rule extract_polya:
         cut -f1,2 {input.fai} | sort -k1,1V > {output.genome_file}
         bedtools genomecov -i {output.bed_file} -g {output.genome_file} -bg > {output.bedgraph_file} 
         
-        bgzip {output.bed_file}
-        bgzip {output.merged_bed_file}
+        bgzip -c {output.bed_file} > {output.bed_file_gz}
+        bgzip -c {output.merged_bed_file} > {output.merged_bed_file_gz}
         tabix -p bed {output.bed_file_gz}
         tabix -p bed {output.merged_bed_file_gz}
         """
