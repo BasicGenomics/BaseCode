@@ -3,6 +3,10 @@ rule log_python_version:
     output: "results/logs/python_version.log"
     shell: "python3 --version > {output}"
 
+rule log_version:
+    output: "results/logs/basecode_version.log"
+    shell: "cat VERSION > {output}"
+
 rule make_barcode_files:
     input: samplesheet = config["samplesheet"], fastq = config["r2"]
     output: barcodes = "results/metadata/{name}_sample_barcodes.txt".format(name=config["name"]),
