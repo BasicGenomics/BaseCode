@@ -16,6 +16,7 @@ def get_final_output(wildcards):
     "results/QC_files/{name}_insert_sizes_per_sample_barcode.csv".format(name=config["name"]),
     "results/QC_files/{name}_double_reads_per_sample_barcode.csv".format(name=config["name"]),
     "results/logs/python_version.log",
+    "results/logs/basecode_version.log",
     "results/QC_files/{name}_summary_stats.csv".format(name=config["name"]),
     "results/downstream/{name}_polyA.bed.gz".format(name=config["name"]), 
     "results/downstream/{name}_polyA_merged.bed.gz".format(name=config["name"]),

@@ -2,6 +2,10 @@ rule log_python_version:
     output: "results/logs/python_version.log"
     shell: "python3 --version > {output}"
 
+rule log_version:
+    output: "results/logs/basecode_version.log"
+    shell: "cat VERSION > {output}"
+
 if config["ignore_none"]:
     if config["i1"] != "" and config["i2"] != "":
         rule make_barcode_files:
