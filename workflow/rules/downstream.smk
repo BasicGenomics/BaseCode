@@ -1,23 +1,45 @@
-rule extract_polya:
+rule generate_polya:
     input: 
         bam = "results/{name}.stitched.molecules.sorted.bam".format(name=config["name"]),
-        fai = REFFILEINDEX
+        bai = "results/{name}.stitched.molecules.sorted.bam.bai".format(name=config["name"])
     output: 
-        bed_file = temp("results/downstream/{name}_polyA.bed".format(name=config["name"])), 
-        merged_bed_file = temp("results/downstream/{name}_polyA_merged.bed".format(name=config["name"])),
-        bed_file_gz = "results/downstream/{name}_polyA.bed.gz".format(name=config["name"]), 
-        merged_bed_file_gz = "results/downstream/{name}_polyA_merged.bed.gz".format(name=config["name"]),
-        bedgraph_file = "results/downstream/{name}_polyA.bedgraph".format(name=config["name"]),
-        genome_file = temp("results/downstream/{name}.genome.txt".format(name=config["name"]))
-    shell:
+        bed = temp("results/downstream/{name}_polyA.bed".format(name=config["name"])), 
+        merged_bed = temp("results/downstream/{name}_polyA_merged.bed".format(name=config["name"])),
+        genome = temp("results/downstream/{name}_genome_polyA.txt".format(name=config["name"])),
+        bedgraph = "results/downstream/{name}_polyA.bedgraph".format(name=config["name"]),
+        bed_gz = "results/downstream/{name}_polyA.bed.gz".format(name=config["name"]), 
+        merged_bed_gz = "results/downstream/{name}_polyA_merged.bed.gz".format(name=config["name"]),
+    params: index = REFINDEX
+    shell: """
+        python workflow/scripts/generate_sites_bed.py --input {input.bam} --output results/downstream/{config[name]} --site-type polya
+        bedtools merge -i {output.bed} -c 4 -o count > {output.merged_bed}
+        cut -f1,2 {params.index} | sort -k1,1V > {output.genome}
+        bedtools genomecov -i {output.bed} -g {output.genome} -bg > {output.bedgraph} 
+        bgzip -c {output.bed} > {output.bed_gz}
+        bgzip -c {output.merged_bed} > {output.merged_bed_gz}
+        tabix -p bed {output.bed_gz}
+        tabix -p bed {output.merged_bed_gz}
         """
-        python workflow/scripts/generate_polya_bed.py --input {input.bam} --output {output.bed_file}
-        bedtools merge -i {output.bed_file} -c 4 -o count > {output.merged_bed_file} 
-        cut -f1,2 {input.fai} | sort -k1,1V > {output.genome_file}
-        bedtools genomecov -i {output.bed_file} -g {output.genome_file} -bg > {output.bedgraph_file} 
 
-        bgzip -c {output.bed_file} > {output.bed_file_gz}
-        bgzip -c {output.merged_bed_file} > {output.merged_bed_file_gz}
-        tabix -p bed {output.bed_file_gz}
-        tabix -p bed {output.merged_bed_file_gz}
+rule generate_tss:
+    input: 
+        bam = "results/{name}.stitched.molecules.sorted.bam".format(name=config["name"]),
+        bai = "results/{name}.stitched.molecules.sorted.bam.bai".format(name=config["name"])
+    output: 
+        bed = temp("results/downstream/{name}_TSS.bed".format(name=config["name"])), 
+        merged_bed = temp("results/downstream/{name}_TSS_merged.bed".format(name=config["name"])),
+        genome = temp("results/downstream/{name}_TSS_genome.txt".format(name=config["name"])),
+        bedgraph = "results/downstream/{name}_TSS.bedgraph".format(name=config["name"]),
+        bed_gz = "results/downstream/{name}_TSS.bed.gz".format(name=config["name"]), 
+        merged_bed_gz = "results/downstream/{name}_TSS_merged.bed.gz".format(name=config["name"])
+    params: index = REFINDEX
+    shell: """
+        python workflow/scripts/generate_sites_bed.py --input {input.bam} --output results/downstream/{config[name]} --site-type tss
+        bedtools merge -i {output.bed} -c 4 -o count > {output.merged_bed}
+        cut -f1,2 {params.index} | sort -k1,1V > {output.genome}
+        bedtools genomecov -i {output.bed} -g {output.genome} -bg > {output.bedgraph} 
+        bgzip -c {output.bed} > {output.bed_gz}
+        bgzip -c {output.merged_bed} > {output.merged_bed_gz}
+        tabix -p bed {output.bed_gz}
+        tabix -p bed {output.merged_bed_gz}
         """
