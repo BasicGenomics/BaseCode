@@ -1,7 +1,11 @@
-# Snakemake workflow: `BaseCode`
+# BaseCode Processing Pipeline
 
-[![Snakemake](https://img.shields.io/badge/snakemake-≥6.3.0-brightgreen.svg)](https://snakemake.github.io)
-[![GitHub actions status](https://github.com/<owner>/<repo>/workflows/Tests/badge.svg?branch=main)](https://github.com/<owner>/<repo>/actions?query=branch%3Amain+workflow%3ATests)
+[![Snakemake](https://img.shields.io/badge/snakemake-≥6.0-brightgreen.svg)](https://snakemake.github.io)
+[![Version](https://img.shields.io/badge/version-1.0.6-blue.svg)](VERSION)
 
+The **BaseCode Processing Pipeline** processes RNA BaseCode sequencing data from raw FASTQ files to genome-mapped **BaseCode Synthetic Long Reads** (BAM format), together with a comprehensive set of quality control metrics.
 
-A Snakemake workflow for `BaseCode Data`
+For full documentation, installation instructions, and output descriptions, see the **[BaseCode Documentation](https://github.com/BasicGenomics/BaseCodeDocumentation)**.
+
+---
+© 2026 Basic Genomics AB · All rights reserved
