@@ -789,7 +789,7 @@ def main(args):
     MONA_SANS_REGULAR = args.font_regular
     MONA_SANS_BOLD    = args.font_bold
 
-    if Path(MONA_SANS_REGULAR).exists() and Path(MONA_SANS_BOLD).exists():
+    if MONA_SANS_REGULAR and MONA_SANS_BOLD and Path(MONA_SANS_REGULAR).exists() and Path(MONA_SANS_BOLD).exists():
         pdfmetrics.registerFont(TTFont("MonaSans",      MONA_SANS_REGULAR))
         pdfmetrics.registerFont(TTFont("MonaSans-Bold", MONA_SANS_BOLD))
         font_regular = "MonaSans"
