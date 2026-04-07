@@ -141,9 +141,9 @@ def main():
             else:
                 key = "ALL"
             if key not in sample_files:
-                tmp = tempfile.NamedTemporaryFile(delete=False, suffix=f"_{key}.bed")
+                tmp = tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=f"_{key}.bed")
                 sample_files[key] = tmp.name
-                sample_handles[key] = open(tmp.name, "w")
+                sample_handles[key] = tmp
             bed = sample_handles[key]
             chrom = bam_in.get_reference_name(read.reference_id)
             start, end, strand = get_site_coords(read, args.site_type)
@@ -162,11 +162,12 @@ def main():
                 final_output = f"{args.output}_{key}_{site_label}.bed"
             else:
                 final_output = f"{args.output}_{site_label}.bed"
-            subprocess.run(
-                f"sort -k1,1V -k2,2n {tmp_bed} > {final_output}",
-                shell=True,
-                check=True
-            )
+            with open(final_output, "w") as out_fh:
+                subprocess.run(
+                    ["sort", "-k1,1V", "-k2,2n", tmp_bed],
+                    stdout=out_fh,
+                    check=True
+                )
             os.remove(tmp_bed)
     finally:
         bam_in.close()
