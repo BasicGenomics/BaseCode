@@ -1,31 +1,44 @@
 rule general_stats:
-    input: bam = "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.bam".format(name=config["name"]), cbcpath = "results/metadata/{name}_cell_barcodes.txt".format(name=config["name"]), smppath = "results/metadata/{name}_sample_barcodes.txt".format(name=config["name"])
-    output: "results/QC_files/{name}_read_type_per_sample.csv".format(name=config["name"]), "results/QC_files/{name}_mapping_categories_per_sample.csv".format(name=config["name"]), "results/QC_files/{name}_nonbarcoded_mapping_categories_per_sample.csv".format(name=config["name"])
-    
+    input: bam = "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.bam".format(name=config["name"]),
+           bai = "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.bam.bai".format(name=config["name"]),
+           cbcpath = "results/metadata/{name}_cell_barcodes.txt".format(name=config["name"]), 
+           pbcpath = "results/metadata/{name}_sample_barcodes.txt".format(name=config["name"])
+    output: "results/QC_files/{name}_read_type_per_sample.csv".format(name=config["name"]), 
+            "results/QC_files/{name}_mapping_categories_per_sample.csv".format(name=config["name"]), 
+            "results/QC_files/{name}_nonbarcoded_mapping_categories_per_sample.csv".format(name=config["name"])
     log: "results/logs/general_stats.log"
-    shell: "python3 workflow/scripts/general_stats.py -i {input.bam} -o results/QC_files -s {input.smppath} -p {config[name]} -c {input.cbcpath} > {log} 2>&1"
+    shell: "python3 workflow/scripts/general_stats.py -i {input.bam} -o results/QC_files -s {input.pbcpath} -p {config[name]} -c {input.cbcpath} > {log} 2>&1"
 
 rule insertion_sizes:
-    input: bam = "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.bam".format(name=config["name"]), cbcpath = "results/metadata/{name}_cell_barcodes.txt".format(name=config["name"]), smppath = "results/metadata/{name}_sample_barcodes.txt".format(name=config["name"])
-    output: "results/QC_files/{name}_insert_sizes_per_sample_barcode.csv".format(name=config["name"]), "results/QC_files/{name}_double_reads_per_sample_barcode.csv".format(name=config["name"])
-    
+    input: bam = "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.bam".format(name=config["name"]),
+           bai = "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.bam.bai".format(name=config["name"]),
+           cbcpath = "results/metadata/{name}_cell_barcodes.txt".format(name=config["name"]), 
+           pbcpath = "results/metadata/{name}_sample_barcodes.txt".format(name=config["name"])
+    output: "results/QC_files/{name}_insert_sizes_per_sample_barcode.csv".format(name=config["name"]), 
+            "results/QC_files/{name}_double_reads_per_sample_barcode.csv".format(name=config["name"])
     log: "results/logs/insertion_sizes.log"
-    shell: "python3 workflow/scripts/insertion_sizes.py -i {input.bam} -o results/QC_files -s {input.smppath} -p {config[name]} -c {input.cbcpath} > {log} 2>&1"
+    shell: "python3 workflow/scripts/insertion_sizes.py -i {input.bam} -o results/QC_files -s {input.pbcpath} -p {config[name]} -c {input.cbcpath} > {log} 2>&1"
 
 rule conversion:
-    input: bam = "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.bam".format(name=config["name"]), bai = "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.bam.bai".format(name=config["name"]), samplesheet = "results/metadata/{name}_samplesheet.csv".format(name=config["name"])
-    output: "results/QC_files/{name}_conversion_rate_pos.csv".format(name=config["name"]),"results/QC_files/{name}_conversion_rate_total.csv".format(name=config["name"])
-    params: fasta = REFFILE, gtf =  "{}.gff3".format(GTFFILE)
-    threads: int(config["threads"]/2)
-    
+    input: bam = "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.bam".format(name=config["name"]), 
+           bai = "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.bam.bai".format(name=config["name"]), 
+           samplesheet = "results/metadata/{name}_samplesheet.csv".format(name=config["name"])
+    output: "results/QC_files/{name}_conversion_rate_pos.csv".format(name=config["name"]), 
+            "results/QC_files/{name}_conversion_rate_neg.csv".format(name=config["name"]), 
+            "results/QC_files/{name}_conversion_rate_total.csv".format(name=config["name"])
     log: "results/logs/conversion.log"
-    shell: "python3 workflow/scripts/conversion_rates.py -i {input.bam} -f {params.fasta} -g {params.gtf} -o results/QC_files -s {input.samplesheet} -p {config[name]} -t {threads} --gene-identifier {config[gff_gene_identifier]} --only-samples > {log} 2>&1"
+    params: ref = REF,
+            gff = "{}.gff3".format(GFF)
+    threads: max(1, int(config["threads"]/2))
+    shell: "python3 workflow/scripts/conversion_rates.py -i {input.bam} -f {params.ref} -g {params.gff} -o results/QC_files -s {input.samplesheet} -p {config[name]} -t {threads} --gene-identifier {config[gff_gene_identifier]} --only-samples > {log} 2>&1"
 
 rule summary_stats:
-    input: long_form = "results/QC_files/{name}_long_form_reconstruction_stats.csv".format(name=config["name"]), json = "results/read_flow_files/{name}_fastq_processed_stats.json".format(name=config["name"]), sample_map = "results/metadata/{name}_sample_map.yaml".format(name=config["name"]), bam = "results/{name}.stitched.molecules.sorted.bam".format(name=config["name"])
-    output: summary_file = "results/QC_files/{name}_summary_stats.csv".format(name=config["name"])
+    input: bam = "results/{name}.stitched.molecules.sorted.bam".format(name=config["name"]),
+           bai = "results/{name}.stitched.molecules.sorted.bam.bai".format(name=config["name"]),
+           long_form = "results/QC_files/{name}_long_form_reconstruction_stats.csv".format(name=config["name"]), 
+           json = "results/read_flow_files/{name}_fastq_processed_stats.json".format(name=config["name"]), 
+           sample_map = "results/metadata/{name}_sample_map.yaml".format(name=config["name"])
+    output: "results/QC_files/{name}_summary_stats.csv".format(name=config["name"])
     log: "results/logs/summary_stats.log"
     threads: 1
-    shell: "echo BaseCode Processing Pipeline Finished &&  python3 workflow/scripts/summary_stats.py --long-form {input.long_form} --json {input.json} --sample-map {input.sample_map} --output {output.summary_file}"
-
-
+    shell: "echo BaseCode Processing Pipeline Finished &&  python3 workflow/scripts/summary_stats.py --long-form {input.long_form} --json {input.json} --sample-map {input.sample_map} --output {output}"
