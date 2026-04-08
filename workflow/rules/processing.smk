@@ -245,14 +245,15 @@ if config["reverse"]:
         input: bam = "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.bam".format(name=config["name"]),
                bai = "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.bam.bai".format(name=config["name"]),
                sample_map = "results/metadata/{name}_sample_map.yaml".format(name=config["name"])
-        output: temp("results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.reconstructed.bam".format(name=config["name"]))
+        output: temp("results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.reconstructed.bam".format(name=config["name"])),
+                merged_genes = "results/intermediate/{name}.merged_genes.csv".format(name=config["name"])
         log: "results/logs/reconstruct.log"
         benchmark: "results/benchmarks/reconstruct.benchmark.txt"
         params: gff = "{}.gff3".format(GFF)
         threads: min(config["threads"], 64)
         shell:"""
         echo Step 6/7 Reconstruct Molecules
-        binaries/basic_reconstruction --input {input.bam} --output {output} --gtf {params.gff} --sample-map {input.sample_map} --threads {threads} --gene-identifier {config[gff_gene_identifier]} --merged-genes {input.merged_genes} --reverse --bulk > {log} 2>&1
+        binaries/basic_reconstruction --input {input.bam} --output {output} --gtf {params.gff} --sample-map {input.sample_map} --threads {threads} --gene-identifier {config[gff_gene_identifier]} --merged-genes {output.merged_genes} --reverse --bulk > {log} 2>&1
         """
 else:
     rule reconstruct:
@@ -267,7 +268,7 @@ else:
         threads: min(config["threads"], 64)
         shell:"""
         echo Step 6/7 Reconstruct Molecules
-        binaries/basic_reconstruction --input {input.bam} --output {output.bam} --gtf {params.gff} --sample-map {input.sample_map} --threads {threads} --gene-identifier {config[gff_gene_identifier]} --merged-genes {input.merged_genes} --bulk > {log} 2>&1
+        binaries/basic_reconstruction --input {input.bam} --output {output.bam} --gtf {params.gff} --sample-map {input.sample_map} --threads {threads} --gene-identifier {config[gff_gene_identifier]} --merged-genes {output.merged_genes} --bulk > {log} 2>&1
         """
 
 rule sort_reconstructed:
