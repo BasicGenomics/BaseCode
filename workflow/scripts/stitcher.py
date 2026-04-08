@@ -29,11 +29,6 @@ ll_other_correct[0] = -(1e-16*np.log(10))/10 - ln_3
 ll_N = -np.log(4)
 
 from scipy.sparse import csc_matrix
-def make_ll_array(e):
-    y = np.array([e[0]/3,e[0]/3,e[0]/3,e[0]/3])
-    if e[1] != 4:
-        y[e[1]] = 1-e[0]
-    return np.log10(y)
 
 # taken from https://stackoverflow.com/questions/312443/how-do-you-split-a-list-into-evenly-sized-chunks
 def chunks(lst, n):
@@ -146,13 +141,15 @@ def stitch_reads(read_d, cell, gene, umi, UMI_tag):
     T1 = False
     F1 = False
     SP = False
+    sample_tag = 'NA'
+    reference_name = None
     for i,read in enumerate(read_d):
 
         
-        if read.has_tag('SM'):
-            sample_tag = read.get_tag('SM')
-        else:
-            sample_tag = 'NA'
+        if i == 0:
+            if read.has_tag('SM'):
+                sample_tag = read.get_tag('SM')
+            reference_name = read.reference_name
         if i == 0:
             if read.has_tag('SC'):
                 master_read['SC'] = read.get_tag('SC')
@@ -185,8 +182,9 @@ def stitch_reads(read_d, cell, gene, umi, UMI_tag):
         insertion_locs = get_insertions_locs(cigtuples)
         
         if len(insertion_locs) > 0:
-            seq = "".join([char for idx, char in enumerate(seq) if idx not in insertion_locs])
-            Q_list = [qual for idx, qual in enumerate(Q_list) if idx not in insertion_locs]
+            insertion_set = set(insertion_locs)
+            seq = "".join([char for idx, char in enumerate(seq) if idx not in insertion_set])
+            Q_list = [qual for idx, qual in enumerate(Q_list) if idx not in insertion_set]
 
         ref_positions = read.get_reference_positions()
         skipped_intervals = get_skipped_tuples(cigtuples, ref_positions)
@@ -224,10 +222,7 @@ def stitch_reads(read_d, cell, gene, umi, UMI_tag):
             fiveprime_start.update({read.reference_end: 1})
 
 
-        if len(master_read) == 0:
-            master_read['skipped_interval_list'] = [skipped_intervals]
-        else:
-            master_read['skipped_interval_list'].append(skipped_intervals)
+        master_read['skipped_interval_list'].append(skipped_intervals)
 
     sparse_row_dict = {b:[] for b in nucleotides}
     sparse_col_dict = {b:[] for b in nucleotides}
@@ -297,7 +292,7 @@ def stitch_reads(read_d, cell, gene, umi, UMI_tag):
 
     master_read['seq'] = ''.join([nucleotides[x] if p > 0.3 else 'N' for p, x in zip(prob_max, nuc_max)])
     master_read['phred'] = np.nan_to_num(np.rint(-10*np.log10(1-prob_max+1e-13)))
-    master_read['SN'] = read.reference_name
+    master_read['SN'] = reference_name
     master_read['is_reverse'] = 1 if orientation_counts['-'] >= orientation_counts['+'] else 0
     master_read['del_intervals'] =  ~(master_read['ref_intervals'] | master_read['skipped_intervals'])
     master_read['NR'] = nreads
@@ -383,6 +378,7 @@ def assemble_reads(bamfile,gene_to_stitch, cell_set, cell_tag, UMI_tag, only_mol
                 readtrie[node].append(read)
             else:
                 readtrie[node] = [read]
+    bam.close()
     mol_list = []
     mol_append = mol_list.append
     for node, mol in readtrie.iteritems():
@@ -415,7 +411,7 @@ def make_POS_and_CIGAR(stitched_m):
     while sum(len(t) for t in tuple_dict.values()) > 0:
         pos_dict = {k:v[0][0] for k,v in tuple_dict.items() if len(v) > 0}
         c = min(pos_dict, key=pos_dict.get)
-        n_bases = np.int_(tuple_dict[c[0]][0][1]-tuple_dict[c[0]][0][0])+1
+        n_bases = int(tuple_dict[c[0]][0][1]-tuple_dict[c[0]][0][0])+1
         if n_bases == 0:
             del tuple_dict[c[0]][0]
             continue
@@ -478,15 +474,10 @@ def yield_reads(read_dict):
                 #print('\t\t', umi)
                 yield read_dict[cell][gene][umi], None, cell, gene, umi
 
-def get_length_from_cigar(read):
-    total_len = 0
-    for (op, len) in read.cigartuples:
-        if op == 0:
-            total_len += len
-    return total_len
 def create_write_function(filename, bamfile, version):
     bam = pysam.AlignmentFile(bamfile, 'rb')
     header = bam.header
+    bam.close()
     
     def write_sam_file(q):
         error_file = open('{}_error.log'.format(os.path.splitext(filename)[0]), 'w')
@@ -498,7 +489,7 @@ def create_write_function(filename, bamfile, version):
                 g = ''
                 for success, mol in mol_list:
                     if success:
-                        read = pysam.AlignedRead.fromstring(mol,header)
+                        read = pysam.AlignedSegment.fromstring(mol,header)
                         if g == '':
                             g = read.get_tag('XT')
                         stitcher_bam.write(read)
