@@ -252,7 +252,7 @@ if config["reverse"]:
         threads: min(config["threads"], 64)
         shell:"""
         echo Step 6/7 Reconstruct Molecules
-        binaries/basic_reconstruction --input {input.bam} --output {output} --gtf {params.gff} --sample-map {input.sample_map} --threads {threads} --gene-identifier {config[gff_gene_identifier]} --reverse > {log} 2>&1
+        binaries/basic_reconstruction --input {input.bam} --output {output} --gtf {params.gff} --sample-map {input.sample_map} --threads {threads} --gene-identifier {config[gff_gene_identifier]} --merged-genes {input.merged_genes} --reverse --bulk > {log} 2>&1
         """
 else:
     rule reconstruct:
@@ -267,7 +267,7 @@ else:
         threads: min(config["threads"], 64)
         shell:"""
         echo Step 6/7 Reconstruct Molecules
-        binaries/basic_reconstruction --input {input.bam} --output {output.bam} --gtf {params.gff} --sample-map {input.sample_map} --threads {threads} --gene-identifier {config[gff_gene_identifier]} --merged-genes {input.merged_genes}> {log} 2>&1
+        binaries/basic_reconstruction --input {input.bam} --output {output.bam} --gtf {params.gff} --sample-map {input.sample_map} --threads {threads} --gene-identifier {config[gff_gene_identifier]} --merged-genes {input.merged_genes} --bulk > {log} 2>&1
         """
 
 rule sort_reconstructed:
