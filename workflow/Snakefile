@@ -3,12 +3,10 @@
 # https://snakemake.readthedocs.io/en/stable/snakefiles/best_practices.html,
 # in particular regarding the standardized folder structure mentioned there. 
 
-from gevent import config
 from snakemake.utils import min_version
 min_version("6.0")
 
 configfile: "config/config.yaml"
-
 
 if 'resource_dir' not in config:
     config['resource_dir'] = '/usr/local/app/resources/'
@@ -24,7 +22,6 @@ if "ignore_none" not in config:
 
 if "i1" not in config:
     config["i1"] = ""
-
 if "i2" not in config:
     config["i2"] = ""
 
@@ -38,23 +35,23 @@ if "ts_pad" not in config:
 if "ts_cutoff" not in config:
     config["ts_cutoff"] = 5
 
-if "gff_gene_identifier" not in config:
+if "gff_gene_identifier" in config:
+    pass
+elif "gtf_gene_identifier" in config:
+    config["gff_gene_identifier"] = config["gtf_gene_identifier"]
+elif "gene_identifier" in config:
+    config["gff_gene_identifier"] = config["gene_identifier"]
+else:
+    config["gff_gene_identifier"] = "gene_id"
 
-    if "gtf_gene_identifier" not in config:
-        config["gff_gene_identifier"] = "gene_id"
-    else:
-        config["gff_gene_identifier"] = config["gtf_gene_identifier"]
-    
-    
+if "reverse" not in config:
+    config["reverse"] = False
 
 if "params" not in config:
     config["params"] = {}
 
 if "cutadapt" not in config["params"]:
     config["params"]["cutadapt"] = "-n 2 -m 25 -q 10 -a CTGTCTCTTATACACATCT -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCA -g TTTTTTTTTTTTTTTTTTTT -g GGAGGAGGAGAGAAGA -g AAAAAAAAAAAAAAAAAAAA -A CTGTCTCTTATACACATCT -A AAAAAAAAAAAAAAAAAAAA -A AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT"
-
-if "reverse" not in config:
-    config["reverse"] = False
 
 if "hisat3n" not in config["params"]:
     if config["reverse"]:
@@ -64,20 +61,21 @@ if "hisat3n" not in config["params"]:
 
 SPLICESITES = "{resource_dir}/genome_references/{reference}/splicesites.ss".format(resource_dir=config["resource_dir"], reference=config["reference"]) 
 GENOMEREF = "{resource_dir}/genome_references/{reference}/genomeref".format(resource_dir=config["resource_dir"], reference=config["reference"])
-GTFFILE = "{resource_dir}/genome_references/{reference}/geneannotations".format(resource_dir=config["resource_dir"], reference=config["reference"])
-REFFILE = "{resource_dir}/genome_references/{reference}/reference.fa".format(resource_dir = config["resource_dir"], reference = config["reference"])
-REFFILEINDEX = "{resource_dir}/genome_references/{reference}/reference.fa.fai".format(resource_dir = config["resource_dir"], reference = config["reference"])
+GFF = "{resource_dir}/genome_references/{reference}/geneannotations".format(resource_dir=config["resource_dir"], reference=config["reference"])
+REF = "{resource_dir}/genome_references/{reference}/reference.fa".format(resource_dir = config["resource_dir"], reference = config["reference"])
+REFINDEX = "{resource_dir}/genome_references/{reference}/reference.fa.fai".format(resource_dir = config["resource_dir"], reference = config["reference"])
+
 cores_samtools = int(config["threads"]*0.05)+1
-cores_hisat = config["threads"]-cores_samtools
+cores_hisat = max(1, config["threads"]-cores_samtools)
 
 include: "rules/processing.smk"
-include: "rules/collect_stats.smk"
 include: "rules/read_flow.smk"
+include: "rules/collect_stats.smk"
 include: "rules/reconstruction_stats.smk"
-include: "rules/visualization.smk"
 include: "rules/downstream.smk"
+include: "rules/report.smk"
 include: "rules/common.smk"
 
 rule all:
     input:
-        get_final_output,
+        get_final_output
