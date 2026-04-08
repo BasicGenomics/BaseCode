@@ -3,6 +3,7 @@
 # https://snakemake.readthedocs.io/en/stable/snakefiles/best_practices.html,
 # in particular regarding the standardized folder structure mentioned there. 
 
+from gevent import config
 from snakemake.utils import min_version
 min_version("6.0")
 
@@ -38,7 +39,13 @@ if "ts_cutoff" not in config:
     config["ts_cutoff"] = 5
 
 if "gff_gene_identifier" not in config:
-    config["gff_gene_identifier"] = "gene_id"
+
+    if "gtf_gene_identifier" not in config:
+        config["gff_gene_identifier"] = "gene_id"
+    else:
+        config["gff_gene_identifier"] = config["gtf_gene_identifier"]
+    
+    
 
 if "params" not in config:
     config["params"] = {}
