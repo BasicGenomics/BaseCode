@@ -281,8 +281,8 @@ if config["reverse"]:
         input: bam = "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.bam".format(name=config["name"]),
                bai = "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.bam.bai".format(name=config["name"]),
                sample_map = "results/metadata/{name}_sample_map.yaml".format(name=config["name"])
-        output: bam = temp("results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.reconstructed.bam".format(name=config["name"]),
-                done = "results/dones/{name}_reconstruct.done".format(name=config["name"]))
+        output: bam = temp("results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.reconstructed.bam".format(name=config["name"])),
+                done = "results/dones/{name}_reconstruct.done".format(name=config["name"])
         log: "results/logs/reconstruct.log"
         benchmark: "results/benchmarks/reconstruct.benchmark.txt"
         params: gff = "{}.gff3".format(GFF)
