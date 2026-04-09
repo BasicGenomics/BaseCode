@@ -145,7 +145,7 @@ rule trim_fastq:
 rule map_reads:
     input: r1 = "results/intermediate/{name}.trimmed.read1.fastq.gz".format(name=config["name"]),
            r2 = "results/intermediate/{name}.trimmed.read2.fastq.gz".format(name=config["name"])
-    output: bam = "results/intermediate/{name}.trimmed.aligned.bam".format(name=config["name"]),
+    output: bam = temp("results/intermediate/{name}.trimmed.aligned.bam".format(name=config["name"])),
             done = "results/dones/{name}_map_reads.done".format(name=config["name"])
     log: log = "results/logs/map_reads.log",
          summary = "results/summaries/{name}.hisat2.summary.txt".format(name=config["name"])
