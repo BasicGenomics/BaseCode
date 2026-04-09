@@ -267,8 +267,8 @@ rule concatenate_and_sort:
 
 rule first_index:
     input: "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.bam".format(name=config["name"])
-    output: bai =temp("results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.bam.bai".format(name=config["name"]),
-            done = "results/dones/{name}_first_index.done".format(name=config["name"]))
+    output: bai = temp("results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.bam.bai".format(name=config["name"])),
+            done = "results/dones/{name}_first_index.done".format(name=config["name"])
     log: "results/logs/first_index.log"
     threads: config["threads"]
     shell: """
