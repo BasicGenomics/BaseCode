@@ -168,9 +168,10 @@ rule split_bam_by_strand:
             done = "results/dones/{name}_split_bam_by_strand.done".format(name=config["name"])
     log: "results/logs/split_bam_by_strand.log"
     benchmark: "results/benchmarks/split_bam_by_strand.benchmark.txt"
+    threads: config["threads"]
     shell: """
     echo Step 5/7 Assign Genes
-    binaries/move_tags --input {input} > {log} 2>&1
+    binaries/move_tags --input {input} --threads {threads} > {log} 2>&1
     touch {output.done}
     """
 
@@ -205,10 +206,11 @@ rule rename_tags_exon:
             done = "results/dones/{name}_rename_tags_exon.done".format(name=config["name"])
     log: "results/logs/rename_tags_exon.log"
     benchmark: "results/benchmarks/rename_tags_exon.benchmark.txt"
+    threads: config["threads"]
     shell:"""
-    binaries/rename_tags --input {input.pstrand} --output {output.pstrand} >> {log} 2>&1
-    binaries/rename_tags --input {input.mstrand} --output {output.mstrand} >> {log} 2>&1
-    binaries/rename_tags --input {input.nostrand} --output {output.nostrand} >> {log} 2>&1
+    binaries/rename_tags --input {input.pstrand} --output {output.pstrand} --threads {threads} >> {log} 2>&1
+    binaries/rename_tags --input {input.mstrand} --output {output.mstrand} --threads {threads} >> {log} 2>&1
+    binaries/rename_tags --input {input.nostrand} --output {output.nostrand} --threads {threads} >> {log} 2>&1
     touch {output.done}
     """
 
@@ -243,10 +245,11 @@ rule rename_tags_intron:
             done = "results/dones/{name}_rename_tags_intron.done".format(name=config["name"])
     log: "results/logs/rename_tags_intron.log"
     benchmark: "results/benchmarks/rename_tags_intron.benchmark.txt"
+    threads: config["threads"]
     shell:"""
-    binaries/rename_tags --input {input.pstrand} --output {output.pstrand} --intron-mode >> {log} 2>&1
-    binaries/rename_tags --input {input.mstrand} --output {output.mstrand} --intron-mode >> {log} 2>&1
-    binaries/rename_tags --input {input.nostrand} --output {output.nostrand} --intron-mode >> {log} 2>&1
+    binaries/rename_tags --input {input.pstrand} --output {output.pstrand} --intron-mode --threads {threads} >> {log} 2>&1
+    binaries/rename_tags --input {input.mstrand} --output {output.mstrand} --intron-mode --threads {threads} >> {log} 2>&1
+    binaries/rename_tags --input {input.nostrand} --output {output.nostrand} --intron-mode --threads {threads} >> {log} 2>&1
     touch {output.done}
     """
 
@@ -336,7 +339,8 @@ rule index_reconstructed:
 
 rule stitch_reconstruction:
     input: bam =  "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.reconstructed.sorted.bam".format(name=config["name"]),
-           bai = "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.reconstructed.sorted.bam.bai".format(name=config["name"])
+           bai = "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.reconstructed.sorted.bam.bai".format(name=config["name"]),
+           merged_genes = "results/intermediate/{name}.merged_genes.csv".format(name=config["name"])
     output: bam = temp("results/intermediate/{name}.stitched.bam".format(name=config["name"])),
             done = "results/dones/{name}_stitch_reconstruction.done".format(name=config["name"])
     params: gff = "{}.gff3".format(GFF)
@@ -345,13 +349,13 @@ rule stitch_reconstruction:
     threads: config["threads"]
     shell: """
     echo Step 7/7 Stitch Molecules
-    python3 workflow/scripts/stitcher.py --input {input.bam} --output {output.bam} --gtf {params.gff} --threads {threads} --cell-tag CB --UMI-tag RM --gene-identifier {config[gff_gene_identifier]} > {log} 2>&1
+    python3 binaries/stitcher_rs --input {input.bam} --output {output.bam} --gtf {params.gff} --threads {threads} --cell-tag CB --UMI-tag RM --gene-identifier {config[gff_gene_identifier]} --merged-genes {input.merged_genes} > {log} 2>&1
     touch {output.done}
     """
 
 rule sort_stitched:
     input: "results/intermediate/{name}.stitched.bam".format(name=config["name"])
-    output: bam =temp("results/intermediate/{name}.stitched.sorted.bam".format(name=config["name"])),
+    output: bam = temp("results/intermediate/{name}.stitched.sorted.bam".format(name=config["name"])),
             done = "results/dones/{name}_sort_stitched.done".format(name=config["name"])
     log: "results/logs/sort_stitched.log"
     threads: config["threads"]
