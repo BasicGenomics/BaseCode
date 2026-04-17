@@ -349,7 +349,7 @@ rule stitch_reconstruction:
     threads: config["threads"]
     shell: """
     echo Step 7/7 Stitch Molecules
-    binaries/stitcher_rs --input {input.bam} --output {output.bam} --gtf {params.gff} --threads {threads} --cell-tag CB --UMI-tag RM --gene-identifier {config[gff_gene_identifier]} --merged-genes {input.merged_genes} > {log} 2>&1
+    binaries/stitcher_rs --input {input.bam} --output {output.bam} --gtf {params.gff} --threads {threads} --cell-tag CB --umi-tag RM --gene-identifier {config[gff_gene_identifier]} --merged-genes {input.merged_genes} > {log} 2>&1
     touch {output.done}
     """
 
