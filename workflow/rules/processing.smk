@@ -290,10 +290,11 @@ if config["reverse"]:
         log: "results/logs/reconstruct.log"
         benchmark: "results/benchmarks/reconstruct.benchmark.txt"
         params: gff = "{}.gff3".format(GFF)
-        threads: min(config["threads"], 64)
+        threads: comp_threads = int(min(config["threads"], 64)*0.2),
+                proc_threads = min(config["threads"], 64)-int(min(config["threads"], 64)*0.2)
         shell:"""
         echo Step 6/7 Reconstruct Molecules
-        binaries/basic_reconstruction --input {input.bam} --output {output.bam} --gtf {params.gff} --sample-map {input.sample_map} --threads {threads} --gene-identifier {config[gff_gene_identifier]} --merged-genes {output.merged_genes} --reverse --bulk > {log} 2>&1
+        binaries/basic_reconstruction --input {input.bam} --output {output.bam} --gtf {params.gff} --sample-map {input.sample_map} --threads {threads.proc_threads} --bam-threads {threads.comp_threads} --gene-identifier {config[gff_gene_identifier]} --merged-genes {output.merged_genes} --reverse --bulk > {log} 2>&1
         touch {output.done}
         """
 else:
@@ -307,10 +308,11 @@ else:
         log: "results/logs/reconstruct.log"
         benchmark: "results/benchmarks/reconstruct.benchmark.txt"
         params: gff = "{}.gff3".format(GFF)
-        threads: min(config["threads"], 64)
+        threads: comp_threads = int(min(config["threads"], 64)*0.2),
+                proc_threads = min(config["threads"], 64)-int(min(config["threads"], 64)*0.2)
         shell:"""
         echo Step 6/7 Reconstruct Molecules
-        binaries/basic_reconstruction --input {input.bam} --output {output.bam} --gtf {params.gff} --sample-map {input.sample_map} --threads {threads} --gene-identifier {config[gff_gene_identifier]} --merged-genes {output.merged_genes} --bulk > {log} 2>&1
+        binaries/basic_reconstruction --input {input.bam} --output {output.bam} --gtf {params.gff} --sample-map {input.sample_map} --threads {threads.proc_threads} --bam-threads {threads.comp_threads} --gene-identifier {config[gff_gene_identifier]} --merged-genes {output.merged_genes} --bulk > {log} 2>&1
         touch {output.done}
         """
 
