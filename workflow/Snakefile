@@ -65,7 +65,7 @@ GFF = "{resource_dir}/genome_references/{reference}/geneannotations".format(reso
 REF = "{resource_dir}/genome_references/{reference}/reference.fa".format(resource_dir = config["resource_dir"], reference = config["reference"])
 REFINDEX = "{resource_dir}/genome_references/{reference}/reference.fa.fai".format(resource_dir = config["resource_dir"], reference = config["reference"])
 
-cores_samtools = int(config["threads"]*0.05)+1
+cores_samtools = int(config["threads"]*0.2)+1
 cores_hisat = max(1, config["threads"]-cores_samtools)
 
 include: "rules/processing.smk"
