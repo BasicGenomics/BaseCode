@@ -64,7 +64,7 @@ def determine_gene_tag(read):
             gene = gene_exon
             # if the exon and intron gene tag contradict each other
         else:
-            gene = ''
+            gene = gene_exon
     else:
         gene = ''
     return gene
