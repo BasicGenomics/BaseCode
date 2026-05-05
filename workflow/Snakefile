@@ -33,7 +33,7 @@ if "ts_sequence" not in config:
 if "ts_pad" not in config:
     config["ts_pad"] = 3
 if "ts_cutoff" not in config:
-    config["ts_cutoff"] = 5
+    config["ts_cutoff"] = 2
 
 if "gff_gene_identifier" in config:
     pass
