@@ -29,7 +29,10 @@ def get_final_output():
     *expand("results/QC_files/{sample}/{sample}_status_fraction_per_gene.csv",sample=sample_in),
     *expand("results/QC_files/{sample}/{sample}_insert_sizes_per_sample_barcode.csv",sample=sample_in),
     *expand("results/QC_files/{sample}/{sample}_double_reads_per_sample_barcode.csv",sample=sample_in),
-    *expand("results/QC_files/{sample}/{sample}_summary_stats.csv",sample=sample_in)
+    *expand("results/QC_files/{sample}/{sample}_summary_stats.csv",sample=sample_in),
+    "results/logs/python_version.log",
+    "results/logs/basecode_version.log",
+    *expand("results/{sample}_run_report.pdf",sample=sample_in)
     ]
 
     return final_output

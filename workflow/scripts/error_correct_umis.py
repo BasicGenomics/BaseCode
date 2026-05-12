@@ -13,7 +13,6 @@ def parse_gtf_gene_name(gtffile, contig, ban_set=set()):
     gene_list = []
 
     ext = Path(gtffile).suffix 
-    counter = 0
     
     with open(gtffile, 'r') as f:
         for line in f:
@@ -48,10 +47,7 @@ def parse_gtf_gene_name(gtffile, contig, ban_set=set()):
                             gene_list.append({'gene_id': l[8].split(' ')[5].replace('"', '').strip(';'), 'seqid':l[0], 'start':int(l[3]), 'end':int(l[4]), 'strand': l[6]})
                         except:
                             gene_list.append({'gene_id': l[8].split(' ')[1].replace('"', '').strip(';'), 'seqid':l[0], 'start':int(l[3]), 'end':int(l[4]), 'strand': l[6]})
-            counter +=1
-            if counter >10:
-                break 
-                
+            
     gene_dict = {g['gene_id']: g for g in gene_list}
     
     return gene_dict
@@ -73,7 +69,7 @@ def correct_tags(inpath, threads, chr):
     inp = pysam.AlignmentFile(inpath, 'rb', threads = threads)
     out = pysam.AlignmentFile(outpath, 'wb', template = inp, threads = threads)
     for read in inp.fetch(chr):
-        if read.get_tag('XX') == 'threep_BCUMI_read':
+        if read.get_tag('XX') == 'TP_read':
             umi = read.get_tag('UB')
             umi_new = umi
             cell = get_cellBC(read)
@@ -333,7 +329,7 @@ def get_umi_mappings(inbam, chr, start, end, gene):
     for read in bam.fetch(chr,start,end):
         if read.is_read2:
             continue
-        if read.get_tag("XX") != "threep_BCUMI_read":
+        if read.get_tag("XX") != "TP_read":
             continue
         cell = get_cellBC(read)
         umi = read.get_tag("UB")

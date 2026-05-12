@@ -33,6 +33,9 @@ def main():
     df_long_form = pl.read_csv(long_form_file)
 
     tags_to_column_names = {'TP_read': '3\' Counts', 'internal': 'Internal Counts', 'FP_read': '5\' Counts'}
+    tags_to_column_names_old_pipeline = {'threep_BCUMI_read': '3\' Counts', 
+                                        'internal': 'Internal Counts', 
+                                        'fivep_T_read': '5\' Counts'}
     
     sample_counts = {}
     for bc, xx_stats in read_flow_dict['XX_stats'].items():
@@ -49,7 +52,10 @@ def main():
 
 
     df_sample_counts_pandas = pd.DataFrame(sample_counts).T
-    df_sample_counts_pandas.columns = [tags_to_column_names[c] for c in df_sample_counts_pandas.columns]
+    try:
+        df_sample_counts_pandas.columns = [tags_to_column_names[c] for c in df_sample_counts_pandas.columns]
+    except KeyError:
+        df_sample_counts_pandas.columns = [tags_to_column_names_old_pipeline[c] for c in df_sample_counts_pandas.columns]
 
     series_total_counts = pd.Series(total_counts_dict)
     series_total_counts.name = 'Total Counts'

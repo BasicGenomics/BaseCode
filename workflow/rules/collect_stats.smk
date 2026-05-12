@@ -1,46 +1,74 @@
+
+def input_bam(wc):
+
+    if config['params_key']=='bulk':
+        suf = ".reads.aligned_trimmed_genetagged_sorted.bam"
+    else:
+        suf = ".reads.aligned_trimmed_genetagged_sorted_umicorrected.bam"
+
+    input_bam_list = os.path.join("results/intermediate/", f"{wc.sample}{suf}")
+
+    return input_bam_list
+
+
 rule general_stats:
-    input:  bam = "results/intermediate/{sample}.reads.aligned_trimmed_genetagged_sorted.bam", 
-            cbcpath = "results/metadata/{name}_cell_barcodes.txt".format(name=config["name"]), 
+    input:  bam = input_bam,
+            cbcpath = "results/metadata/{name}_cell_barcodes.txt".format(name=config["name"]),
             smppath = "results/metadata/{name}_sample_barcodes.txt".format(name=config["name"])
-    output: "results/QC_files/{sample}/{sample}_read_type_per_sample.csv", 
-            "results/QC_files/{sample}/{sample}_mapping_categories_per_sample.csv",
-            "results/QC_files/{sample}/{sample}_nonbarcoded_mapping_categories_per_sample.csv"
+    output: read_type    = "results/QC_files/{sample}/{sample}_read_type_per_sample.csv",
+            mapping_cats = "results/QC_files/{sample}/{sample}_mapping_categories_per_sample.csv",
+            nonbarcoded  = "results/QC_files/{sample}/{sample}_nonbarcoded_mapping_categories_per_sample.csv",
+            done         = "results/done/{sample}.general_stats.done"
     conda: "../envs/full.yaml"
     log: "results/QC_files/logs/{sample}/{sample}.general_stats.log"
-    shell: "python3 workflow/scripts/general_stats.py -i {input.bam} -o results/QC_files/{wildcards.sample} -s {input.smppath} -p {wildcards.sample} -c {input.cbcpath} > {log} 2>&1"
+    shell: """
+    python3 workflow/scripts/general_stats.py -i {input.bam} -o results/QC_files/{wildcards.sample} -s {input.smppath} -p {wildcards.sample} -c {input.cbcpath} > {log} 2>&1
+    touch {output.done}
+    """
 
 rule insertion_sizes:
-    input:  bam = "results/intermediate/{sample}.reads.aligned_trimmed_genetagged_sorted.bam", 
-            cbcpath = "results/metadata/{name}_cell_barcodes.txt".format(name=config["name"]), 
+    input:  bam = input_bam,
+            cbcpath = "results/metadata/{name}_cell_barcodes.txt".format(name=config["name"]),
             smppath = "results/metadata/{name}_sample_barcodes.txt".format(name=config["name"])
-    output: "results/QC_files/{sample}/{sample}_insert_sizes_per_sample_barcode.csv", 
-            "results/QC_files/{sample}/{sample}_double_reads_per_sample_barcode.csv"
+    output: insert_sizes  = "results/QC_files/{sample}/{sample}_insert_sizes_per_sample_barcode.csv",
+            double_reads  = "results/QC_files/{sample}/{sample}_double_reads_per_sample_barcode.csv",
+            done          = "results/done/{sample}.insertion_sizes.done"
     conda: "../envs/full.yaml"
     log: "results/QC_files/logs/{sample}/{sample}.insertion_sizes.log"
-    shell: "python3 workflow/scripts/insertion_sizes.py -i {input.bam} -o results/QC_files/{wildcards.sample} -s {input.smppath} -p {wildcards.sample} -c {input.cbcpath} > {log} 2>&1"
+    shell: """
+    python3 workflow/scripts/insertion_sizes.py -i {input.bam} -o results/QC_files/{wildcards.sample} -s {input.smppath} -p {wildcards.sample} -c {input.cbcpath} > {log} 2>&1
+    touch {output.done}
+    """
 
 rule conversion:
-    input:  bam = "results/intermediate/{sample}.reads.aligned_trimmed_genetagged_sorted.bam",
-            bai = "results/intermediate/{sample}.reads.aligned_trimmed_genetagged_sorted.bam.bai", 
+    input:  bam = input_bam,
+            bai = "results/intermediate/{sample}.reads.aligned_trimmed_genetagged_sorted.bam.bai",
             samplesheet = "results/metadata/{name}_samplesheet.csv".format(name=config["name"])
-    output: "results/QC_files/{sample}/{sample}_conversion_rate_pos.csv",
-            "results/QC_files/{sample}/{sample}_conversion_rate_total.csv"
-    params: 
-        fasta = REFFILE, 
+    output: conversion_pos   = "results/QC_files/{sample}/{sample}_conversion_rate_pos.csv",
+            conversion_total = "results/QC_files/{sample}/{sample}_conversion_rate_total.csv",
+            done             = "results/done/{sample}.conversion.done"
+    params:
+        fasta = REFFILE,
         gtf =  "{}.gff3".format(GTFFILE),
         only_sample_flag = lambda wc: bulk_flag(config)
-    threads: int(config["threads"]/2)
+    threads: int(config["threads"])
     conda: "../envs/full.yaml"
     log: "results/QC_files/logs/{sample}/{sample}.conversion.log"
-    shell: "python3 workflow/scripts/conversion_rates.py -i {input.bam} -f {params.fasta} -g {params.gtf} -o results/QC_files/{wildcards.sample} -s {input.samplesheet} -p {wildcards.sample} -t {threads} --gene-identifier {config[gff_gene_identifier]} {params.only_sample_flag}> {log} 2>&1"
+    shell: """
+    python3 workflow/scripts/conversion_rates.py -i {input.bam} -f {params.fasta} -g {params.gtf} -o results/QC_files/{wildcards.sample} -s {input.samplesheet} -p {wildcards.sample} -t {threads} --gene-identifier {config[gff_gene_identifier]} {params.only_sample_flag}> {log} 2>&1
+    touch {output.done}
+    """
 
 rule summary_stats:
-    input:  long_form = "results/QC_files/{sample}/{sample}_long_form_reconstruction_stats.csv", 
-            json = "results/read_flow_files/{sample}/{sample}_fastq_processed_stats.json", 
-            sample_map = "results/metadata/{name}_sample_map.yaml".format(name=config["name"]), 
-    output: summary_file = "results/QC_files/{sample}/{sample}_summary_stats.csv"
+    input:  long_form = "results/QC_files/{sample}/{sample}_long_form_reconstruction_stats.csv",
+            json = "results/read_flow_files/{sample}/{sample}_fastq_processed_stats.json",
+            sample_map = "results/metadata/{name}_sample_map.yaml".format(name=config["name"]),
+    output: summary_file = "results/QC_files/{sample}/{sample}_summary_stats.csv",
+            done         = "results/done/{sample}.summary_stats.done"
     log: "results/QC_files/logs/{sample}/{sample}.summary_stats.log"
     threads: 1
-    shell: "echo BaseCode Processing Pipeline Finished &&  python3 workflow/scripts/summary_stats.py --long-form {input.long_form} --json {input.json} --sample-map {input.sample_map} --prefix {wildcards.sample} --output {output.summary_file}"
-
-
+    shell: """
+    echo BaseCode Processing Pipeline Finished
+    python3 workflow/scripts/summary_stats.py --long-form {input.long_form} --json {input.json} --sample-map {input.sample_map} --prefix {wildcards.sample} --output {output.summary_file}
+    touch {output.done}
+    """
