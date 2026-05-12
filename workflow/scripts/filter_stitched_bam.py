@@ -11,6 +11,12 @@ def trim_mol(mol):
             continue
         if len(mol.cigartuples) <= 2:
             return mol
+        if mol.cigartuples[0][0] == 0 and mol.cigartuples[1][0] in (2, 3) and mol.cigartuples[0][1] < 50:
+            if _homopolymer_at(mol.query_sequence[:mol.cigartuples[0][1]]):
+                return None
+        if mol.cigartuples[-1][0] == 0 and mol.cigartuples[-2][0] in (2, 3) and mol.cigartuples[-1][1] < 50:
+            if _homopolymer_at(mol.query_sequence[-mol.cigartuples[-1][1]:]):
+                return None
         if mol.is_reverse:
             if mol.cigartuples[0][0] == 0 and mol.cigartuples[1][0] == 3 and mol.cigartuples[0][1] <= 25:
                 q = mol.query_qualities
@@ -96,6 +102,13 @@ def reverse_complement(dna_sequence):
     
     return reverse_complement_sequence
 
+def _homopolymer_at(seq):
+    if not seq:
+        return False
+    n = len(seq)
+    return (sum(1 for b in seq if b == 'A') / n > 0.70
+            or sum(1 for b in seq if b == 'T') / n > 0.70)
+
     
 
 def main():
@@ -116,6 +129,8 @@ def main():
         if mol.query_name.split(':')[-1][0] == '_' or mol.query_name.split(':')[-1][:5] == 'Unass':
             continue
         mol = trim_mol(mol)
+        if mol is None:
+            continue
         mol = fix_cigar(mol)
 
         bam_out.write(mol)
