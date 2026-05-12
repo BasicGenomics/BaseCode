@@ -20,6 +20,7 @@ def get_final_output(wildcards):
     "results/QC_files/{name}_counts_per_gene.csv".format(name=config["name"]),
     "results/QC_files/{name}_status_sum.csv".format(name=config["name"]),
     "results/QC_files/{name}_status_fraction_per_gene.csv".format(name=config["name"]),
+    "results/QC_files/fastq/multiqc/{name}_multiqc_report.html".format(name=config["name"]),
     "results/logs/python_version.log",
     "results/logs/basecode_version.log",
     "results/QC_files/{name}_summary_stats.csv".format(name=config["name"]),

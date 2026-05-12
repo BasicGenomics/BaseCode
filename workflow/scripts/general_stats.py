@@ -2,8 +2,11 @@ import pandas as pd
 import pysam
 from collections import Counter
 import argparse
+import yaml
 
-# Exon, Intron, Ambiguous, Intergenic, Unmapped
+MAPPING_GROUPS = ['Exon', 'Intron', 'Intergenic', 'Unmapped']
+READ_TYPES = ['TP_read', 'internal', 'FP_read']
+
 def get_mapping_group(read):
     if read.is_unmapped:
         return 'Unmapped'
@@ -46,27 +49,21 @@ def modify_read_type_stats(read_type_dicts):
 
 def get_mapping_group_dict(bamfile, cell_set, sample_set):
     mapping_group_dict = {}
-
     bam = pysam.AlignmentFile(bamfile)
-
     for read in bam.fetch(until_eof=True):
         if read.has_tag('SB'):
             sample = read.get_tag('SB')
         else:
             sample = read.get_tag('SM')
         if sample not in sample_set:
-            sample = 'UNASSIGNED'
-            
+            sample = 'Unassigned'
         if sample not in mapping_group_dict:
             mapping_group_dict[sample] = {}
-        
         mapping_group = get_mapping_group(read)
         read_type = read.get_tag('XX')
         read_pair = 'read1' if read.is_read1 else 'read2'
-        
         if read_type not in mapping_group_dict[sample]:
             mapping_group_dict[sample][read_type] = {}
-            
         if read_type == 'TP_read':
             if read_pair not in  mapping_group_dict[sample][read_type]:
                  mapping_group_dict[sample][read_type][read_pair] = {}
@@ -86,9 +83,10 @@ def get_mapping_group_dict(bamfile, cell_set, sample_set):
 
 def main():
     parser = argparse.ArgumentParser(description='', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-i','--input',metavar='input', type=str, help='Input .bam file')
-    parser.add_argument('-c','--cells',metavar='cells', type=str, help='Cell barcodes .txt file' )
+    parser.add_argument('-i','--input', metavar='input', type=str, help='Input .bam file')
+    parser.add_argument('-c','--cells', metavar='cells', type=str, help='Cell barcodes .txt file' )
     parser.add_argument('-s','--samplesheet', help='Samplesheet file')
+    parser.add_argument('-m','--sample-map', default=None, help='Sample map .yaml file')
     parser.add_argument('-o','--out_dir', help='Output directory')
     parser.add_argument('-p', '--prefix')
 
@@ -97,11 +95,16 @@ def main():
     cell_set = set([line.rstrip() for line in open(args.cells)])
     sample_set = set([line.rstrip() for line in open(args.samplesheet)])
 
+    if args.sample_map:
+        with open(args.sample_map) as f:
+            sample_map = yaml.safe_load(f) or {}
+    else:
+        sample_map = {}
+
+    def to_sample_id(bc):
+        return sample_map.get(bc, 'Unassigned')
+
     mapping_group_dict = get_mapping_group_dict(args.input, cell_set, sample_set)
-
-    
-
-    
 
     sample_dfs = {}
     for sample, sample_dict in mapping_group_dict.items():
@@ -112,37 +115,54 @@ def main():
                 df['read_pair'] = read_pair
                 sample_dfs['{}_{}'.format(sample, read_pair)] = df
     if len(sample_dfs) > 0:
-        df_cell_level = pd.concat(sample_dfs,axis=0)
-        df_cell_level.index = ['_'.join([s1,s2]) for (s1,s2) in df_cell_level.index]
+        df_cell_level = pd.concat(sample_dfs, axis=0)
+        df_cell_level.index = ['_'.join([s1, s2]) for (s1, s2) in df_cell_level.index]
+        df_cell_level = df_cell_level.reindex(
+            columns=MAPPING_GROUPS + ['sample_barcode', 'read_pair'], fill_value=0)
+        df_cell_level['SAMPLE_ID'] = df_cell_level['sample_barcode'].map(to_sample_id)
+        df_cell_level = df_cell_level[['sample_barcode', 'SAMPLE_ID', 'read_pair'] + MAPPING_GROUPS]
     else:
-        df_cell_level = pd.DataFrame()
-
+        df_cell_level = pd.DataFrame(
+            columns=['sample_barcode', 'SAMPLE_ID', 'read_pair'] + MAPPING_GROUPS)
     df_cell_level.to_csv('{}/{}_mapping_categories_per_sample.csv'.format(args.out_dir, args.prefix))
 
-    sample_nonthreep_dfs = {}
+    nonbarcoded_rows = []
     for sample, sample_dict in mapping_group_dict.items():
-        res_dict = {}
         for read_type, read_type_dict in sample_dict.items():
             if read_type == 'TP_read':
                 continue
             for read_pair, counter in read_type_dict.items():
-                if read_pair not in res_dict:
-                    res_dict[read_pair] = {}
-                
-                res_dict[read_pair][read_type] = counter
-        for read_pair, read_type_dict in res_dict.items():
-            df = pd.DataFrame(read_type_dict).T
-            df['sample_barcode'] = sample
-            df['read_pair'] = read_pair
-            sample_nonthreep_dfs['{}_{}'.format(sample, read_pair)] = df
+                row = dict(counter)
+                row['sample_barcode'] = sample
+                row['read_pair'] = read_pair
+                row['read_type'] = read_type
+                nonbarcoded_rows.append(row)
+    if nonbarcoded_rows:
+        df_nonbarcoded = pd.DataFrame(nonbarcoded_rows)
+        df_nonbarcoded = df_nonbarcoded.reindex(
+            columns=MAPPING_GROUPS + ['sample_barcode', 'read_pair', 'read_type'], fill_value=0)
+        df_nonbarcoded['SAMPLE_ID'] = df_nonbarcoded['sample_barcode'].map(to_sample_id)
+        df_nonbarcoded = df_nonbarcoded[
+            ['sample_barcode', 'SAMPLE_ID', 'read_pair', 'read_type'] + MAPPING_GROUPS]
+    else:
+        df_nonbarcoded = pd.DataFrame(
+            columns=['sample_barcode', 'SAMPLE_ID', 'read_pair', 'read_type'] + MAPPING_GROUPS)
+    df_nonbarcoded.to_csv(
+        '{}/{}_nonbarcoded_mapping_categories_per_sample.csv'.format(args.out_dir, args.prefix),
+        index=False)
 
-    df_nonbarcoded = pd.concat(sample_nonthreep_dfs.values(), axis=0)
+    read_type_per_sample_df = pd.DataFrame(
+        {sample: get_read_type_stats(sample_dict)
+         for sample, sample_dict in mapping_group_dict.items()}).T
+    read_type_per_sample_df = read_type_per_sample_df.reindex(columns=READ_TYPES, fill_value=0)
+    read_type_per_sample_df = (
+        read_type_per_sample_df.reset_index().rename(columns={'index': 'sample_barcode'}))
+    read_type_per_sample_df['SAMPLE_ID'] = read_type_per_sample_df['sample_barcode'].map(to_sample_id)
+    read_type_per_sample_df = read_type_per_sample_df[
+        ['sample_barcode', 'SAMPLE_ID'] + READ_TYPES]
 
-    df_nonbarcoded.to_csv('{}/{}_nonbarcoded_mapping_categories_per_sample.csv'.format(args.out_dir, args.prefix))
-
-    read_type_per_sample_df = pd.DataFrame({sample: get_read_type_stats(sample_dict) for sample, sample_dict in mapping_group_dict.items()}).T
-
-    read_type_per_sample_df.to_csv('{}/{}_read_type_per_sample.csv'.format(args.out_dir, args.prefix))
+    read_type_per_sample_df.to_csv(
+        '{}/{}_read_type_per_sample.csv'.format(args.out_dir, args.prefix), index=False)
 
 if __name__ == '__main__':
     main()

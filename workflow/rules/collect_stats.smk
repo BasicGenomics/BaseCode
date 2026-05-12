@@ -1,15 +1,16 @@
 rule general_stats:
     input: bam = "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.bam".format(name=config["name"]),
            bai = "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.bam.bai".format(name=config["name"]),
-           cbcpath = "results/metadata/{name}_cell_barcodes.txt".format(name=config["name"]), 
-           pbcpath = "results/metadata/{name}_sample_barcodes.txt".format(name=config["name"])
-    output: read_type = "results/QC_files/{name}_read_type_per_sample.csv".format(name=config["name"]), 
-            mapping_categories = "results/QC_files/{name}_mapping_categories_per_sample.csv".format(name=config["name"]), 
+           cbcpath = "results/metadata/{name}_cell_barcodes.txt".format(name=config["name"]),
+           pbcpath = "results/metadata/{name}_sample_barcodes.txt".format(name=config["name"]),
+           sample_map = "results/metadata/{name}_sample_map.yaml".format(name=config["name"])
+    output: read_type = "results/QC_files/{name}_read_type_per_sample.csv".format(name=config["name"]),
+            mapping_categories = "results/QC_files/{name}_mapping_categories_per_sample.csv".format(name=config["name"]),
             nonbarcoded_mapping_categories = "results/QC_files/{name}_nonbarcoded_mapping_categories_per_sample.csv".format(name=config["name"]),
             done = "results/dones/{name}_general_stats.done".format(name=config["name"])
     log: "results/logs/general_stats.log"
     shell: """
-    python3 workflow/scripts/general_stats.py -i {input.bam} -o results/QC_files -s {input.pbcpath} -p {config[name]} -c {input.cbcpath} > {log} 2>&1
+    python3 workflow/scripts/general_stats.py -i {input.bam} -o results/QC_files -s {input.pbcpath} -p {config[name]} -c {input.cbcpath} -m {input.sample_map} > {log} 2>&1
     touch {output.done}
     """
 

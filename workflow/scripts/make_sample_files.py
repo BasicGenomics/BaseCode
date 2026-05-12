@@ -230,7 +230,6 @@ def scan_fastq_for_order_and_orientation(fastq_files: list, index_sequence_map: 
     forward_list = ['forward' in first_most_common, 'forward' in second_most_common]
     return seq_order, forward_list
 
-
 def main():
     parser = argparse.ArgumentParser(
         description=(
@@ -349,5 +348,6 @@ def main():
         yaml.dump(sample_barcode_to_readType_map, f)
     
     samplesheet_df.to_csv(samplesheet_out)
+    
 if __name__ == "__main__":
     main()

@@ -1,3 +1,6 @@
+import os
+import pandas as pd
+
 rule log_python_version:
     output: "results/logs/python_version.log"
     shell: "python3 --version > {output}"
@@ -78,51 +81,126 @@ else:
             python3 workflow/scripts/make_sample_files.py -s {input.samplesheet} --fastq {input.r2} --index-sequences {input.index_sequences} --sample-barcodes {output.barcodes} --cell-barcodes {output.cell_barcodes} --sample-map {output.sample_map} --readtype-map {output.readtype_map} --samplesheet-out {output.samplesheet} > {log} 2>&1
             touch {output.done}
             """
+            
+def _read_samplesheet_samples(samplesheet_path):
+    _, ext = os.path.splitext(samplesheet_path)
+    if ext.lower() in (".xls", ".xlsx"):
+        df = pd.read_excel(samplesheet_path)
+    else:
+        df = pd.read_csv(samplesheet_path)
+    samples = []
+    for s in df["SAMPLE_ID"].astype(str):
+        s = s.replace(" ", "_").replace("-", "_")
+        if s and s not in samples:
+            samples.append(s)
+    return samples
+
+SAMPLES = _read_samplesheet_samples(config["samplesheet"])
 
 if config["i1"] != "" and config["i2"] != "":
     rule parse_fastq:
         input: r1 = config["r1"],
                r2 = config["r2"],
                i1 = config["i1"],
-               i2 = config["i2"], 
+               i2 = config["i2"],
                pbcpath = "results/metadata/{name}_sample_barcodes.txt".format(name=config["name"]),
                cell_barcodes = "results/metadata/{name}_cell_barcodes.txt".format(name=config["name"]),
                sample_map = "results/metadata/{name}_sample_map.yaml".format(name=config["name"]),
                readtype_map = "results/metadata/{name}_readtype_map.yaml".format(name=config["name"]),
                dt_structure = config["dt_structure"]
-        output: r1 = temp("results/intermediate/{name}.read1.fastq.gz".format(name=config["name"])),
-                r2 = temp("results/intermediate/{name}.read2.fastq.gz".format(name=config["name"])),
+        output: r1 = temp(expand("results/intermediate/per_sample_fastq/{name}/{sample}_1.fq.gz", name=config["name"], sample=SAMPLES)),
+                r2 = temp(expand("results/intermediate/per_sample_fastq/{name}/{sample}_2.fq.gz", name=config["name"], sample=SAMPLES)),
                 done = "results/dones/{name}_parse_fastq.done".format(name=config["name"])
         log: "results/logs/parse_fastq.log"
         benchmark: "results/benchmarks/parse_fastq.benchmark.txt"
-        params: comp_threads = int(config["threads"]*0.2),
-                proc_threads = config["threads"]-int(config["threads"]*0.2)
+        params: comp_threads = max(1, int(config["threads"]*0.2)),
+                proc_threads = max(1, config["threads"]-max(1, int(config["threads"]*0.2))),
+                prefix = "results/intermediate/per_sample_fastq/{name}/".format(name=config["name"])
         shell: """
         echo Step 2/7 Parse FASTQ
-        binaries/parse_fastq --read1 {input.r1} --read2 {input.r2} --index1 {input.i1} --index2 {input.i2} --r1-out {output.r1} --r2-out {output.r2} --cbcpath {input.cell_barcodes} --pbcpath {input.pbcpath} --readtype-structure {input.readtype_map} --dt-structure {input.dt_structure} --index-layout {config[index_layout]} --sample-structure {input.sample_map} --processing-threads {params.proc_threads} --compression-threads {params.comp_threads} --ts-sequence {config[ts_sequence]} --ts-pad {config[ts_pad]} --ts-cutoff {config[ts_cutoff]} > {log} 2>&1
+        mkdir -p {params.prefix}
+        binaries/parse_fastq --read1 {input.r1} --read2 {input.r2} --index1 {input.i1} --index2 {input.i2} --cbcpath {input.cell_barcodes} --pbcpath {input.pbcpath} --readtype-structure {input.readtype_map} --dt-structure {input.dt_structure} --index-layout {config[index_layout]} --sample-structure {input.sample_map} --processing-threads {params.proc_threads} --compression-threads {params.comp_threads} --ts-sequence {config[ts_sequence]} --ts-pad {config[ts_pad]} --ts-cutoff {config[ts_cutoff]} --demultiplex --prefix {params.prefix} > {log} 2>&1
         touch {output.done}
         """
 else:
     rule parse_fastq:
         input: r1 = config["r1"],
-               r2 = config["r2"], 
+               r2 = config["r2"],
                pbcpath = "results/metadata/{name}_sample_barcodes.txt".format(name=config["name"]),
                cell_barcodes = "results/metadata/{name}_cell_barcodes.txt".format(name=config["name"]),
                sample_map = "results/metadata/{name}_sample_map.yaml".format(name=config["name"]),
                readtype_map = "results/metadata/{name}_readtype_map.yaml".format(name=config["name"]),
                dt_structure = config["dt_structure"]
-        output: r1 = temp("results/intermediate/{name}.read1.fastq.gz".format(name=config["name"])),
-                r2 = temp("results/intermediate/{name}.read2.fastq.gz".format(name=config["name"])),
+        output: r1 = temp(expand("results/intermediate/per_sample_fastq/{name}/{sample}_1.fq.gz", name=config["name"], sample=SAMPLES)),
+                r2 = temp(expand("results/intermediate/per_sample_fastq/{name}/{sample}_2.fq.gz", name=config["name"], sample=SAMPLES)),
                 done = "results/dones/{name}_parse_fastq.done".format(name=config["name"])
         log: "results/logs/parse_fastq.log"
         benchmark: "results/benchmarks/parse_fastq.benchmark.txt"
-        params: comp_threads = int(config["threads"]*0.2),
-                proc_threads = config["threads"]-int(config["threads"]*0.2)
+        params: comp_threads = max(1, int(config["threads"]*0.2)),
+                proc_threads = max(1, config["threads"]-max(1, int(config["threads"]*0.2))),
+                prefix = "results/intermediate/per_sample_fastq/{name}/".format(name=config["name"])
         shell: """
         echo Step 2/7 Parse FASTQ
-        binaries/parse_fastq --read1 {input.r1} --read2 {input.r2} --r1-out {output.r1} --r2-out {output.r2} --cbcpath {input.cell_barcodes} --pbcpath {input.pbcpath} --readtype-structure {input.readtype_map} --dt-structure {input.dt_structure} --index-layout {config[index_layout]} --sample-structure {input.sample_map} --processing-threads {params.proc_threads} --compression-threads {params.comp_threads} --ts-sequence {config[ts_sequence]} --ts-pad {config[ts_pad]} --ts-cutoff {config[ts_cutoff]} > {log} 2>&1
+        mkdir -p {params.prefix}
+        binaries/parse_fastq --read1 {input.r1} --read2 {input.r2} --cbcpath {input.cell_barcodes} --pbcpath {input.pbcpath} --readtype-structure {input.readtype_map} --dt-structure {input.dt_structure} --index-layout {config[index_layout]} --sample-structure {input.sample_map} --processing-threads {params.proc_threads} --compression-threads {params.comp_threads} --ts-sequence {config[ts_sequence]} --ts-pad {config[ts_pad]} --ts-cutoff {config[ts_cutoff]} --demultiplex --prefix {params.prefix} > {log} 2>&1
         touch {output.done}
         """
+
+rule fastp:
+    input: r1 = "results/intermediate/per_sample_fastq/{name}/{{sample}}_1.fq.gz".format(name=config["name"]),
+           r2 = "results/intermediate/per_sample_fastq/{name}/{{sample}}_2.fq.gz".format(name=config["name"])
+    output: json = "results/QC_files/fastq/fastp/{name}/{{sample}}.fastp.json".format(name=config["name"]),
+            html = "results/QC_files/fastq/fastp/{name}/{{sample}}.fastp.html".format(name=config["name"])
+    log: "results/logs/fastp/{sample}.log"
+    threads: max(1, config["threads"] // 4)
+    shell: """
+    mkdir -p $(dirname {output.json}) $(dirname {log})
+    fastp -w {threads} --disable_quality_filtering --disable_length_filtering --disable_adapter_trimming --disable_trim_poly_g -i {input.r1} -I {input.r2} -j {output.json} -h {output.html} > {log} 2>&1
+    """
+
+rule fastqc:
+    input: r1 = "results/intermediate/per_sample_fastq/{name}/{{sample}}_1.fq.gz".format(name=config["name"]),
+           r2 = "results/intermediate/per_sample_fastq/{name}/{{sample}}_2.fq.gz".format(name=config["name"])
+    output: r1_html = "results/QC_files/fastq/fastqc/{name}/{{sample}}_1_fastqc.html".format(name=config["name"]),
+            r1_zip  = "results/QC_files/fastq/fastqc/{name}/{{sample}}_1_fastqc.zip".format(name=config["name"]),
+            r2_html = "results/QC_files/fastq/fastqc/{name}/{{sample}}_2_fastqc.html".format(name=config["name"]),
+            r2_zip  = "results/QC_files/fastq/fastqc/{name}/{{sample}}_2_fastqc.zip".format(name=config["name"])
+    log: "results/logs/fastqc/{sample}.log"
+    threads: max(1, config["threads"] // 4)
+    params: outdir = "results/QC_files/fastq/fastqc/{name}".format(name=config["name"])
+    shell: """
+    mkdir -p {params.outdir} $(dirname {log})
+    fastqc -t {threads} -o {params.outdir} {input.r1} {input.r2} > {log} 2>&1
+    """
+
+rule multiqc:
+    input: fastp  = expand("results/QC_files/fastq/fastp/{name}/{sample}.fastp.json", name=config["name"], sample=SAMPLES),
+           fastqc = expand("results/QC_files/fastq/fastqc/{name}/{sample}_{read}_fastqc.zip", name=config["name"], sample=SAMPLES, read=[1, 2])
+    output: report = "results/QC_files/fastq/multiqc/{name}_multiqc_report.html".format(name=config["name"]),
+            done = "results/dones/{name}_multiqc.done".format(name=config["name"])
+    log: "results/logs/multiqc.log"
+    params: indir_fastp = "results/QC_files/fastq/fastp/{name}".format(name=config["name"]),
+            indir_fastqc = "results/QC_files/fastq/fastqc/{name}".format(name=config["name"]),
+            outdir = "results/QC_files/fastq/multiqc",
+            report_name = "{name}_multiqc_report.html".format(name=config["name"])
+    shell: """
+    mkdir -p {params.outdir} $(dirname {log})
+    multiqc {params.indir_fastp} {params.indir_fastqc} -o {params.outdir} -n {params.report_name} --force > {log} 2>&1
+    touch {output.done}
+    """
+
+rule concatenate_fastq:
+    input: r1 = expand("results/intermediate/per_sample_fastq/{name}/{sample}_1.fq.gz", name=config["name"], sample=SAMPLES),
+           r2 = expand("results/intermediate/per_sample_fastq/{name}/{sample}_2.fq.gz", name=config["name"], sample=SAMPLES)
+    output: r1 = temp("results/intermediate/{name}.read1.fastq.gz".format(name=config["name"])),
+            r2 = temp("results/intermediate/{name}.read2.fastq.gz".format(name=config["name"])),
+            done = "results/dones/{name}_concatenate_fastq.done".format(name=config["name"])
+    log: "results/logs/concatenate_fastq.log"
+    shell: """
+    cat {input.r1} > {output.r1} 2> {log}
+    cat {input.r2} > {output.r2} 2>> {log}
+    touch {output.done}
+    """
 
 rule trim_fastq:
     input: r1 = "results/intermediate/{name}.read1.fastq.gz".format(name=config["name"]),
@@ -189,7 +267,7 @@ rule assign_genes_exon:
             gff_negative = "{}.negative.gff3".format(GFF)
     threads: min(config["threads"], 64)
     shell:"""
-    binaries/featureCounts -t exon --primary -g {config[gff_gene_identifier]} -T {threads} -R BAM -p --countReadPairs -O -M --largestOverlap --fracOverlap 0.1 -a {params.gff_positive} -o results/intermediate/positive.exon.FeatureCounts.txt {input.pstrand} >> {log} 2>&1
+    binaries/featureCounts -t exon --primary -g {config[gff_gene_identifier]} -T {threads} -R BAM -p --countReadPairs -O -M --largestOverlap --fracOverlap 0.1 -a {params.gff_positive} -o results/intermediate/positive.exon.FeatureCounts.txt {input.pstrand} > {log} 2>&1
     binaries/featureCounts -t exon --primary -g {config[gff_gene_identifier]} -T {threads} -R BAM -p --countReadPairs -O -M --largestOverlap --fracOverlap 0.1 -a {params.gff_negative} -o results/intermediate/negative.exon.FeatureCounts.txt {input.mstrand} >> {log} 2>&1
     binaries/featureCounts -t exon --primary -g {config[gff_gene_identifier]} -T {threads} -R BAM -p --countReadPairs -O -M --largestOverlap --fracOverlap 0.1 -a {params.gff} -o results/intermediate/no.exon.FeatureCounts.txt {input.nostrand} >> {log} 2>&1
     touch {output.done}
@@ -206,7 +284,7 @@ rule rename_tags_exon:
     log: "results/logs/rename_tags_exon.log"
     benchmark: "results/benchmarks/rename_tags_exon.benchmark.txt"
     shell:"""
-    binaries/rename_tags --input {input.pstrand} --output {output.pstrand} >> {log} 2>&1
+    binaries/rename_tags --input {input.pstrand} --output {output.pstrand} > {log} 2>&1
     binaries/rename_tags --input {input.mstrand} --output {output.mstrand} >> {log} 2>&1
     binaries/rename_tags --input {input.nostrand} --output {output.nostrand} >> {log} 2>&1
     touch {output.done}
@@ -227,7 +305,7 @@ rule assign_genes_intron:
             gff_negative = "{}.negative.gff3".format(GFF)
     threads: min(config["threads"], 64)
     shell:"""
-    binaries/featureCounts -t intron --primary -g {config[gff_gene_identifier]} -T {threads} -R BAM -p --countReadPairs -O -M --largestOverlap --fracOverlap 0.1 -a {params.gff_positive} -o results/intermediate/positive.intron.FeatureCounts.txt {input.pstrand} >> {log} 2>&1
+    binaries/featureCounts -t intron --primary -g {config[gff_gene_identifier]} -T {threads} -R BAM -p --countReadPairs -O -M --largestOverlap --fracOverlap 0.1 -a {params.gff_positive} -o results/intermediate/positive.intron.FeatureCounts.txt {input.pstrand} > {log} 2>&1
     binaries/featureCounts -t intron --primary -g {config[gff_gene_identifier]} -T {threads} -R BAM -p --countReadPairs -O -M --largestOverlap --fracOverlap 0.1 -a {params.gff_negative} -o results/intermediate/negative.intron.FeatureCounts.txt {input.mstrand} >> {log} 2>&1
     binaries/featureCounts -t intron --primary -g {config[gff_gene_identifier]} -T {threads} -R BAM -p --countReadPairs -O -M --largestOverlap --fracOverlap 0.1 -a {params.gff} -o results/intermediate/no.intron.FeatureCounts.txt {input.nostrand} >> {log} 2>&1
     touch {output.done}
@@ -244,7 +322,7 @@ rule rename_tags_intron:
     log: "results/logs/rename_tags_intron.log"
     benchmark: "results/benchmarks/rename_tags_intron.benchmark.txt"
     shell:"""
-    binaries/rename_tags --input {input.pstrand} --output {output.pstrand} --intron-mode >> {log} 2>&1
+    binaries/rename_tags --input {input.pstrand} --output {output.pstrand} --intron-mode > {log} 2>&1
     binaries/rename_tags --input {input.mstrand} --output {output.mstrand} --intron-mode >> {log} 2>&1
     binaries/rename_tags --input {input.nostrand} --output {output.nostrand} --intron-mode >> {log} 2>&1
     touch {output.done}
@@ -262,6 +340,7 @@ rule concatenate_and_sort:
     shell:"""
     mkdir -p results/.tmp_bgab/
     samtools cat {input.nostrand} {input.pstrand} {input.mstrand} | samtools sort -m 1000M -@ {threads} -T results/.tmp_bgab/sorttmp. -o {output.bam} > {log} 2>&1
+    rm -r results/.tmp_bgab/
     touch {output.done}
     """
 
@@ -318,6 +397,7 @@ rule sort_reconstructed:
     shell: """
     mkdir -p results/.tmp_bgab/
     samtools sort -m 1000M -@ {threads} -o {output.bam} -T results/.tmp_bgab/sorttmp. {input} > {log} 2>&1
+    rm -r results/.tmp_bgab/
     touch {output.done}
     """
 
@@ -337,9 +417,9 @@ rule stitch_reconstruction:
            bai = "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.reconstructed.sorted.bam.bai".format(name=config["name"])
     output: bam = temp("results/intermediate/{name}.stitched.bam".format(name=config["name"])),
             done = "results/dones/{name}_stitch_reconstruction.done".format(name=config["name"])
-    params: gff = "{}.gff3".format(GFF)
     log: "results/logs/stitch_reconstruction.log"
     benchmark: "results/benchmarks/stitch_reconstruction.benchmark.txt"
+    params: gff = "{}.gff3".format(GFF)
     threads: config["threads"]
     shell: """
     echo Step 7/7 Stitch Molecules
@@ -356,6 +436,7 @@ rule sort_stitched:
     shell: """
     mkdir -p results/.tmp_bgab/
     samtools sort -m 1000M -@ {threads} -o {output.bam} -T results/.tmp_bgab/sorttmp. {input} > {log} 2>&1
+    rm -r results/.tmp_bgab/
     touch {output.done}
     """
 
@@ -391,6 +472,7 @@ rule sort_molecule_bam:
     echo Creating final output file
     mkdir -p results/.tmp_bgab/
     samtools sort -m 1000M -@ {threads} -o {output.bam} -T results/.tmp_bgab/sorttmp. {input} > {log} 2>&1
+    rm -r results/.tmp_bgab/
     touch {output.done}
     """
 
