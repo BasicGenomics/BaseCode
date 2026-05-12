@@ -23,6 +23,21 @@ rule overlap_and_mi:
     touch {output.done}
     """
 
+rule mark_dup:
+    input: bam = "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.reconstructed.sorted.bam".format(name=config["name"])
+    output: markdup_bam = "results/QC_files/{name}.reads.aligned_trimmed_genetagged_sorted.reconstructed.sorted.markdup.bam".format(name=config["name"]),
+            status = "results/QC_files/{name}_markdup_stats.csv".format(name=config["name"]),
+            done = "results/dones/{name}_mark_dup_bam.done".format(name=config["name"])
+    log: "results/logs/mark_dup_bam.log"
+    threads: max(1, int(config["threads"]/2))
+    shell: """
+    samtools sort -n -@ {threads} {input.bam} \
+    | samtools fixmate -m -@ {threads} - - \
+    | samtools sort -@ {threads} - \
+    | samtools markdup -@ {threads} -f {output.status} - {output.markdup_bam} > {log} 2>&1
+    touch {output.done}
+    """
+
 rule status_stats:
     input: bam = "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.reconstructed.sorted.bam".format(name=config["name"]), 
            bai = "results/intermediate/{name}.reads.aligned_trimmed_genetagged_sorted.reconstructed.sorted.bam.bai".format(name=config["name"])
