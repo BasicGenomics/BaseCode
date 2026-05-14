@@ -43,3 +43,30 @@ rule generate_tss:
         tabix -p bed {output.merged_bed_gz}
         touch {output.done}
         """
+
+rule make_canonical_bed:
+    output: gff = "{}.canonical.MANE.level2.gff3".format(GFF),
+            gff_discarded = "{}.canonical.MANE.level2_discarded.gff".format(GFF),
+            bed = "{}.canonical.MANE.level2_discarded.bed".format(GFF)
+    params: gff = "{}.gff3".format(GFF)
+    shell: """
+        AGAT/bin/agat_sp_filter_feature_by_attribute_value.pl \
+        --gff {params.gff} \
+        --attribute tag \
+        --value MANE_Select \
+        -p level2 \
+        --output {output.gff} &&
+        AGAT/bin/agat_convert_sp_gff2bed.pl --gff {output.gff_discarded} -o {output.bed}
+    """
+
+rule coverage_by_canonical_len:
+    input: gff = "{}.canonical.MANE.level2_discarded.gff".format(GFF),
+           bed = "{}.canonical.MANE.level2_discarded.bed".format(GFF),
+           long_form_reconstruction_stats = "results/QC_files/{name}_long_form_reconstruction_stats.csv".format(name=config["name"])
+     shell: """
+        workflow/scripts/coverage_by_canonical_len.py \
+        --gff {params.gff} \
+        --bed {input.bed} \
+        --longform {input.long_form_reconstruction_stats} \
+        --gene_identifier config[gff_gene_identifier]
+    """

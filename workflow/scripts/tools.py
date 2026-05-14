@@ -5,14 +5,14 @@ def parse_col_nine(col9):
     info_dict = {t.split('=')[0]: t.split('=')[1].rstrip() for t in info_list}
     return info_dict
 
-def parse_gtf(gtffile, contig, ban_set=set(), gene_identifier = 'gene_name'):
+def parse_gtf(gtffile, contig, ban_set=set(), gene_identifier = 'gene_name',feature_type='gene'):
     gene_list = []
     with open(gtffile, 'r') as f:
         for line in f:
             l = line.split('\t')
             if len(l) < 8:
                 continue
-            if l[2] == 'gene':
+            if l[2] == feature_type:
                 if l[2] in ban_set:
                     continue
                 if contig is not None:
@@ -20,12 +20,18 @@ def parse_gtf(gtffile, contig, ban_set=set(), gene_identifier = 'gene_name'):
                         info_dict = parse_col_nine(l[8])
                         if gene_identifier not in info_dict:
                             continue
-                        gene_list.append({'gene_id': info_dict[gene_identifier], 'seqid': l[0], 'start': int(l[3]), 'end': int(l[4]), 'strand': l[6]})
+                        entry = {'gene_id': info_dict[gene_identifier], 'seqid': l[0], 'start': int(l[3]), 'end': int(l[4]), 'strand': l[6]}
+                        if feature_type == 'transcript':
+                            entry['transcript_id'] = info_dict['transcript_id']
+                        gene_list.append(entry)
                 else:
                     info_dict = parse_col_nine(l[8])
                     if gene_identifier not in info_dict:
                         continue
-                    gene_list.append({'gene_id': info_dict[gene_identifier], 'seqid': l[0], 'start': int(l[3]), 'end': int(l[4]), 'strand': l[6]})
+                    entry = {'gene_id': info_dict[gene_identifier], 'seqid': l[0], 'start': int(l[3]), 'end': int(l[4]), 'strand': l[6]}
+                    if feature_type == 'transcript':
+                        entry['transcript_id'] = info_dict['transcript_id']
+                    gene_list.append(entry)
     gene_dict = {g['gene_id']: g for g in gene_list}
     return gene_dict
 
