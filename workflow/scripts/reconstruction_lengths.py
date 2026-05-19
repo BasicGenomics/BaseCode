@@ -74,7 +74,8 @@ def process_read(bamfile, seqid):
                         mol.get_tag('CC'), mol.get_tag('SC'),
                         mol.query_length, cigar_stats[4],
                         mol.get_tag('F1'), mol.get_tag('T1')]
-            res_i.extend(cigar_stats)
+            res_i.extend(cigar_stats[:4])   # skip index 4 (len(del_lengths) == GAPS, already added)
+            res_i.extend(cigar_stats[5:])
             res_i.append(mol.get_tag('CV'))
             res.append(res_i)
     return res
@@ -109,7 +110,7 @@ if __name__ == "__main__":
                                     'CC','SC',
                                     'QL', 'GAPS', 'F1', 'T1',
                                     'read_length', 'aligned_bases', 'aligned_blocks',
-                                    'deletion_bases', 'del_count', 'del_lengths',
+                                    'deletion_bases', 'del_lengths',
                                     'intron_bases', 'soft_clip', 'ref_span', 'missing_fraction','read_depth_profile'])
     
     df['ANY_TC'] = df['TC'] > 0

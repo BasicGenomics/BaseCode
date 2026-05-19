@@ -58,14 +58,23 @@ def main():
 
     sample_list = []
     genes_detected_list = []
+    genes_with_threep_list = []
+    genes_with_int_list = []
+    genes_with_fivep_list = []
+    genes_with_complete_list = []
+    genes_with_short_list = []
     molecules_detected_TP_list = []
     molecules_detected_INT_list = []
     molecules_detected_FP_list = []
+    molecules_detected_short_list = []
+    molecules_detected_complete_list = []
+    percentage_short_list = []
     percentage_reconstructed_list = []
     median_reconstructed_completed_list = []
 
     for (unique_sample_id, df_long_form_sample) in df_long_form.group_by('SM'):
         df_long_form_completed = df_long_form_sample.filter(((pl.col('TC') > 0) & (pl.col('IC') > 0) & (pl.col('FC') > 0)))
+        df_short_form = df_long_form_sample.filter(((pl.col('TC') > 0) & (pl.col('IC') == 0) & (pl.col('FC') > 0)))
         df_long_form_sample_threep = df_long_form_sample.filter(pl.col('TC') > 0)
         df_long_form_sample_int = df_long_form_sample.filter(pl.col('IC') > 0)
         df_long_form_sample_fivep = df_long_form_sample.filter(pl.col('FC') > 0)
@@ -74,6 +83,13 @@ def main():
 
         genes_detected_sample = df_long_form_sample.unique(subset=['XT']).shape[0]
         genes_detected_list.append(genes_detected_sample)
+
+        genes_with_threep_list.append(df_long_form_sample_threep.unique(subset=['XT']).shape[0])
+        genes_with_int_list.append(df_long_form_sample_int.unique(subset=['XT']).shape[0])
+        genes_with_fivep_list.append(df_long_form_sample_fivep.unique(subset=['XT']).shape[0])
+        genes_with_complete_list.append(df_long_form_completed.unique(subset=['XT']).shape[0])
+        genes_with_short_list.append(df_short_form.unique(subset=['XT']).shape[0])
+
 
         molecules_detected_TP_sample = df_long_form_sample_threep.shape[0]
         molecules_detected_TP_list.append(molecules_detected_TP_sample)
@@ -84,13 +100,30 @@ def main():
         molecules_detected_FP_sample = df_long_form_sample_fivep.shape[0]
         molecules_detected_FP_list.append(molecules_detected_FP_sample)
 
+        molecules_detected_short_list.append(df_short_form.shape[0])
+        molecules_detected_complete_list.append(df_long_form_completed.shape[0])
+
+        percentage_short_list.append(np.round(100*(df_short_form.shape[0]/df_long_form_sample_threep.shape[0]),2))
         percentage_reconstructed_sample = np.round(100*(df_long_form_completed.shape[0]/df_long_form_sample_threep.shape[0]),2)
         percentage_reconstructed_list.append(percentage_reconstructed_sample)
-        
+
         median_reconstructed_completed_sample = int(df_long_form_completed.median()['QL'][0])
         median_reconstructed_completed_list.append(median_reconstructed_completed_sample)
 
-    data = {'index': sample_list, 'Genes Detected': genes_detected_list, 'Molecules Detected (5\')': molecules_detected_FP_list, 'Molecules Detected (INT)': molecules_detected_INT_list, 'Molecules Detected (3\')': molecules_detected_TP_list, 'Percentage Completed (%)': percentage_reconstructed_list, 'Median Length Completed Molecules (bp)': median_reconstructed_completed_list }
+    data = {'index': sample_list,   'Genes Detected': genes_detected_list,
+                                    'Genes Detected (3\')': genes_with_threep_list, 
+                                    'Genes Detected (INT)': genes_with_int_list, 
+                                    'Genes Detected (5\')': genes_with_fivep_list, 
+                                    'Genes Detected (3\'-5\')': genes_with_short_list, 
+                                    'Genes Detected (Complete)': genes_with_complete_list, 
+                                    'Molecules Detected (5\')': molecules_detected_FP_list,
+                                    'Molecules Detected (INT)': molecules_detected_INT_list,
+                                    'Molecules Detected (3\')': molecules_detected_TP_list,
+                                    'Molecules Detected (3\'-5\')': molecules_detected_short_list,
+                                    'Molecules Detected (Complete)': molecules_detected_complete_list,
+                                    'Percentage 3\'-5\' (%)': percentage_short_list,
+                                    'Percentage Completed (%)': percentage_reconstructed_list,
+                                    'Median Length Completed Molecules (bp)': median_reconstructed_completed_list }
 
     df_reconstruction_polars = pl.DataFrame(data)
 
