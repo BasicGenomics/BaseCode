@@ -95,7 +95,7 @@ rule precompute_bins_for_gene_body_coverage_byXT:
            bed = "{}.canonical.MANE.level2_discarded.bed".format(GFF),
            done = "results/dones/{name}_add_canonical_len.done".format(name=config["name"])
     output: parquet = "results/QC_files/gene_body_coverage/{name}_mol_bins.parquet".format(name=config["name"]),
-            done = "results/dones/{name}_precompute_bins_for_gene_body_coverage.done".format(name=config["name"])
+            done = "results/dones/{name}_precompute_bins_for_gene_body_coverage_byXT.done".format(name=config["name"])
     shell: """
         python workflow/scripts/gene_body_coverage.py precompute \
         --longform {input.long_form} \

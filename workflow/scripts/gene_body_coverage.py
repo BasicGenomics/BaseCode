@@ -384,7 +384,7 @@ if __name__ == "__main__":
     p_cov.add_argument("--parquet", required=True, help="Parquet from precompute step.")
     p_cov.add_argument("--output", required=True, help="Output CSV.")
     p_cov.add_argument("--groupby", default=None,
-                       help="Comma-separated column names to group by (e.g. SM,XT or SM,F1). "
+                       help="Comma-separated column names to group by (e.g. SM,XT or SM). "
                             "Omit for whole-dataset mode (equivalent to RSeQC whole-BAM).")
     p_cov.add_argument("--n_bins", type=int, default=100)
     p_cov.add_argument("--weighted", action="store_true")
