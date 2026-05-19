@@ -50,6 +50,9 @@ if "reverse" not in config:
 if "params" not in config:
     config["params"] = {}
 
+if "mode" not in config:
+    config["mode"] = 'basic' # if it is comprehensive - run all qc.
+
 if "cutadapt" not in config["params"]:
     config["params"]["cutadapt"] = "-n 2 -m 25 -q 10 -a CTGTCTCTTATACACATCT -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCA -g TTTTTTTTTTTTTTTTTTTT -g GGAGGAGGAGAGAAGA -g AAAAAAAAAAAAAAAAAAAA -A CTGTCTCTTATACACATCT -A AAAAAAAAAAAAAAAAAAAA -A AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT"
 

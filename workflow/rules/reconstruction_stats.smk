@@ -3,9 +3,10 @@ rule count_lengths:
            bai = "results/{name}.stitched.molecules.sorted.bam.bai".format(name=config["name"])
     output: long_form_reconstruction_stats = "results/QC_files/{name}_long_form_reconstruction_stats.csv".format(name=config["name"]),
             done = "results/dones/{name}_count_lengths.done".format(name=config["name"])
+    params: mode = config['mode']
     log: "results/logs/count_lengths.log"
     shell: """
-    python3 workflow/scripts/reconstruction_lengths.py -i {input.bam} -o {output.long_form_reconstruction_stats} > {log} 2>&1
+    python3 workflow/scripts/reconstruction_lengths.py -i {input.bam} -o {output.long_form_reconstruction_stats} -m {params.mode}> {log} 2>&1
     touch {output.done}
     """
 

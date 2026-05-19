@@ -8,7 +8,7 @@ bed12_cols = [
     "itemRgb", "blockCount", "blockSizes", "blockStarts"
 ]
 
-def add_canonical_len(bed, gff, longform,gene_identifier):
+def _add_canonical_len(bed, gff, longform,gene_identifier):
     # Read only transcript_id (col 3) and blockSizes (col 10) — skip the other 10 columns
     bed_df = (
         pl.read_csv(bed, separator="\t", has_header=False, null_values=".",
@@ -33,7 +33,7 @@ def add_canonical_len(bed, gff, longform,gene_identifier):
     })
     del mapping
 
-    longform_df = pl.read_csv(longform).join(mapping_df, on='XT', how='left')
+    longform_df = pl.read_csv(longform, schema_overrides={"SEQID": pl.Utf8}).join(mapping_df, on='XT', how='left')
 
     return longform_df.join(bed_df, left_on='canonical_transcripts_id', right_on='transcript_id', how='inner')
 
@@ -47,5 +47,5 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    out_df = add_canonical_len(args.bed,args.gff,args.longform,args.gene_identifier)
+    out_df = _add_canonical_len(args.bed,args.gff,args.longform,args.gene_identifier)
     out_df.write_csv(args.longform)

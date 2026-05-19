@@ -59,3 +59,62 @@ rule summary_stats:
     echo BaseCode Processing Pipeline Finished &&  python3 workflow/scripts/summary_stats.py --long-form {input.long_form_reconstruction_stats} --json {input.json} --sample-map {input.sample_map} --output {output.summary_stats}
     touch {output.done}
     """
+
+
+rule make_canonical_bed:
+    output: gff = "{}.canonical.MANE.level2.gff3".format(GFF),
+            gff_discarded = "{}.canonical.MANE.level2_discarded.gff".format(GFF),
+            bed = "{}.canonical.MANE.level2_discarded.bed".format(GFF)
+    params: gff = "{}.gff3".format(GFF)
+    shell: """
+        AGAT/bin/agat_sp_filter_feature_by_attribute_value.pl \
+        --gff {params.gff} \
+        --attribute tag \
+        --value MANE_Select \
+        -p level2 \
+        --output {output.gff} &&
+        AGAT/bin/agat_convert_sp_gff2bed.pl --gff {output.gff_discarded} -o {output.bed}
+    """
+
+rule add_canonical_len:
+    input: gff = "{}.canonical.MANE.level2_discarded.gff".format(GFF),
+           bed = "{}.canonical.MANE.level2_discarded.bed".format(GFF),
+           long_form = "results/QC_files/{name}_long_form_reconstruction_stats.csv".format(name=config["name"])
+    output: done = "results/dones/{name}_add_canonical_len.done".format(name=config["name"])
+    shell: """
+        python workflow/scripts/add_canonical_len.py \
+        --gff {input.gff} \
+        --bed {input.bed} \
+        --longform {input.long_form} \
+        --gene_identifier {config[gff_gene_identifier]} &&
+        touch {output.done}
+    """
+
+rule precompute_bins_for_gene_body_coverage_byXT:
+    input: long_form = "results/QC_files/{name}_long_form_reconstruction_stats.csv".format(name=config["name"]),
+           bed = "{}.canonical.MANE.level2_discarded.bed".format(GFF),
+           done = "results/dones/{name}_add_canonical_len.done".format(name=config["name"])
+    output: parquet = "results/QC_files/gene_body_coverage/{name}_mol_bins.parquet".format(name=config["name"]),
+            done = "results/dones/{name}_precompute_bins_for_gene_body_coverage.done".format(name=config["name"])
+    shell: """
+        python workflow/scripts/gene_body_coverage.py precompute \
+        --longform {input.long_form} \
+        --bed {input.bed} \
+        --output {output.parquet} \
+        --weighted &&
+        touch {output.done}
+    """
+
+rule precompute_bins_for_gene_body_coverage_rseqc:
+    input: long_form = "results/QC_files/{name}_long_form_reconstruction_stats.csv".format(name=config["name"]),
+           bed = "{}.canonical.MANE.level2_discarded.bed".format(GFF),
+           done = "results/dones/{name}_add_canonical_len.done".format(name=config["name"])
+    output: parquet = "results/QC_files/gene_body_coverage/{name}_mol_bins_rseqc.parquet".format(name=config["name"]),
+            done = "results/dones/{name}_precompute_bins_for_gene_body_coverage_resqc.done".format(name=config["name"])
+    shell: """
+        python workflow/scripts/gene_body_coverage.py precompute_rseqc \
+        --longform {input.long_form} \
+        --bed {input.bed} \
+        --output {output.parquet} &&
+        touch {output.done}
+    """

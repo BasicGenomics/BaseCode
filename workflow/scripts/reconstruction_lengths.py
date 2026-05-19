@@ -13,24 +13,30 @@ CIGAR_S = 4
 
 
 def process_cigar(read):
-       
+
     aligned_bases = 0  # M/=/X — read bases on reference
     deletion_bases = 0  # D — reference bases not covered, non-intronic
     intron_bases = 0  # N — skipped (intron)
     soft_clip = 0
     del_lengths = []
-    aligned_lengths = []
+    aligned_blocks = []  # absolute genomic (start, end) per M block; D gaps are implicit
+    ref_pos = read.reference_start
+
     for op, length in read.cigartuples:
         if op in CIGAR_M_LIKE:
+            aligned_blocks.append((ref_pos, ref_pos + length))
             aligned_bases += length
-            aligned_lengths.append(length)
+            ref_pos += length
         elif op == CIGAR_D:
             deletion_bases += length
             del_lengths.append(length)
+            ref_pos += length
         elif op == CIGAR_N:
             intron_bases += length
+            ref_pos += length
         elif op == CIGAR_S:
             soft_clip += length
+            # soft clips do not advance reference position
 
     read_length = read.infer_read_length()  # includes soft clips; None if unavailable
     if read_length is None:
@@ -42,7 +48,7 @@ def process_cigar(read):
     return [
         read_length,
         aligned_bases,
-        ';'.join(map(str, aligned_lengths)),
+        ';'.join('{}:{}'.format(s, e) for s, e in aligned_blocks),
         deletion_bases,
         len(del_lengths),
         ';'.join(map(str, del_lengths)),
@@ -64,6 +70,7 @@ def process_read(bamfile, seqid):
                         mol.get_tag('NR'), mol.get_tag('ER'), mol.get_tag('IR'),
                         mol.get_tag('TC'), mol.get_tag('IC'), mol.get_tag('FC'),
                         mol.get_tag('XT'),
+                        mol.reference_name, mol.reference_start, mol.reference_end,
                         mol.get_tag('CC'), mol.get_tag('SC'),
                         mol.query_length, cigar_stats[4],
                         mol.get_tag('F1'), mol.get_tag('T1')]
@@ -78,6 +85,8 @@ if __name__ == "__main__":
     parser.add_argument('-i','--input',metavar='input', type=str, help='Input .bam file')
     parser.add_argument('-o','--outfile', help='Output file')
     parser.add_argument('-t', '--threads', metavar='threads', type=int, default=1, help='Number of threads')
+    parser.add_argument('-m','--mode',default='basic')
+
 
     args = parser.parse_args()
 
@@ -96,14 +105,25 @@ if __name__ == "__main__":
                                     'SM','BC',
                                     'NR', 'ER', 'IR',
                                     'TC', 'IC', 'FC',
-                                    'XT',
+                                    'XT','SEQID','ref_start','ref_end',
                                     'CC','SC',
                                     'QL', 'GAPS', 'F1', 'T1',
-                                    'read_length', 'aligned_bases', 'aligned_lengths',
+                                    'read_length', 'aligned_bases', 'aligned_blocks',
                                     'deletion_bases', 'del_count', 'del_lengths',
-                                    'intron_bases', 'soft_clip', 'ref_span', 'missing_fraction','coverage'])
+                                    'intron_bases', 'soft_clip', 'ref_span', 'missing_fraction','read_depth_profile'])
+    
     df['ANY_TC'] = df['TC'] > 0
     df['ANY_IC'] = df['IC'] > 0
     df['ANY_FC'] = df['FC'] > 0
     df['ANY_GAPS'] = df['GAPS'] > 0
-    df.to_csv(outfile)
+
+    
+    df_basic = df[['MOL_NAME','SM','BC', 'TC', 'IC', 'FC', 'XT','CC','SC','QL', 'GAPS', 'F1', 'T1','ANY_TC','ANY_IC','ANY_FC','ANY_GAPS']]
+   
+    df_basic.to_csv(outfile)
+
+    if args.mode =='comprehensive':
+        stem = outfile.rstrip('.csv')
+        df.to_csv(f'{stem}_detailed.csv')
+    
+        

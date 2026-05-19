@@ -1,25 +1,9 @@
 def get_final_output(wildcards):
     final_output = ["results/{name}.stitched.molecules.sorted.bam".format(name=config["name"]),
     "results/{name}.stitched.molecules.sorted.bam.bai".format(name=config["name"]),
-    "results/read_flow_files/{name}_fastq_processed_stats.json".format(name=config["name"]),
-    "results/read_flow_files/{name}_fastq_trimmed_stats.json".format(name=config["name"]),
-    "results/read_flow_files/{name}_fastq_tooshort_stats.json".format(name=config["name"]),
-    "results/read_flow_files/{name}_mapping_group.csv".format(name=config["name"]),
-    "results/read_flow_files/{name}_status_group.csv".format(name=config["name"]),
-    "results/QC_files/{name}_read_type_per_sample.csv".format(name=config["name"]),
-    "results/QC_files/{name}_mapping_categories_per_sample.csv".format(name=config["name"]), 
-    "results/QC_files/{name}_nonbarcoded_mapping_categories_per_sample.csv".format(name=config["name"]),
-    "results/QC_files/{name}_insert_sizes_per_sample_barcode.csv".format(name=config["name"]),
-    "results/QC_files/{name}_double_reads_per_sample_barcode.csv".format(name=config["name"]),
-    "results/QC_files/{name}_conversion_rate_pos.csv".format(name=config["name"]), 
-    "results/QC_files/{name}_conversion_rate_neg.csv".format(name=config["name"]),
-    "results/QC_files/{name}_conversion_rate_total.csv".format(name=config["name"]),
+  
     "results/QC_files/{name}_long_form_reconstruction_stats.csv".format(name=config["name"]),
-    "results/QC_files/{name}_overlap_and_mi_genes.csv".format(name=config["name"]),
-    "results/QC_files/{name}_overlap_and_mi_cells.csv".format(name=config["name"]),
     "results/QC_files/{name}_counts_per_gene.csv".format(name=config["name"]),
-    "results/QC_files/{name}_status_sum.csv".format(name=config["name"]),
-    "results/QC_files/{name}_status_fraction_per_gene.csv".format(name=config["name"]),
     "results/QC_files/fastq/multiqc/{name}_multiqc_report.html".format(name=config["name"]),
     "results/logs/python_version.log",
     "results/logs/basecode_version.log",
@@ -31,5 +15,28 @@ def get_final_output(wildcards):
     "results/downstream/{name}_TSS_merged.bed.gz".format(name=config["name"]),
     "results/downstream/{name}_TSS.bedgraph".format(name=config["name"]),
     "results/{name}_run_report.pdf".format(name=config["name"])]
+
+    if config["mode"] == "comprehensive":
+        final_output += [
+            "results/read_flow_files/{name}_fastq_processed_stats.json".format(name=config["name"]),
+            "results/read_flow_files/{name}_fastq_trimmed_stats.json".format(name=config["name"]),
+            "results/read_flow_files/{name}_fastq_tooshort_stats.json".format(name=config["name"]),
+            "results/read_flow_files/{name}_mapping_group.csv".format(name=config["name"]),
+            "results/read_flow_files/{name}_status_group.csv".format(name=config["name"]),
+            "results/QC_files/{name}_read_type_per_sample.csv".format(name=config["name"]),
+            "results/QC_files/{name}_mapping_categories_per_sample.csv".format(name=config["name"]), 
+            "results/QC_files/{name}_nonbarcoded_mapping_categories_per_sample.csv".format(name=config["name"]),
+            "results/QC_files/{name}_insert_sizes_per_sample_barcode.csv".format(name=config["name"]),
+            "results/QC_files/{name}_double_reads_per_sample_barcode.csv".format(name=config["name"]),
+            "results/QC_files/{name}_conversion_rate_pos.csv".format(name=config["name"]), 
+            "results/QC_files/{name}_conversion_rate_neg.csv".format(name=config["name"]),
+            "results/QC_files/{name}_conversion_rate_total.csv".format(name=config["name"]),
+            "results/QC_files/{name}_overlap_and_mi_genes.csv".format(name=config["name"]),
+            "results/QC_files/{name}_overlap_and_mi_cells.csv".format(name=config["name"]),
+            "results/QC_files/{name}_status_sum.csv".format(name=config["name"]),
+            "results/QC_files/{name}_status_fraction_per_gene.csv".format(name=config["name"]),
+            "results/QC_files/gene_body_coverage/{name}_mol_bins.parquet".format(name=config["name"]),
+            "results/QC_files/gene_body_coverage/{name}_mol_bins_rseqc.parquet".format(name=config["name"])
+        ]
 
     return final_output
