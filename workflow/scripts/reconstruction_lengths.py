@@ -38,15 +38,11 @@ def process_cigar(read):
             soft_clip += length
             # soft clips do not advance reference position
 
-    read_length = read.infer_read_length()  # includes soft clips; None if unavailable
-    if read_length is None:
-        read_length = read.query_length
     ref_span = aligned_bases + deletion_bases + intron_bases
     denom = aligned_bases + deletion_bases
     missing_fraction = deletion_bases / denom if denom > 0 else 0.0
 
     return [
-        read_length,
         aligned_bases,
         ';'.join('{}:{}'.format(s, e) for s, e in aligned_blocks),
         deletion_bases,
@@ -72,10 +68,10 @@ def process_read(bamfile, seqid):
                         mol.get_tag('XT'),
                         mol.reference_name, mol.reference_start, mol.reference_end,
                         mol.get_tag('CC'), mol.get_tag('SC'),
-                        mol.query_length, cigar_stats[4],
+                        mol.query_length, cigar_stats[3],
                         mol.get_tag('F1'), mol.get_tag('T1')]
-            res_i.extend(cigar_stats[:4])   # skip index 4 (len(del_lengths) == GAPS, already added)
-            res_i.extend(cigar_stats[5:])
+            res_i.extend(cigar_stats[:3])   # skip index 3 (len(del_lengths) == GAPS, already added)
+            res_i.extend(cigar_stats[4:])
             res_i.append(mol.get_tag('CV'))
             res.append(res_i)
     return res
@@ -109,7 +105,7 @@ if __name__ == "__main__":
                                     'XT','SEQID','ref_start','ref_end',
                                     'CC','SC',
                                     'QL', 'GAPS', 'F1', 'T1',
-                                    'read_length', 'aligned_bases', 'aligned_blocks',
+                                    'aligned_bases', 'aligned_blocks',
                                     'deletion_bases', 'del_lengths',
                                     'intron_bases', 'soft_clip', 'ref_span', 'missing_fraction','read_depth_profile'])
     
