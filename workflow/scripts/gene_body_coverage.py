@@ -62,19 +62,24 @@ def _to_bins(t_lo_expr, t_hi_expr, canonical_len_expr, n_bins):
     return pl.min_horizontal(raw_lo, raw_hi), pl.max_horizontal(raw_lo, raw_hi)
 
 
-def compute_coverage(parquet, group_cols=None, n_bins=100, weighted=False):
+def compute_coverage(parquet, longform=None, group_cols=None, n_bins=100, weighted=False):
     """
     Aggregate pre-computed bin intervals from parquet → per-group gene body coverage.
-    Input parquet must be produced by precompute_bins().
+    Input parquet must be produced by precompute_bins() (contains MOL_NAME + bin columns).
+    If group_cols are needed, provide longform so group columns can be joined on MOL_NAME.
     group_cols=None computes over the whole dataset (equivalent to RSeQC whole-BAM mode).
     Returns long-form DataFrame: <group_cols> | bin | coverage | coverage_norm
     and, if weighted=True: coverage_weighted | coverage_weighted_norm | mean_weight.
     """
 
-    if isinstance(parquet,str):
+    if isinstance(parquet, str):
         df = pl.read_parquet(parquet)
     else:
         df = parquet
+
+    if group_cols and longform is not None:
+        lf = pl.read_csv(longform, schema_overrides={"SEQID": pl.Utf8}) if isinstance(longform, str) else longform
+        df = df.join(lf.select(["MOL_NAME"] + group_cols), on="MOL_NAME", how="left")
 
     b_lo_expr, b_hi_expr = _to_bins(
         pl.col("mol_t_lo"), pl.col("mol_t_hi"), pl.col("canonical_len"), n_bins
@@ -213,11 +218,10 @@ def precompute_bins(longform, bed, weighted=False,CV_COL='read_depth_profile'):
 
     pdf = pdf.groupby("canonical_transcripts_id", group_keys=False).apply(add_intervals)
 
-    # drop_after = ["aligned_blocks", "chromStart", "blockStarts", "blockSizes",
-    #               "strand", "canonical_transcripts_id"] + (([CV_COL]) if weighted else [])
-    # pdf = pdf.drop(columns=[c for c in drop_after if c in pdf.columns])
-
-    return pl.from_pandas(pdf)
+    keep = ["MOL_NAME", "canonical_len", "mol_t_lo", "mol_t_hi"]
+    if weighted:
+        keep += ["cv_t_lo", "cv_t_hi", "cv_count"]
+    return pl.from_pandas(pdf[[c for c in keep if c in pdf.columns]])
 
 
 def _bed_genomic_percentile_positions(bed, n_bins=100, min_len=100):
@@ -281,13 +285,15 @@ def _bed_genomic_percentile_positions(bed, n_bins=100, min_len=100):
     return chrom_pos_arr, chrom_bin_arr
 
 
-def precompute_bins_rseqc(longform, bed, n_bins=100, min_len=100):
+def precompute_bins_rseqc(longform, bed, n_bins=100, min_len=100, weighted=False):
     """
     RSeQC-equivalent precompute: for each molecule, find all transcript percentile bin
     indices it overlaps across ALL transcripts in the BED (not just its XT-assigned one).
     Duplicates are kept — a molecule covering the same percentile in N transcripts
     contributes N counts, matching RSeQC pileup semantics.
-    Output parquet has a list column 'rseqc_bins' plus all metadata columns.
+    Output parquet has list column 'rseqc_bins' plus all metadata columns.
+    If weighted=True, also stores 'rseqc_weights' (CV read depth at each hit position),
+    enabling read-level pileup equivalent (matches RSeQC's individual-read counts).
     """
     chrom_pos_arr, chrom_bin_arr = _bed_genomic_percentile_positions(bed, n_bins, min_len)
 
@@ -299,10 +305,16 @@ def precompute_bins_rseqc(longform, bed, n_bins=100, min_len=100):
     def mol_bins(row):
         seqid = str(row["SEQID"])
         if seqid not in chrom_pos_arr:
-            return []
+            return ([], []) if weighted else []
         pos_arr = chrom_pos_arr[seqid]
         bin_arr = chrom_bin_arr[seqid]
         hits = []
+        hit_weights = []
+
+        if weighted:
+            ref_start = int(row["ref_start"])
+            cv_segs = _parse_cv(str(row["read_depth_profile"]))
+
         for blk in str(row["aligned_blocks"]).split(";"):
             if not blk:
                 continue
@@ -311,32 +323,55 @@ def precompute_bins_rseqc(longform, bed, n_bins=100, min_len=100):
             hi = int(np.searchsorted(pos_arr, e, side="left"))
             if lo < hi:
                 hits.extend(bin_arr[lo:hi].tolist())
-        return hits
+                if weighted:
+                    for gpos in pos_arr[lo:hi].tolist():
+                        rel = int(gpos) - ref_start
+                        w = 1
+                        for cv_s, cv_e, cv_c in cv_segs:
+                            if cv_s <= rel < cv_e:
+                                w = cv_c
+                                break
+                        hit_weights.append(w)
 
-    drop = {"aligned_blocks", "del_lengths", "read_depth_profile"}
-    keep = [c for c in pdf.columns if c not in drop]
-    result = pdf[keep].copy()
-    result["rseqc_bins"] = pdf.apply(mol_bins, axis=1)
+        return (hits, hit_weights) if weighted else hits
+
+    result = pdf[["MOL_NAME"]].copy()
+
+    if weighted:
+        raw = pdf.apply(mol_bins, axis=1)
+        result["rseqc_bins"]    = raw.apply(lambda x: x[0])
+        result["rseqc_weights"] = raw.apply(lambda x: x[1])
+    else:
+        result["rseqc_bins"] = pdf.apply(mol_bins, axis=1)
+
     result = result[result["rseqc_bins"].apply(len) > 0].reset_index(drop=True)
     return pl.from_pandas(result)
 
 
-def compute_coverage_rseqc(parquet, group_cols=None, n_bins=100):
+def compute_coverage_rseqc(parquet, longform=None, group_cols=None, n_bins=100, weighted=False):
     """
     Aggregate RSeQC-style precomputed bin hits → per-group gene body coverage.
-    Input parquet must be from precompute_bins_rseqc().
+    Input parquet must be from precompute_bins_rseqc() (contains MOL_NAME + rseqc_bins).
+    If group_cols are needed, provide longform so group columns can be joined on MOL_NAME.
     bin is 1-indexed (1–n_bins) to match RSeQC output convention.
+    If weighted=True, also outputs coverage_weighted (sum of CV depths = read-level pileup).
+    Parquet must have been produced with precompute_bins_rseqc(weighted=True).
     """
 
-    if isinstance(parquet,str):
+    if isinstance(parquet, str):
         df = pl.read_parquet(parquet)
     else:
         df = parquet
 
-    sel_cols = (group_cols or []) + ["rseqc_bins"]
+    if group_cols and longform is not None:
+        lf = pl.read_csv(longform, schema_overrides={"SEQID": pl.Utf8}) if isinstance(longform, str) else longform
+        df = df.join(lf.select(["MOL_NAME"] + group_cols), on="MOL_NAME", how="left")
+
+    explode_cols = ["rseqc_bins"] + (["rseqc_weights"] if weighted else [])
+    sel_cols = (group_cols or []) + explode_cols
     flat = (
         df.select(sel_cols)
-          .explode("rseqc_bins")
+          .explode(explode_cols)
           .to_pandas()
           .rename(columns={"rseqc_bins": "bin"})
           .dropna(subset=["bin"])
@@ -354,15 +389,25 @@ def compute_coverage_rseqc(parquet, group_cols=None, n_bins=100):
         key = (key,) if not isinstance(key, tuple) else key
         group_dict = dict(zip(group_cols or [], key))
 
+        bins_arr = np.clip(grp["bin"].to_numpy(dtype=np.int32), 0, n_bins - 1)
         cov = np.zeros(n_bins, dtype=np.int64)
-        np.add.at(cov, np.clip(grp["bin"].to_numpy(dtype=np.int32), 0, n_bins - 1), 1)
+        np.add.at(cov, bins_arr, 1)
 
         if group_cols is not None:
             total = int(totals.get(key[0] if len(key) == 1 else key, 1))
         norm = cov / total if total > 0 else cov.astype(float)
 
+        if weighted:
+            cov_w = np.zeros(n_bins, dtype=np.float64)
+            np.add.at(cov_w, bins_arr, grp["rseqc_weights"].to_numpy(dtype=np.float64))
+            norm_w = cov_w / total if total > 0 else cov_w.copy()
+
         for b in range(n_bins):
-            rows.append({**group_dict, "bin": b + 1, "coverage": int(cov[b]), "coverage_norm": float(norm[b])})
+            row = {**group_dict, "bin": b + 1, "coverage": int(cov[b]), "coverage_norm": float(norm[b])}
+            if weighted:
+                row["coverage_weighted"]      = float(cov_w[b])
+                row["coverage_weighted_norm"] = float(norm_w[b])
+            rows.append(row)
 
     return pl.DataFrame(rows)
 
@@ -382,6 +427,8 @@ if __name__ == "__main__":
 
     p_cov = sub.add_parser("coverage", help="Aggregate parquet → per-group gene body coverage CSV.")
     p_cov.add_argument("--parquet", required=True, help="Parquet from precompute step.")
+    p_cov.add_argument("--longform", default=None,
+                       help="Original longform CSV; required when using --groupby to join group columns on MOL_NAME.")
     p_cov.add_argument("--output", required=True, help="Output CSV.")
     p_cov.add_argument("--groupby", default=None,
                        help="Comma-separated column names to group by (e.g. SM,XT or SM). "
@@ -395,13 +442,19 @@ if __name__ == "__main__":
     p_pre_r.add_argument("--output", required=True, help="Output .parquet file.")
     p_pre_r.add_argument("--n_bins", type=int, default=100)
     p_pre_r.add_argument("--min_len", type=int, default=100, help="Skip transcripts shorter than this (bp).")
+    p_pre_r.add_argument("--weighted", action="store_true",
+                         help="Store CV read depth at each hit position for read-level pileup equivalent.")
 
     p_cov_r = sub.add_parser("coverage_rseqc", help="RSeQC-equivalent: aggregate parquet → per-group coverage CSV (1-indexed bins).")
     p_cov_r.add_argument("--parquet", required=True, help="Parquet from precompute_rseqc step.")
+    p_cov_r.add_argument("--longform", default=None,
+                         help="Original longform CSV; required when using --groupby to join group columns on MOL_NAME.")
     p_cov_r.add_argument("--output", required=True, help="Output CSV.")
     p_cov_r.add_argument("--groupby", default=None,
                          help="Comma-separated column names to group by. Omit for whole-dataset mode.")
     p_cov_r.add_argument("--n_bins", type=int, default=100)
+    p_cov_r.add_argument("--weighted", action="store_true",
+                         help="Sum CV read depths per bin (requires --weighted parquet). Adds coverage_weighted column.")
 
     args = parser.parse_args()
 
@@ -409,9 +462,9 @@ if __name__ == "__main__":
         precompute_bins(args.longform, args.bed, args.weighted).write_parquet(args.output)
     elif args.cmd == "coverage":
         group_cols = [c.strip() for c in args.groupby.split(",")] if args.groupby else None
-        compute_coverage(args.parquet, group_cols, args.n_bins, args.weighted).write_csv(args.output)
+        compute_coverage(args.parquet, args.longform, group_cols, args.n_bins, args.weighted).write_csv(args.output)
     elif args.cmd == "precompute_rseqc":
-        precompute_bins_rseqc(args.longform, args.bed, args.n_bins, args.min_len).write_parquet(args.output)
+        precompute_bins_rseqc(args.longform, args.bed, args.n_bins, args.min_len, args.weighted).write_parquet(args.output)
     else:
         group_cols = [c.strip() for c in args.groupby.split(",")] if args.groupby else None
-        compute_coverage_rseqc(args.parquet, group_cols, args.n_bins).write_csv(args.output)
+        compute_coverage_rseqc(args.parquet, args.longform, group_cols, args.n_bins, args.weighted).write_csv(args.output)
